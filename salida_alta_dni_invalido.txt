@@ -1,0 +1,32 @@
+ 
+=== CUENTA BANCARIA ===
+1 - Alta de cliente
+2 - Modificar / Baja de cliente
+3 - Deposito
+4 - Extraccion
+5 - Consulta de saldo
+0 - Salir
+Opcion:
+DNI (8 digitos):
+DNI invalido: deben ser 8 digitos.
+ 
+=== CUENTA BANCARIA ===
+1 - Alta de cliente
+2 - Modificar / Baja de cliente
+3 - Deposito
+4 - Extraccion
+5 - Consulta de saldo
+0 - Salir
+Opcion:
+DNI (8 digitos):
+DNI invalido: deben ser 8 digitos.
+ 
+=== CUENTA BANCARIA ===
+1 - Alta de cliente
+2 - Modificar / Baja de cliente
+3 - Deposito
+4 - Extraccion
+5 - Consulta de saldo
+0 - Salir
+Opcion:
+Hasta luego.

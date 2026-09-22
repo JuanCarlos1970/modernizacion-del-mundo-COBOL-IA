@@ -1,0 +1,40 @@
+ 
+=== CUENTA BANCARIA ===
+1 - Alta de cliente
+2 - Modificar / Baja de cliente
+3 - Deposito
+4 - Extraccion
+5 - Consulta de saldo
+0 - Salir
+Opcion:
+DNI (8 digitos):
+Nombre (hasta 30 caracteres):
+Direccion (hasta 40 caracteres):
+Telefono (hasta 15 caracteres):
+Cliente dado de alta.
+ 
+=== CUENTA BANCARIA ===
+1 - Alta de cliente
+2 - Modificar / Baja de cliente
+3 - Deposito
+4 - Extraccion
+5 - Consulta de saldo
+0 - Salir
+Opcion:
+DNI (8 digitos):
+Nombre:    Diego Consulta
+DNI:       80000006
+Direccion: Calle Consulta 400
+Telefono:  011 5000-0006
+Saldo:                0.00
+Estado:    A - Activo
+ 
+=== CUENTA BANCARIA ===
+1 - Alta de cliente
+2 - Modificar / Baja de cliente
+3 - Deposito
+4 - Extraccion
+5 - Consulta de saldo
+0 - Salir
+Opcion:
+Hasta luego.
