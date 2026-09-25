@@ -817,17 +817,19 @@ Igual que `BATCH-CIERRE.cbl` con sus tablas de Activos/Reactivados e Inactivos, 
 
 El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo).
 
-### Casos automatizados (semi-automatizados)
+### Casos automatizados
 
-Los cinco casos más simples y lineales de esa matriz —sin ramificaciones ni confirmaciones S/N— están automatizados con archivos de entrada que simulan lo que un usuario tipearía en el menú:
+Los cinco casos más simples y lineales de esa matriz —sin ramificaciones ni confirmaciones S/N— están automatizados de punta a punta: se ejecutan con archivos de entrada que simulan lo que un usuario tipearía en el menú, y el resultado se compara automáticamente (sin intervención manual) contra un archivo de referencia con `fc` (File Compare, incluido en Windows):
 
-| Caso | Entrada | Salida | Cubre |
-|------|---------|--------|-------|
-| CP-01 | `entrada_alta_ok.txt` | `salida_alta_ok.txt` | Alta exitosa, Estado queda en `A` |
-| CP-02 | `entrada_alta_dni_invalido.txt` | `salida_alta_dni_invalido.txt` | Alta rechazada con DNI de menos de 8 dígitos y con DNI no numérico |
-| CP-03 | `entrada_deposito.txt` | `salida_deposito.txt` | Depósito exitoso a un cliente Activo |
-| CP-04 | `entrada_extraccion.txt` | `salida_extraccion.txt` | Extracción exitosa (fondos suficientes) |
-| CP-06 | `entrada_consulta.txt` | `salida_consulta.txt` | Consulta muestra todos los datos, incluido Estado |
+| Caso | Entrada | Salida | Esperado (referencia) | Cubre |
+|------|---------|--------|------------------------|-------|
+| CP-01 | `entrada_alta_ok.txt` | `salida_alta_ok.txt` | `esperado_alta_ok.txt` | Alta exitosa, Estado queda en `A` |
+| CP-02 | `entrada_alta_dni_invalido.txt` | `salida_alta_dni_invalido.txt` | `esperado_alta_dni_invalido.txt` | Alta rechazada con DNI de menos de 8 dígitos y con DNI no numérico |
+| CP-03 | `entrada_deposito.txt` | `salida_deposito.txt` | `esperado_deposito.txt` | Depósito exitoso a un cliente Activo |
+| CP-04 | `entrada_extraccion.txt` | `salida_extraccion.txt` | `esperado_extraccion.txt` | Extracción exitosa (fondos suficientes) |
+| CP-06 | `entrada_consulta.txt` | `salida_consulta.txt` | `esperado_consulta.txt` | Consulta muestra todos los datos, incluido Estado |
+
+Cada `esperado_*.txt` es la salida ya verificada a mano contra el "Resultado esperado" de `CASOS_DE_PRUEBA.md`, guardada como referencia fija. Si en el futuro se cambia a propósito algo que afecta la salida de `cuenta.cbl` (por ejemplo, se redacta distinto un mensaje), hay que revisar el nuevo `salida_*.txt` a mano una vez y, si es correcto, actualizar el `esperado_*.txt` correspondiente — la comparación automática no sabe distinguir un cambio intencional de una regresión, solo detecta que algo cambió.
 
 ### Cómo correrlos
 
@@ -837,7 +839,23 @@ La forma más simple y confiable:
 correr_pruebas_automatizadas.bat
 ```
 
-Compila `cuenta.exe` **en `bin\`** y corre ahí los 5 pares entrada/salida (leyendo cada `entrada_*.txt` y escribiendo cada `salida_*.txt` en la raíz del proyecto), con el runtime de GnuCOBOL correctamente puesto en el `PATH` para esa sesión (mismo mecanismo de respaldo que `correr_batch_cierre.bat` y `ver_listado_clientes.bat`).
+Compila `cuenta.exe` **en `bin\`**, corre ahí los 5 pares entrada/salida (leyendo cada `entrada_*.txt` y escribiendo cada `salida_*.txt` en la raíz del proyecto) con el runtime de GnuCOBOL correctamente puesto en el `PATH` para esa sesión (mismo mecanismo de respaldo que `correr_batch_cierre.bat` y `ver_listado_clientes.bat`), y **compara cada `salida_*.txt` contra su `esperado_*.txt` con `fc`**, mostrando al final un resumen del tipo:
+
+```
+[pruebas]   OK     - alta_ok
+[pruebas]   OK     - alta_dni_invalido
+[pruebas]   OK     - deposito
+[pruebas]   OK     - extraccion
+[pruebas]   OK     - consulta
+
+[pruebas] ==========================================
+[pruebas]  Resumen: 5 OK / 0 FALLO (de 5)
+[pruebas] ==========================================
+```
+
+Si algún caso falla, el script indica cuál y sugiere el comando `fc` puntual para ver la diferencia exacta, y termina con código de salida distinto de cero (útil si en algún momento se engancha a un pipeline de CI).
+
+Ese mismo resumen se guarda además en **`resultado_pruebas.txt`** (en la raíz del proyecto, junto a `CASOS_DE_PRUEBA.md`), igual que `correr_batch_cierre.bat` deja `bin\reporte_cierre.txt` y `ver_listado_clientes.bat` deja `bin\listado_clientes.txt`. Esto es necesario porque si el `.bat` se corre con doble clic (en vez de desde una terminal ya abierta), la ventana de consola se cierra sola apenas termina y no da tiempo a leer el resumen en pantalla; el archivo queda para abrirlo después con cualquier editor de texto.
 
 También se puede correr cada caso a mano, uno por uno, desde `bin\`:
 
@@ -850,7 +868,7 @@ Y así con cada par. **Para esto, el `PATH` de esa terminal tiene que incluir el
 
 Cada `entrada_*.txt` es autocontenido (da de alta su propio cliente de prueba, con un DNI dedicado en el rango `800000XX` para no chocar con los DNIs que usa la matriz manual) y **termina siempre en `0`**, la opción de salir del menú: es necesario para que no quede colgado, porque una entrada redirigida por archivo que se queda sin líneas antes de un `0` no corta sola (ver [Solución de problemas](#solucion-de-problemas), «Si la entrada se redirige…»).
 
-Después de correr uno, conviene abrir el `salida_*.txt` correspondiente y comparar a mano contra el "Resultado esperado" de esa fila en `CASOS_DE_PRUEBA.md`; no hay un comparador automático de resultados en este proyecto. Si `clientes_v3.dat` ya tiene un cliente con ese mismo DNI de una corrida anterior, el script no falla, pero la salida cambia (por ejemplo, `entrada_alta_ok.txt` mostraría `Ya existe un cliente con ese DNI.` en vez de `Cliente dado de alta.`); para una corrida "limpia" de los cinco casos, borrar `bin\clientes_v3.dat` antes.
+Si se corren a mano (fuera de `correr_pruebas_automatizadas.bat`), hay que comparar cada `salida_*.txt` contra su `esperado_*.txt` (o contra el "Resultado esperado" de `CASOS_DE_PRUEBA.md`) uno por uno, por ejemplo con `fc esperado_alta_ok.txt salida_alta_ok.txt`. Si `clientes_v3.dat` ya tiene un cliente con ese mismo DNI de una corrida anterior, el script no falla, pero la salida cambia (por ejemplo, `entrada_alta_ok.txt` mostraría `Ya existe un cliente con ese DNI.` en vez de `Cliente dado de alta.`, y la comparación automática lo marcaría como FALLO); para una corrida "limpia" de los cinco casos, borrar `bin\clientes_v3.dat` antes.
 
 Los siete casos restantes (CP-05, CP-07 a CP-12) quedan como pruebas manuales en `CASOS_DE_PRUEBA.md`: tienen ramificaciones (confirmaciones S/N, submenús, un estado previo que hay que preparar, o el batch de cierre) que no se prestan a una sola pasada de entrada redirigida.
 
