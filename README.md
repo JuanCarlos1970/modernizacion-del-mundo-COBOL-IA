@@ -872,6 +872,14 @@ Si se corren a mano (fuera de `correr_pruebas_automatizadas.bat`), hay que compa
 
 Los siete casos restantes (CP-05, CP-07 a CP-12) quedan como pruebas manuales en `CASOS_DE_PRUEBA.md`: tienen ramificaciones (confirmaciones S/N, submenús, un estado previo que hay que preparar, o el batch de cierre) que no se prestan a una sola pasada de entrada redirigida.
 
+### Gestión de casos y ejecución en Jira/Xray
+
+Los 12 casos de prueba de `CASOS_DE_PRUEBA.md` (los 5 automatizados y los 7 manuales) están además cargados como Tests en Jira, usando Xray como plugin de gestión de pruebas, cada uno con su Resumen, Descripción, pasos estructurados (Acción / Datos / Resultado Esperado) y — en los automatizados — la referencia a los archivos `entrada_*.txt` / `esperado_*.txt` correspondientes.
+
+Los 12 Tests están agrupados en una Ejecución de Tests (Test Execution) donde quedó registrada la corrida completa: los 5 automatizados con el resultado real obtenido al correr `correr_pruebas_automatizadas.bat`, y los 7 manuales ejecutados paso a paso contra `cuenta.exe`, marcando cada paso (y el resultado general de cada caso) como PASS o FAIL según lo observado. La última ejecución completa cerró en **12 de 12 casos PASSED**.
+
+Esto documenta, además del código, la práctica de gestión y trazabilidad de QA sobre el proyecto: diseño de casos, automatización de los que se prestan a un script simple, ejecución manual del resto, y registro de resultados en una herramienta de test management real.
+
 <a id="solucion-de-problemas"></a>
 ## Solución de problemas
 
