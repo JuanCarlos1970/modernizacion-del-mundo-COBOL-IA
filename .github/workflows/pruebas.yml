@@ -1,0 +1,62 @@
+name: Pruebas automatizadas
+
+# Corre los 5 casos de prueba automatizados (CP-01 a CP-04 y CP-06 de
+# CASOS_DE_PRUEBA.md) en cada push o pull request a main, compilando
+# cuenta.cbl con GnuCOBOL en un runner Linux y comparando cada salida
+# contra su esperado_*.txt de referencia.
+#
+# Es el equivalente en Linux/CI de correr_pruebas_automatizadas.bat
+# (que usa "fc" y es especifico de Windows): misma logica, misma
+# lista de casos, pero con "diff" en vez de "fc" para poder correr
+# en un runner de GitHub Actions.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      # Se usa el paquete "gnucobol3" (no "gnucobol4") porque en Ubuntu
+      # el paquete gnucobol4 trae el manejador de archivos indexados
+      # deshabilitado ("indexed file handler: disabled"), y cuenta.cbl
+      # usa ORGANIZATION INDEXED. gnucobol3 lo trae habilitado (BDB).
+      - name: Instalar GnuCOBOL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnucobol3
+
+      - name: Compilar cuenta.cbl
+        run: |
+          mkdir -p bin
+          cobc -x -Wall -o bin/cuenta.exe cuenta.cbl
+
+      - name: Correr los 5 casos automatizados y comparar contra lo esperado
+        run: |
+          cd bin
+          OK=0
+          FALLO=0
+          for CASO in alta_ok alta_dni_invalido deposito extraccion consulta; do
+            ./cuenta.exe < "../entrada_${CASO}.txt" > "../salida_${CASO}.txt"
+            if diff -q "../esperado_${CASO}.txt" "../salida_${CASO}.txt" > /dev/null; then
+              echo "OK     - ${CASO}"
+              OK=$((OK+1))
+            else
+              echo "FALLO  - ${CASO}"
+              echo "----- diff esperado vs salida (${CASO}) -----"
+              diff "../esperado_${CASO}.txt" "../salida_${CASO}.txt" || true
+              FALLO=$((FALLO+1))
+            fi
+          done
+          echo "=========================================="
+          echo " Resumen: ${OK} OK / ${FALLO} FALLO (de 5)"
+          echo "=========================================="
+          if [ "$FALLO" -gt 0 ]; then
+            exit 1
+          fi
