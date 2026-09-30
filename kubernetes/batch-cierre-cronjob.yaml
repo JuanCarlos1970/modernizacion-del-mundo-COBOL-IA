@@ -1,0 +1,42 @@
+# CronJob que corre BATCH-CIERRE.exe dentro de la imagen "cuenta-cobol"
+# usando el cluster local de Kubernetes (Docker Desktop).
+#
+# Equivalente, en espiritu, a como en un mainframe real este mismo
+# proceso se dispararia via batch_cierre.jcl en un horario programado
+# (ver README.md, seccion "Proceso Batch de Cierre").
+#
+# IMPORTANTE sobre los datos: el contenedor no tiene almacenamiento
+# persistente configurado (mismo motivo que en Docker: ver el doc de
+# Docker, seccion "que pasa con los datos y con GitHub"). Como
+# BATCH-CIERRE.exe abre clientes_v3.dat en modo I-O (necesita que el
+# archivo YA EXISTA), en un contenedor nuevo -sin altas de clientes
+# previas- el programa va a terminar con un error de FILE STATUS
+# esperado (no hay archivo de clientes). Eso demuestra igual que el
+# CronJob se dispara y corre el programa correctamente; para un cierre
+# con datos reales haria falta un volumen persistente compartido con
+# cuenta.exe (fuera del alcance de este mini-proyecto de portfolio).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: batch-cierre
+spec:
+  # Cada 2 minutos, solo para poder ver el resultado rapido en esta
+  # prueba. Para un caso real (cierre nocturno), se usaria algo como
+  # "0 2 * * *" (todos los dias a las 2:00 AM).
+  schedule: "*/2 * * * *"
+  # En pausa (suspend: true) despues de comprobar que funciona, para
+  # no seguir corriendo cada 2 minutos indefinidamente. Para
+  # reactivarlo, cambiar a "suspend: false" y volver a aplicar con
+  # "kubectl apply -f kubernetes\batch-cierre-cronjob.yaml".
+  suspend: true
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: batch-cierre
+              image: cuenta-cobol:latest
+              imagePullPolicy: IfNotPresent
+              workingDir: /app/bin
+              command: ["./BATCH-CIERRE.exe"]
+          restartPolicy: OnFailure
