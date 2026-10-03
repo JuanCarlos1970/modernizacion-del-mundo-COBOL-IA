@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestion de Cuentas Bancarias - COBOL (demo web)</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='xterm.css') }}" />
+  <style>
+    body {
+      background: #1e1e1e;
+      color: #e0e0e0;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: normal;
+      color: #9cdcfe;
+      margin-bottom: 4px;
+    }
+    p.subtitulo {
+      color: #888;
+      font-size: 13px;
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+    #terminal-contenedor {
+      width: 100%;
+      max-width: 900px;
+      height: 500px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gestion de Cuentas Bancarias &mdash; demo COBOL en Azure</h1>
+  <p class="subtitulo">
+    Proyecto de modernizacion de un sistema COBOL bancario, con esta pantalla como
+    capa web sobre el programa original (rehosting / screen scraping).
+    Repositorio: github.com/JuanCarlos1970/modernizacion-del-mundo-COBOL-IA
+  </p>
+
+  <div id="terminal-contenedor"></div>
+
+  <script src="{{ url_for('static', filename='xterm.js') }}"></script>
+  <script src="{{ url_for('static', filename='xterm-addon-fit.js') }}"></script>
+  <script src="{{ url_for('static', filename='socket.io.min.js') }}"></script>
+  <script>
+    // Creamos la terminal visual (xterm.js) que se va a ver en la pagina.
+    const terminal = new Terminal({
+      cursorBlink: true,
+      fontSize: 15,
+      theme: { background: "#1e1e1e" }
+    });
+    const ajuste = new FitAddon.FitAddon();
+    terminal.loadAddon(ajuste);
+    terminal.open(document.getElementById("terminal-contenedor"));
+    ajuste.fit();
+
+    // Nos conectamos al servidor Flask por WebSocket.
+    const socket = io();
+
+    // Cuando el servidor nos manda texto nuevo (lo que imprime el programa COBOL), lo mostramos.
+    socket.on("salida_terminal", (texto) => {
+      terminal.write(texto);
+    });
+
+    socket.on("proceso_terminado", () => {
+      terminal.write("\r\n\r\n[El programa finalizo. Recarga la pagina para iniciar de nuevo.]\r\n");
+    });
+
+    // Cuando el usuario tipea algo en la terminal visual, se lo mandamos al servidor,
+    // que a su vez se lo pasa al programa COBOL como si fuera el teclado real.
+    terminal.onData((dato) => {
+      socket.emit("entrada_terminal", dato);
+    });
+
+    // Avisamos el tamano inicial de la terminal.
+    socket.emit("resize_terminal", { cols: terminal.cols, rows: terminal.rows });
+
+    window.addEventListener("resize", () => {
+      ajuste.fit();
+      socket.emit("resize_terminal", { cols: terminal.cols, rows: terminal.rows });
+    });
+  </script>
+</body>
+</html>
