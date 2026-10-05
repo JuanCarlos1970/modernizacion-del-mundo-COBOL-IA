@@ -133,13 +133,19 @@ Probado con GnuCOBOL 2.0.0 (el que trae OpenCobolIDE): los tres programas compil
 ### Menú principal
 
 ```
-=== CUENTA BANCARIA ===
-1 - Alta de cliente
-2 - Modificar / Baja de cliente
-3 - Deposito
-4 - Extraccion
-5 - Consulta de saldo
-0 - Salir
+  ======================================
+             CUENTA BANCARIA
+  ======================================
+
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+
+     0 - Salir
+
+  Opcion:
 ```
 
 | Opción | Qué hace |
@@ -248,12 +254,17 @@ Se pueden editar **solo tres datos: Dirección, Teléfono y Saldo**. **El nombre
 Se ofrece un **submenú** que se repite hasta elegir "Terminar modificación":
 
 ```
-Que desea modificar?
-1 - Direccion
-2 - Telefono
-3 - Saldo
-4 - Terminar modificacion
-Opcion:
+  ======================================
+           QUE DESEA MODIFICAR?
+  ======================================
+
+     1 - Direccion
+     2 - Telefono
+     3 - Saldo
+
+     4 - Terminar modificacion
+
+  Opcion:
 ```
 
 Ejemplo, modificando dirección y saldo en la misma operación:
@@ -265,20 +276,27 @@ Direccion (hasta 40 caracteres):
 Nueva 456
 Dato modificado.
 
-Que desea modificar?
-1 - Direccion
-2 - Telefono
-3 - Saldo
-4 - Terminar modificacion
-Opcion:
+  ======================================
+           QUE DESEA MODIFICAR?
+  ======================================
+
+     1 - Direccion
+     2 - Telefono
+     3 - Saldo
+
+     4 - Terminar modificacion
+
+  Opcion:
 3
 Nuevo saldo (cero o mayor):
 500
 Dato modificado.
 
-Que desea modificar?
+  ======================================
+           QUE DESEA MODIFICAR?
+  ======================================
 ...
-Opcion:
+  Opcion:
 4
 
 Datos actualizados del cliente:

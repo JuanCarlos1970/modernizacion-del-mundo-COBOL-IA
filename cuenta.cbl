@@ -171,16 +171,23 @@
                WHEN OTHER           DISPLAY "Opcion invalida."
            END-EVALUATE.
 
+      * Solo presentacion: lineas en blanco y sangria con espacios.
+      * Los numeros de opcion (1-5 y 0) no cambian.
        1100-MOSTRAR-MENU.
            DISPLAY " "
-           DISPLAY "=== CUENTA BANCARIA ==="
-           DISPLAY "1 - Alta de cliente"
-           DISPLAY "2 - Modificar / Baja de cliente"
-           DISPLAY "3 - Deposito"
-           DISPLAY "4 - Extraccion"
-           DISPLAY "5 - Consulta de saldo"
-           DISPLAY "0 - Salir"
-           DISPLAY "Opcion:".
+           DISPLAY "  ======================================"
+           DISPLAY "             CUENTA BANCARIA"
+           DISPLAY "  ======================================"
+           DISPLAY " "
+           DISPLAY "     1 - Alta de cliente"
+           DISPLAY "     2 - Modificar / Baja de cliente"
+           DISPLAY "     3 - Deposito"
+           DISPLAY "     4 - Extraccion"
+           DISPLAY "     5 - Consulta de saldo"
+           DISPLAY " "
+           DISPLAY "     0 - Salir"
+           DISPLAY " "
+           DISPLAY "  Opcion:".
 
       ******************************************************************
       * 1 - Alta de cliente (saldo inicial en cero, estado A)
@@ -368,14 +375,20 @@
            DISPLAY "Datos actualizados del cliente:"
            PERFORM 8800-MOSTRAR-CLIENTE.
 
+      * Mismo formato que 1100-MOSTRAR-MENU (solo presentacion).
        6150-MENU-CAMPO.
            DISPLAY " "
-           DISPLAY "Que desea modificar?"
-           DISPLAY "1 - Direccion"
-           DISPLAY "2 - Telefono"
-           DISPLAY "3 - Saldo"
-           DISPLAY "4 - Terminar modificacion"
-           DISPLAY "Opcion:"
+           DISPLAY "  ======================================"
+           DISPLAY "           QUE DESEA MODIFICAR?"
+           DISPLAY "  ======================================"
+           DISPLAY " "
+           DISPLAY "     1 - Direccion"
+           DISPLAY "     2 - Telefono"
+           DISPLAY "     3 - Saldo"
+           DISPLAY " "
+           DISPLAY "     4 - Terminar modificacion"
+           DISPLAY " "
+           DISPLAY "  Opcion:"
            ACCEPT WS-OPC-MOD
            EVALUATE TRUE
                WHEN MOD-DIRECCION
