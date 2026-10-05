@@ -11,8 +11,7 @@
  
      0 - Salir
  
-  Opcion:
-DNI (8 digitos):
+  Opcion: DNI (8 digitos):
 Nombre (hasta 30 caracteres):
 Direccion (hasta 40 caracteres):
 Telefono (hasta 15 caracteres):
@@ -30,8 +29,7 @@ Cliente dado de alta.
  
      0 - Salir
  
-  Opcion:
-DNI (8 digitos):
+  Opcion: DNI (8 digitos):
 Nombre:    Ana Automatizada
 DNI:       80000001
 Direccion: Calle Test 100
@@ -51,5 +49,4 @@ Estado:    A - Activo
  
      0 - Salir
  
-  Opcion:
-Hasta luego.
+  Opcion: Hasta luego.

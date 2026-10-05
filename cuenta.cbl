@@ -187,7 +187,7 @@
            DISPLAY " "
            DISPLAY "     0 - Salir"
            DISPLAY " "
-           DISPLAY "  Opcion:".
+           DISPLAY "  Opcion: " WITH NO ADVANCING.
 
       ******************************************************************
       * 1 - Alta de cliente (saldo inicial en cero, estado A)
@@ -487,10 +487,12 @@
            END-IF.
 
       * Pide un DNI de exactamente 8 digitos.
-      * NOTA: los prompts terminan en salto de linea a proposito. Con
-      * WITH NO ADVANCING el texto puede quedar sin mostrarse mientras
-      * el programa espera en el ACCEPT (stdout redirigido o buffer de
-      * algunas consolas), y parece que el programa se colgo.
+      * NOTA: el prompt "Opcion:" del menu principal usa WITH NO
+      * ADVANCING (probado en la terminal web: Docker, Ubuntu). Los
+      * prompts de datos, como este, mantienen el salto de linea: con
+      * WITH NO ADVANCING el texto podria no mostrarse mientras se
+      * espera el ACCEPT (stdout redirigido o buffer de algunas
+      * consolas), y pareceria que el programa se colgo.
        8100-PEDIR-DNI.
            SET DNI-INVALIDO TO TRUE
            DISPLAY "DNI (8 digitos):"

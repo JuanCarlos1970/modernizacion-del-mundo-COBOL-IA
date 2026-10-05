@@ -11,8 +11,7 @@
  
      0 - Salir
  
-  Opcion:
-DNI (8 digitos):
+  Opcion: DNI (8 digitos):
 DNI invalido: deben ser 8 digitos.
  
   ======================================
@@ -27,8 +26,7 @@ DNI invalido: deben ser 8 digitos.
  
      0 - Salir
  
-  Opcion:
-DNI (8 digitos):
+  Opcion: DNI (8 digitos):
 DNI invalido: deben ser 8 digitos.
  
   ======================================
@@ -43,5 +41,4 @@ DNI invalido: deben ser 8 digitos.
  
      0 - Salir
  
-  Opcion:
-Hasta luego.
+  Opcion: Hasta luego.
