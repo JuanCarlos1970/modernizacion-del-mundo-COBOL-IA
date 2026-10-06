@@ -649,7 +649,7 @@ Aplica tanto a `cuenta.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` (el `COPY`
 - **Alta atómica.** Los campos se validan antes de grabar; si uno falla, no se escribe nada.
 - **Aritmética decimal.** `PIC S9(9)V99` usa decimales exactos (sin errores de punto flotante), lo habitual para dinero en COBOL. `ADD ... ON SIZE ERROR` y `COMPUTE ... ON SIZE ERROR` evitan truncamientos silenciosos.
 - **`FILE STATUS` en todas las operaciones de E/S.** Se distinguen los casos esperados (clave no encontrada, duplicada, archivo inexistente) de los errores reales, que terminan el programa con un mensaje claro.
-- **Prompts y `WITH NO ADVANCING`.** El prompt `Opcion:` del menú principal usa `WITH NO ADVANCING`, así que la opción se tipea en la misma línea; se probó en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y el prompt se ve antes de tipear. Los demás prompts de datos mantienen el formato anterior (terminan en salto de línea), porque fuera de una consola real ese texto podría no mostrarse mientras se espera la entrada (ver [Solución de problemas](#solucion-de-problemas)).
+- **Prompts y `WITH NO ADVANCING`.** Los prompts `Opcion:` del menú principal y del submenú de modificación usan `WITH NO ADVANCING`, así que la opción se tipea en la misma línea; el del menú principal se probó en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y el prompt se ve antes de tipear. Los prompts de datos mantienen el formato anterior (terminan en salto de línea), porque fuera de una consola real ese texto podría no mostrarse mientras se espera la entrada (ver [Solución de problemas](#solucion-de-problemas)).
 - **Archivo con versión en el nombre** (`_v3`), por los cambios de layout (ver «Por qué el archivo se llama `clientes_v3.dat`», en Persistencia).
 
 <a id="proceso-batch-cierre"></a>
@@ -901,7 +901,7 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 <a id="solucion-de-problemas"></a>
 ## Solución de problemas
 
-**Parece colgado después de ingresar un dato (no aparece el siguiente prompt).** Con `DISPLAY "..." WITH NO ADVANCING`, cuando la salida no va a una consola real (por ejemplo el panel de un IDE, o salida redirigida), el texto puede no mostrarse mientras el programa espera en un `ACCEPT`: el programa no está colgado, espera datos que el usuario no sabe que debe ingresar. Por eso los prompts de datos terminan en salto de línea y lo tipeado va en la línea siguiente. La excepción es el prompt `Opcion:` del menú principal, que sí usa `WITH NO ADVANCING`: se probó en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y se ve correctamente antes de tipear.
+**Parece colgado después de ingresar un dato (no aparece el siguiente prompt).** Con `DISPLAY "..." WITH NO ADVANCING`, cuando la salida no va a una consola real (por ejemplo el panel de un IDE, o salida redirigida), el texto puede no mostrarse mientras el programa espera en un `ACCEPT`: el programa no está colgado, espera datos que el usuario no sabe que debe ingresar. Por eso los prompts de datos terminan en salto de línea y lo tipeado va en la línea siguiente. La excepción son los prompts `Opcion:` del menú principal y del submenú de modificación, que sí usan `WITH NO ADVANCING`; el del menú principal se probó en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y se ve correctamente antes de tipear.
 
 **Elegí la opción 2 y me pide un DNI, no `M` o `B`.** Es lo esperado: primero se pide el DNI y se muestran los datos; la pregunta `M`/`B` viene después.
 

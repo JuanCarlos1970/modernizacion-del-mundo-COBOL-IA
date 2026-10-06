@@ -388,7 +388,7 @@
            DISPLAY " "
            DISPLAY "     4 - Terminar modificacion"
            DISPLAY " "
-           DISPLAY "  Opcion:"
+           DISPLAY "  Opcion: " WITH NO ADVANCING
            ACCEPT WS-OPC-MOD
            EVALUATE TRUE
                WHEN MOD-DIRECCION
@@ -487,10 +487,11 @@
            END-IF.
 
       * Pide un DNI de exactamente 8 digitos.
-      * NOTA: el prompt "Opcion:" del menu principal usa WITH NO
-      * ADVANCING (probado en la terminal web: Docker, Ubuntu). Los
-      * prompts de datos, como este, mantienen el salto de linea: con
-      * WITH NO ADVANCING el texto podria no mostrarse mientras se
+      * NOTA: los prompts "Opcion:" del menu principal y del submenu
+      * de modificacion usan WITH NO ADVANCING (el del menu principal
+      * se probo en la terminal web: Docker, Ubuntu). Los prompts de
+      * datos, como este, mantienen el salto de linea: con WITH NO
+      * ADVANCING el texto podria no mostrarse mientras se
       * espera el ACCEPT (stdout redirigido o buffer de algunas
       * consolas), y pareceria que el programa se colgo.
        8100-PEDIR-DNI.
