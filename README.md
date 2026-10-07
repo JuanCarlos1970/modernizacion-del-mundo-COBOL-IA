@@ -270,8 +270,7 @@ Se ofrece un **submenú** que se repite hasta elegir "Terminar modificación":
 Ejemplo, modificando dirección y saldo en la misma operación:
 
 ```
-Opcion:
-1
+  Opcion: 1
 Direccion (hasta 40 caracteres):
 Nueva 456
 Dato modificado.
@@ -286,8 +285,7 @@ Dato modificado.
 
      4 - Terminar modificacion
 
-  Opcion:
-3
+  Opcion: 3
 Nuevo saldo (cero o mayor):
 500
 Dato modificado.
@@ -295,9 +293,14 @@ Dato modificado.
   ======================================
            QUE DESEA MODIFICAR?
   ======================================
-...
-  Opcion:
-4
+
+     1 - Direccion
+     2 - Telefono
+     3 - Saldo
+
+     4 - Terminar modificacion
+
+  Opcion: 4
 
 Datos actualizados del cliente:
 Nombre:    Ana Perez
@@ -325,7 +328,7 @@ La baja es **lógica**: el registro **no se elimina del archivo**, solo se pone 
 
 #### Retorno al menú principal
 
-Tanto la modificación (al elegir `4 - Terminar modificacion`) como la baja y la reactivación terminan mostrando los datos actualizados del cliente y **volviendo directamente al menú principal de 6 líneas** (1-Alta, 2-Modificar/Baja, 3-Depósito, 4-Extracción, 5-Consulta de saldo, 0-Salir). El único submenú que se repite es el de campos a modificar (`1`-`4`), y solo mientras se sigue eligiendo `1`, `2` o `3`; en cuanto se elige `4` no queda ningún submenú abierto.
+Tanto la modificación (al elegir `4 - Terminar modificacion`) como la baja y la reactivación terminan mostrando los datos actualizados del cliente y **volviendo directamente al menú principal de 6 opciones** (1-Alta, 2-Modificar/Baja, 3-Depósito, 4-Extracción, 5-Consulta de saldo, 0-Salir). El único submenú que se repite es el de campos a modificar (`1`-`4`), y solo mientras se sigue eligiendo `1`, `2` o `3`; en cuanto se elige `4` no queda ningún submenú abierto.
 
 ### Depósito y extracción (opciones 3 y 4)
 
@@ -364,11 +367,22 @@ El monto de un depósito/extracción y el saldo nuevo se validan distinto a prop
 
 #### Ejemplo de sesión
 
-Las líneas `1`, `12345678`, `Ana Perez`, etc. son lo que tipea el usuario.
+Lo que tipea el usuario es el número que va al lado de `Opcion:` (en la misma línea) y las líneas `12345678`, `Ana Perez`, etc.
 
 ```
-Opcion:
-1
+  ======================================
+             CUENTA BANCARIA
+  ======================================
+
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+
+     0 - Salir
+
+  Opcion: 1
 DNI (8 digitos):
 12345678
 Nombre (hasta 30 caracteres):
@@ -379,10 +393,11 @@ Telefono (hasta 15 caracteres):
 011 4444-5555
 Cliente dado de alta.
 
-=== CUENTA BANCARIA ===        <- vuelve al menu principal
-...
-Opcion:
-2
+  ======================================      <- vuelve al menu principal
+             CUENTA BANCARIA
+  ======================================
+     (... mismas opciones de arriba ...)
+  Opcion: 2
 DNI (8 digitos):
 12345678
 Nombre:    Ana Perez
@@ -405,18 +420,20 @@ Telefono:  011 4444-5555
 Saldo:                0.00
 Estado:    I - Inactivo
 
-=== CUENTA BANCARIA ===        <- vuelve al menu principal
-...
-Opcion:
-3
+  ======================================      <- vuelve al menu principal
+             CUENTA BANCARIA
+  ======================================
+     (... mismas opciones de arriba ...)
+  Opcion: 3
 DNI (8 digitos):
 12345678
 Cliente inactivo: no se puede operar.
 
-=== CUENTA BANCARIA ===
-...
-Opcion:
-2
+  ======================================      <- vuelve al menu principal
+             CUENTA BANCARIA
+  ======================================
+     (... mismas opciones de arriba ...)
+  Opcion: 2
 DNI (8 digitos):
 12345678
    (... muestra los datos, Estado: I - Inactivo ...)
@@ -432,7 +449,11 @@ Telefono:  011 4444-5555
 Saldo:                0.00
 Estado:    R - Reactivado
 
-=== CUENTA BANCARIA ===        <- vuelve al menu principal
+  ======================================      <- vuelve al menu principal
+             CUENTA BANCARIA
+  ======================================
+     (... mismas opciones de arriba ...)
+  Opcion:
 ```
 
 ### Persistencia
@@ -649,7 +670,7 @@ Aplica tanto a `cuenta.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` (el `COPY`
 - **Alta atómica.** Los campos se validan antes de grabar; si uno falla, no se escribe nada.
 - **Aritmética decimal.** `PIC S9(9)V99` usa decimales exactos (sin errores de punto flotante), lo habitual para dinero en COBOL. `ADD ... ON SIZE ERROR` y `COMPUTE ... ON SIZE ERROR` evitan truncamientos silenciosos.
 - **`FILE STATUS` en todas las operaciones de E/S.** Se distinguen los casos esperados (clave no encontrada, duplicada, archivo inexistente) de los errores reales, que terminan el programa con un mensaje claro.
-- **Prompts y `WITH NO ADVANCING`.** Los prompts `Opcion:` del menú principal y del submenú de modificación usan `WITH NO ADVANCING`, así que la opción se tipea en la misma línea; el del menú principal se probó en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y el prompt se ve antes de tipear. Los prompts de datos mantienen el formato anterior (terminan en salto de línea), porque fuera de una consola real ese texto podría no mostrarse mientras se espera la entrada (ver [Solución de problemas](#solucion-de-problemas)).
+- **Prompts y `WITH NO ADVANCING`.** Los prompts `Opcion:` del menú principal y del submenú de modificación usan `WITH NO ADVANCING`, así que la opción se tipea en la misma línea; los dos se probaron en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y el prompt se ve antes de tipear. Los prompts de datos mantienen el formato anterior (terminan en salto de línea), porque fuera de una consola real ese texto podría no mostrarse mientras se espera la entrada (ver [Solución de problemas](#solucion-de-problemas)).
 - **Archivo con versión en el nombre** (`_v3`), por los cambios de layout (ver «Por qué el archivo se llama `clientes_v3.dat`», en Persistencia).
 
 <a id="proceso-batch-cierre"></a>
@@ -901,7 +922,7 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 <a id="solucion-de-problemas"></a>
 ## Solución de problemas
 
-**Parece colgado después de ingresar un dato (no aparece el siguiente prompt).** Con `DISPLAY "..." WITH NO ADVANCING`, cuando la salida no va a una consola real (por ejemplo el panel de un IDE, o salida redirigida), el texto puede no mostrarse mientras el programa espera en un `ACCEPT`: el programa no está colgado, espera datos que el usuario no sabe que debe ingresar. Por eso los prompts de datos terminan en salto de línea y lo tipeado va en la línea siguiente. La excepción son los prompts `Opcion:` del menú principal y del submenú de modificación, que sí usan `WITH NO ADVANCING`; el del menú principal se probó en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y se ve correctamente antes de tipear.
+**Parece colgado después de ingresar un dato (no aparece el siguiente prompt).** Con `DISPLAY "..." WITH NO ADVANCING`, cuando la salida no va a una consola real (por ejemplo el panel de un IDE, o salida redirigida), el texto puede no mostrarse mientras el programa espera en un `ACCEPT`: el programa no está colgado, espera datos que el usuario no sabe que debe ingresar. Por eso los prompts de datos terminan en salto de línea y lo tipeado va en la línea siguiente. La excepción son los prompts `Opcion:` del menú principal y del submenú de modificación, que sí usan `WITH NO ADVANCING`; los dos se probaron en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y se ven correctamente antes de tipear.
 
 **Elegí la opción 2 y me pide un DNI, no `M` o `B`.** Es lo esperado: primero se pide el DNI y se muestran los datos; la pregunta `M`/`B` viene después.
 
