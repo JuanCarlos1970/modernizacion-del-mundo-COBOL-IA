@@ -1,7 +1,7 @@
 # CLAUDE.md — Reglas de trabajo de este repositorio
 
 Proyecto COBOL (GnuCOBOL) de gestión de cuentas bancarias:
-- `cuenta.cbl`: programa interactivo (menú).
+- `gestion-bancaria.cbl`: programa interactivo (menú).
 - `BATCH-CIERRE.cbl`: proceso batch nocturno de cierre (acredita intereses).
 - `LISTADO-CLIENTES.cbl`: listado de solo lectura.
 - `CLIENTE.cpy`: layout del registro del archivo indexado `clientes_v3.dat`
@@ -18,8 +18,8 @@ trabajo, porque `clientes_v3.dat` se busca en la carpeta desde donde se
 ejecuta el programa. Si se corre desde otro lado, se crea otro
 `clientes_v3.dat` sin ningún aviso.
 
-- Compilar `cuenta.cbl` (Windows):
-  `cobc -x -Wall -o bin\cuenta.exe cuenta.cbl`
+- Compilar `gestion-bancaria.cbl` (Windows):
+  `cobc -x -Wall -o bin\gestion-bancaria.exe gestion-bancaria.cbl`
   Si `cobc` no está en el PATH, los `.bat` usan
   `C:\Program Files (x86)\OpenCobolIDE\GnuCOBOL` automáticamente.
 - Pruebas automáticas (compila + corre + compara con `fc`):
@@ -34,11 +34,11 @@ ejecuta el programa. Si se corre desde otro lado, se crea otro
   que trae los archivos indexados deshabilitados). En CI se compara con
   `diff` en vez de `fc`.
 - Si los `.bat` fallan por el bloqueo de Windows (Device Guard), las
-  pruebas se corren en Docker: `docker build -t cuenta-cobol .` y después
+  pruebas se corren en Docker: `docker build -t gestion-bancaria .` y después
   (desde PowerShell):
-  `docker run --rm cuenta-cobol bash -c 'cd bin && sed -i s/\\r$// ../entrada_*.txt ../esperado_*.txt && FALLO=0 && for C in alta_ok alta_dni_invalido deposito extraccion consulta; do ./cuenta.exe < ../entrada_$C.txt > ../salida_$C.txt; if diff -q ../esperado_$C.txt ../salida_$C.txt > /dev/null; then echo OK - $C; else echo FALLO - $C; FALLO=1; fi; done; exit $FALLO'`
+  `docker run --rm gestion-bancaria bash -c 'cd bin && sed -i s/\\r$// ../entrada_*.txt ../esperado_*.txt && FALLO=0 && for C in alta_ok alta_dni_invalido deposito extraccion consulta; do ./gestion-bancaria.exe < ../entrada_$C.txt > ../salida_$C.txt; if diff -q ../esperado_$C.txt ../salida_$C.txt > /dev/null; then echo OK - $C; else echo FALLO - $C; FALLO=1; fi; done; exit $FALLO'`
   Tienen que salir los 5 en `OK` y código de salida 0. Los casos manuales
-  se corren con `docker run -it --rm cuenta-cobol`.
+  se corren con `docker run -it --rm gestion-bancaria`.
   Detalles de este comando (no "simplificarlo"):
   - El `sed` pasa los `.txt` de CRLF a LF solo dentro del contenedor. Hace
     falta porque con `core.autocrlf=true` la carpeta de Windows tiene CRLF,
@@ -49,12 +49,12 @@ ejecuta el programa. Si se corre desde otro lado, se crea otro
   - Con `--rm`, los `salida_*.txt` quedan dentro del contenedor y se
     borran al terminar; el resultado se ve en pantalla.
 
-Si una salida queda en 0 bytes, no es un bug de `cuenta.cbl`: falta el
+Si una salida queda en 0 bytes, no es un bug de `gestion-bancaria.cbl`: falta el
 runtime de GnuCOBOL en el PATH (ver README, "Solución de problemas").
-No correr `cuenta.exe` y el batch al mismo tiempo sobre el mismo
+No correr `gestion-bancaria.exe` y el batch al mismo tiempo sobre el mismo
 `clientes_v3.dat`.
 
-## Regla 1 — Después de cualquier cambio en `cuenta.cbl`
+## Regla 1 — Después de cualquier cambio en `gestion-bancaria.cbl`
 
 Recompilar y correr los 12 casos de `CASOS_DE_PRUEBA.md`:
 
@@ -62,7 +62,7 @@ Recompilar y correr los 12 casos de `CASOS_DE_PRUEBA.md`:
   `cmd /c correr_pruebas_automatizadas.bat`. Tiene que decir
   `Resumen: 5 OK / 0 FALLO (de 5)`.
 - 7 manuales (CP-05, CP-07, CP-08, CP-09, CP-10, CP-11 y CP-12):
-  seguir los pasos de la matriz, ejecutando `cuenta.exe` desde `bin\`.
+  seguir los pasos de la matriz, ejecutando `gestion-bancaria.exe` desde `bin\`.
   CP-12 incluye correr `correr_batch_cierre.bat` y revisar
   `bin\reporte_cierre.txt` (interés de 50,00 sobre 10.000,00 con la
   tasa por defecto de 0,50%).

@@ -1,19 +1,21 @@
       ******************************************************************
       * COPYBOOK    : CLIENTE
       * DESCRIPCION : Layout del registro de cliente del archivo
-      *               indexado clientes_v3.dat. Lo comparten CUENTA
-      *               (programa interactivo) y BATCH-CIERRE (proceso
-      *               batch nocturno) para garantizar que ambos leen
-      *               y escriben el archivo con el MISMO formato.
+      *               indexado clientes_v3.dat. Lo comparten
+      *               GESTION-BANCARIA (programa interactivo) y
+      *               BATCH-CIERRE (proceso batch nocturno) para
+      *               garantizar que ambos leen y escriben el
+      *               archivo con el MISMO formato.
       * USO         : Se incluye con "COPY CLIENTE." inmediatamente
       *               despues de la clausula FD del archivo, en cada
       *               programa que lo necesite.
       * ADVERTENCIA : Si se cambia este layout, hay que recompilar
-      *               TODOS los programas que lo incluyen (CUENTA y
-      *               BATCH-CIERRE) y, salvo que el cambio agregue
-      *               campos al final sin correr los existentes,
-      *               cambiar tambien el nombre del archivo de datos
-      *               (ver la nota de versionado en cuenta.cbl).
+      *               TODOS los programas que lo incluyen
+      *               (GESTION-BANCARIA y BATCH-CIERRE) y, salvo que
+      *               el cambio agregue campos al final sin correr
+      *               los existentes, cambiar tambien el nombre del
+      *               archivo de datos (ver la nota de versionado en
+      *               gestion-bancaria.cbl).
       ******************************************************************
        01  REG-CLIENTE.
            05  CLI-DNI             PIC 9(8).

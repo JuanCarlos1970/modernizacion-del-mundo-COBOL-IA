@@ -1,5 +1,5 @@
       ******************************************************************
-      * PROGRAMA    : CUENTA
+      * PROGRAMA    : GESTION-BANCARIA
       * DESCRIPCION : Gestion simple de cuentas bancarias.
       *               Alta, modificacion y baja logica de clientes,
       *               deposito, extraccion y consulta de saldo,
@@ -14,7 +14,7 @@
       *               cliente inactivo se puede reactivar (estado R).
       ******************************************************************
        IDENTIFICATION DIVISION.
-       PROGRAM-ID. CUENTA.
+       PROGRAM-ID. GESTION-BANCARIA.
 
        ENVIRONMENT DIVISION.
        CONFIGURATION SECTION.

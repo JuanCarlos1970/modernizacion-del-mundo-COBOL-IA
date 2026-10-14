@@ -17,7 +17,7 @@ rem  correr_batch_cierre.bat, que si actualiza saldos).
 rem
 rem  IMPORTANTE: el .exe se compila DENTRO de bin\ y se ejecuta ahi
 rem  mismo, para que lea siempre bin\clientes_v3.dat (el mismo
-rem  archivo que usan cuenta.exe y BATCH-CIERRE.exe), en vez de
+rem  archivo que usan gestion-bancaria.exe y BATCH-CIERRE.exe), en vez de
 rem  crear/leer un clientes_v3.dat aparte en esta carpeta. listado_
 rem  clientes.txt tambien queda en bin\. Ver README.md, seccion
 rem  "Dónde vive clientes_v3.dat".

@@ -2,7 +2,8 @@
       * PROGRAMA    : BATCH-CIERRE
       * DESCRIPCION : Proceso batch de cierre de la cartera de
       *               clientes. Recorre TODO clientes_v3.dat (el
-      *               mismo archivo indexado que usa CUENTA) y, para
+      *               mismo archivo indexado que usa
+      *               GESTION-BANCARIA) y, para
       *               cada cliente Activo (A) o Reactivado (R),
       *               acredita un interes simple mensual sobre su
       *               saldo. Los clientes Inactivos (I) se excluyen
@@ -13,8 +14,9 @@
       * FECHA       : 2026-09-22
       * USO         : Pensado para correrse fuera del horario de
       *               atencion (cierre nocturno), NUNCA al mismo
-      *               tiempo que CUENTA sobre el mismo archivo (ver
-      *               README.md, seccion "Proceso Batch de Cierre").
+      *               tiempo que GESTION-BANCARIA sobre el mismo
+      *               archivo (ver README.md, seccion "Proceso
+      *               Batch de Cierre").
       * EJECUCION   : correr_batch_cierre.bat (compila y ejecuta).
       *               batch_cierre.jcl documenta el equivalente en
       *               un mainframe z/OS real.
@@ -29,9 +31,9 @@
 
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
-      * Mismo archivo fisico que usa CUENTA. Acceso SEQUENTIAL: el
-      * cierre recorre todos los registros en orden de clave (DNI),
-      * no busca clientes puntuales.
+      * Mismo archivo fisico que usa GESTION-BANCARIA. Acceso
+      * SEQUENTIAL: el cierre recorre todos los registros en orden de
+      * clave (DNI), no busca clientes puntuales.
            SELECT ARCH-CLIENTES ASSIGN TO "clientes_v3.dat"
                ORGANIZATION IS INDEXED
                ACCESS MODE IS SEQUENTIAL
@@ -45,8 +47,9 @@
        DATA DIVISION.
        FILE SECTION.
        FD  ARCH-CLIENTES.
-      * Mismo layout que usa CUENTA (ver CLIENTE.cpy). Ambos
-      * programas se recompilan siempre juntos si el layout cambia.
+      * Mismo layout que usa GESTION-BANCARIA (ver CLIENTE.cpy).
+      * Ambos programas se recompilan siempre juntos si el layout
+      * cambia.
            COPY CLIENTE.
 
        FD  ARCH-REPORTE.

@@ -1,4 +1,4 @@
-# CronJob que corre BATCH-CIERRE.exe dentro de la imagen "cuenta-cobol"
+# CronJob que corre BATCH-CIERRE.exe dentro de la imagen "gestion-bancaria"
 # usando el cluster local de Kubernetes (Docker Desktop).
 #
 # Equivalente, en espiritu, a como en un mainframe real este mismo
@@ -14,7 +14,7 @@
 # esperado (no hay archivo de clientes). Eso demuestra igual que el
 # CronJob se dispara y corre el programa correctamente; para un cierre
 # con datos reales haria falta un volumen persistente compartido con
-# cuenta.exe (fuera del alcance de este mini-proyecto de portfolio).
+# gestion-bancaria.exe (fuera del alcance de este mini-proyecto de portfolio).
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -35,7 +35,7 @@ spec:
         spec:
           containers:
             - name: batch-cierre
-              image: cuenta-cobol:latest
+              image: gestion-bancaria:latest
               imagePullPolicy: IfNotPresent
               workingDir: /app/bin
               command: ["./BATCH-CIERRE.exe"]

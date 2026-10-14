@@ -16,7 +16,7 @@ rem  de Cierre" de README.md).
 rem
 rem  IMPORTANTE: el .exe se compila DENTRO de bin\ y se ejecuta ahi
 rem  mismo, para que trabaje siempre sobre bin\clientes_v3.dat (el
-rem  mismo archivo que usan cuenta.exe y LISTADO-CLIENTES.exe), en
+rem  mismo archivo que usan gestion-bancaria.exe y LISTADO-CLIENTES.exe), en
 rem  vez de crear un clientes_v3.dat aparte en esta carpeta. reporte_
 rem  cierre.txt tambien queda en bin\. Ver README.md, seccion
 rem  "Dónde vive clientes_v3.dat".
@@ -25,7 +25,7 @@ rem  Requisitos: GnuCOBOL (cobc) instalado. Si "cobc" no esta en el
 rem  PATH, este script intenta usar la instalacion de OpenCobolIDE
 rem  detectada en esta maquina (ajustar GNUCOBOL_DIR si no aplica).
 rem
-rem  IMPORTANTE: no correr este script mientras cuenta.exe esta
+rem  IMPORTANTE: no correr este script mientras gestion-bancaria.exe esta
 rem  abierto sobre el mismo clientes_v3.dat (ver limitacion de
 rem  acceso concurrente en README.md).
 rem =================================================================

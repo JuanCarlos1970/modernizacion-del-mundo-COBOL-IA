@@ -79,7 +79,7 @@
 //*   un turno de mantenimiento o un mecanismo de serializacion
 //*   (ENQ/DEQ, RLS) para evitar que otra aplicacion lo toque al
 //*   mismo tiempo (ver la nota de acceso concurrente en README.md,
-//*   que aplica igual en el entorno local con cuenta.exe).
+//*   que aplica igual en el entorno local con gestion-bancaria.exe).
 //*   El SELECT del programa asociaria este DD con el archivo por
 //*   su nombre logico (ARCH-CLIENTES), igual que ASSIGN TO
 //*   "clientes_v3.dat" lo hace en GnuCOBOL.

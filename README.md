@@ -5,14 +5,14 @@
 
 Este proyecto fue desarrollado con **[Claude Code](https://claude.com/claude-code)** (el asistente de inteligencia artificial de Anthropic para tareas de ingeniería de software), bajo la dirección de un analista con experiencia real en sistemas bancarios.
 
-Es una demostración práctica de cómo la IA puede acelerar el análisis, el desarrollo y la modernización de sistemas legacy en COBOL: partiendo de un programa mínimo de alta/depósito/extracción/consulta, se fue iterando —siempre con revisión humana en cada paso— hasta llegar a un sistema con estados de cliente, baja lógica y reactivación, un proceso batch de cierre con acreditación de interés, un programa de consulta de solo lectura, documentación de referencia de cómo correría el mismo batch en un mainframe z/OS real (JCL), una matriz de casos de prueba, y pruebas semi-automatizadas. En el camino se encontró y se corrigió, con evidencia reproducible, un bug real de generación de código del compilador GnuCOBOL 2.0 (ver [Programa interactivo: cuenta.cbl](#programa-cuenta)).
+Es una demostración práctica de cómo la IA puede acelerar el análisis, el desarrollo y la modernización de sistemas legacy en COBOL: partiendo de un programa mínimo de alta/depósito/extracción/consulta, se fue iterando —siempre con revisión humana en cada paso— hasta llegar a un sistema con estados de cliente, baja lógica y reactivación, un proceso batch de cierre con acreditación de interés, un programa de consulta de solo lectura, documentación de referencia de cómo correría el mismo batch en un mainframe z/OS real (JCL), una matriz de casos de prueba, y pruebas semi-automatizadas. En el camino se encontró y se corrigió, con evidencia reproducible, un bug real de generación de código del compilador GnuCOBOL 2.0 (ver [Programa interactivo: gestion-bancaria.cbl](#programa-gestion-bancaria)).
 
 El código, la arquitectura y cada decisión de diseño fueron guiados y revisados por el autor; la IA se usó como herramienta de productividad para escribir, probar y documentar más rápido — no como reemplazo del criterio profesional.
 
 <a id="descripcion-general"></a>
 ## Descripción general
 
-`cuenta.cbl` es un programa COBOL interactivo (consola) para gestionar clientes y saldos de una cuenta bancaria simple. Es un ejemplo didáctico, pensado para mostrar patrones típicos de un sistema bancario legacy: archivos indexados, procesos batch nocturnos, y las decisiones de diseño (y las limitaciones) que eso implica.
+`gestion-bancaria.cbl` es un programa COBOL interactivo (consola) para gestionar clientes y saldos de una cuenta bancaria simple. Es un ejemplo didáctico, pensado para mostrar patrones típicos de un sistema bancario legacy: archivos indexados, procesos batch nocturnos, y las decisiones de diseño (y las limitaciones) que eso implica.
 
 Funciones del programa interactivo: **alta**, **modificación**, **baja lógica** y **reactivación** de clientes; **depósito**, **extracción** y **consulta de saldo**. Cada cliente tiene DNI, nombre, dirección, teléfono, saldo y **estado** (Activo / Inactivo / Reactivado). Los datos se guardan en un **archivo indexado** (`clientes_v3.dat`, clave = DNI) y sobreviven al cerrar y reabrir el programa.
 
@@ -29,7 +29,7 @@ Además del programa interactivo, el proyecto incluye:
 - [Requisitos previos](#requisitos-previos)
 - [Estructura de archivos](#estructura-de-archivos)
 - [Compilación y ejecución](#compilacion-y-ejecucion)
-- [Programa interactivo: cuenta.cbl](#programa-cuenta)
+- [Programa interactivo: gestion-bancaria.cbl](#programa-gestion-bancaria)
 - [Proceso batch de cierre: BATCH-CIERRE.cbl](#proceso-batch-cierre)
 - [Listado de clientes (solo lectura): LISTADO-CLIENTES.cbl](#listado-clientes)
 - [Testing](#testing)
@@ -51,13 +51,13 @@ Además del programa interactivo, el proyecto incluye:
 
 | Archivo | Descripción |
 |---------|-------------|
-| `cuenta.cbl` | Programa interactivo (código fuente, formato fijo COBOL) — ver [Programa interactivo: cuenta.cbl](#programa-cuenta) |
+| `gestion-bancaria.cbl` | Programa interactivo (código fuente, formato fijo COBOL) — ver [Programa interactivo: gestion-bancaria.cbl](#programa-gestion-bancaria) |
 | `BATCH-CIERRE.cbl` | Proceso batch de cierre: acredita interés mensual — ver [Proceso batch de cierre](#proceso-batch-cierre) |
 | `LISTADO-CLIENTES.cbl` | Listado de consulta de **solo lectura**: no modifica datos — ver [Listado de clientes (solo lectura)](#listado-clientes) |
 | `CLIENTE.cpy` | Copybook con el layout del registro de cliente, compartido por los tres programas de arriba |
 | `correr_batch_cierre.bat` | Compila `BATCH-CIERRE.cbl` en `bin\` y lo ejecuta ahí |
 | `ver_listado_clientes.bat` | Compila `LISTADO-CLIENTES.cbl` en `bin\` y lo ejecuta ahí |
-| `correr_pruebas_automatizadas.bat` | Compila `cuenta.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados — ver [Testing](#testing) |
+| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados — ver [Testing](#testing) |
 | `batch_cierre.jcl` | JCL de **referencia/documentación**: cómo correría el mismo cierre en un mainframe z/OS real (no se ejecuta en este entorno) |
 | `README.md` | Esta documentación |
 | `CASOS_DE_PRUEBA.md` | Matriz de casos de prueba (QA) — ver [Testing](#testing) |
@@ -69,17 +69,17 @@ Además del programa interactivo, el proyecto incluye:
 
 | Archivo (en `bin\`) | Descripción |
 |----------------------|-------------|
-| `cuenta.exe` | Ejecutable de `cuenta.cbl` |
+| `gestion-bancaria.exe` | Ejecutable de `gestion-bancaria.cbl` |
 | `BATCH-CIERRE.exe` | Ejecutable de `BATCH-CIERRE.cbl` |
 | `LISTADO-CLIENTES.exe` | Ejecutable de `LISTADO-CLIENTES.cbl` |
-| `clientes_v3.dat` | Archivo de datos indexado, compartido por los tres programas. **Se crea solo** en la primera ejecución de `cuenta.cbl` |
+| `clientes_v3.dat` | Archivo de datos indexado, compartido por los tres programas. **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl` |
 | `reporte_cierre.txt` | Reporte del cierre, generado por `BATCH-CIERRE.cbl` en cada corrida |
 | `listado_clientes.txt` | Listado de clientes, generado por `LISTADO-CLIENTES.cbl` en cada corrida |
 
 <a id="compilacion-y-ejecucion"></a>
 ## Compilación y ejecución
 
-Escrito en COBOL de formato fijo. Los tres programas (`cuenta.cbl`, `BATCH-CIERRE.cbl`, `LISTADO-CLIENTES.cbl`) incluyen el layout del cliente con `COPY CLIENTE.`, así que **`CLIENTE.cpy` tiene que estar en la misma carpeta que el `.cbl`** al compilar cualquiera de los tres (no hace falta copiarlo a `bin\`: `cobc` lo busca junto al código fuente).
+Escrito en COBOL de formato fijo. Los tres programas (`gestion-bancaria.cbl`, `BATCH-CIERRE.cbl`, `LISTADO-CLIENTES.cbl`) incluyen el layout del cliente con `COPY CLIENTE.`, así que **`CLIENTE.cpy` tiene que estar en la misma carpeta que el `.cbl`** al compilar cualquiera de los tres (no hace falta copiarlo a `bin\`: `cobc` lo busca junto al código fuente).
 
 ### Dónde vive `clientes_v3.dat`
 
@@ -98,15 +98,15 @@ ver_listado_clientes.bat           REM idem
 correr_pruebas_automatizadas.bat   REM idem, para los 5 casos semi-automatizados
 ```
 
-Los tres compilan el `.exe` directamente en `bin\` y lo ejecutan desde ahí, así que siempre apuntan a `bin\clientes_v3.dat`. `cuenta.cbl`, al no tener un `.bat` propio (es el programa de uso diario, pensado para dejarse abierto en el menú), hay que compilarlo y correrlo apuntando a `bin\` a mano (ver abajo) — o, más simple, usar OpenCobolIDE, que ya compila y corre con `bin\` como carpeta de trabajo por convención.
+Los tres compilan el `.exe` directamente en `bin\` y lo ejecutan desde ahí, así que siempre apuntan a `bin\clientes_v3.dat`. `gestion-bancaria.cbl`, al no tener un `.bat` propio (es el programa de uso diario, pensado para dejarse abierto en el menú), hay que compilarlo y correrlo apuntando a `bin\` a mano (ver abajo) — o, más simple, usar OpenCobolIDE, que ya compila y corre con `bin\` como carpeta de trabajo por convención.
 
 ### Compilar a mano
 
 Para compilar apuntando siempre a `bin\`:
 
 ```bash
-cobc -x -Wall -o bin/cuenta cuenta.cbl                        # programa interactivo
-cd bin && ./cuenta                                            # Windows: bin\cuenta.exe
+cobc -x -Wall -o bin/gestion-bancaria gestion-bancaria.cbl    # programa interactivo
+cd bin && ./gestion-bancaria                                  # Windows: bin\gestion-bancaria.exe
 
 cobc -x -Wall -o bin/BATCH-CIERRE BATCH-CIERRE.cbl            # batch de cierre
 cd bin && ./BATCH-CIERRE                                      # Windows: bin\BATCH-CIERRE.exe
@@ -115,7 +115,7 @@ cobc -x -Wall -o bin/LISTADO-CLIENTES LISTADO-CLIENTES.cbl    # listado (solo le
 cd bin && ./LISTADO-CLIENTES                                  # Windows: bin\LISTADO-CLIENTES.exe
 ```
 
-**Importante:** el `-o bin/programa` solo dice dónde queda el `.exe`; para que el programa *use* `bin\clientes_v3.dat` hay que **ejecutarlo con `bin\` como directorio de trabajo** (por eso el `cd bin` antes de correrlo). Compilar con `-o bin\cuenta.exe` pero correrlo desde la raíz (`bin\cuenta.exe` sin más) no alcanza: el archivo de datos se buscaría igual en la raíz.
+**Importante:** el `-o bin/programa` solo dice dónde queda el `.exe`; para que el programa *use* `bin\clientes_v3.dat` hay que **ejecutarlo con `bin\` como directorio de trabajo** (por eso el `cd bin` antes de correrlo). Compilar con `-o bin\gestion-bancaria.exe` pero correrlo desde la raíz (`bin\gestion-bancaria.exe` sin más) no alcanza: el archivo de datos se buscaría igual en la raíz.
 
 En Windows, `correr_batch_cierre.bat` y `ver_listado_clientes.bat` hacen cada uno su bloque (compilar en `bin\` y ejecutar ahí) en un solo paso; no hace falta escribir estos comandos a mano para esos dos programas.
 
@@ -123,12 +123,12 @@ En Windows, `correr_batch_cierre.bat` y `ver_listado_clientes.bat` hacen cada un
 
 Probado con GnuCOBOL 2.0.0 (el que trae OpenCobolIDE): los tres programas compilan con `-Wall` sin errores ni warnings.
 
-- **`cuenta.cbl`:** todas las opciones del menú, cada validación, el ciclo completo de estados (alta → baja → reactivación → baja), la restricción a clientes inactivos, el retorno al menú principal, la persistencia entre ejecuciones y el manejo de un archivo de datos corrupto.
-- **`BATCH-CIERRE.cbl`:** el cálculo de interés sobre clientes Activos y Reactivados, la exclusión de Inactivos, el archivo de clientes inexistente (cartera vacía), y que `cuenta.cbl` sigue leyendo y escribiendo `clientes_v3.dat` correctamente después de una corrida del batch.
+- **`gestion-bancaria.cbl`:** todas las opciones del menú, cada validación, el ciclo completo de estados (alta → baja → reactivación → baja), la restricción a clientes inactivos, el retorno al menú principal, la persistencia entre ejecuciones y el manejo de un archivo de datos corrupto.
+- **`BATCH-CIERRE.cbl`:** el cálculo de interés sobre clientes Activos y Reactivados, la exclusión de Inactivos, el archivo de clientes inexistente (cartera vacía), y que `gestion-bancaria.cbl` sigue leyendo y escribiendo `clientes_v3.dat` correctamente después de una corrida del batch.
 - **`LISTADO-CLIENTES.cbl`:** las tres secciones con una cartera mixta (Activos, Reactivados e Inactivos), el archivo inexistente (cartera vacía), que la pantalla y `listado_clientes.txt` muestran exactamente el mismo contenido, y —con un hash del archivo antes y después de correrlo— que `clientes_v3.dat` queda **byte a byte idéntico**.
 
-<a id="programa-cuenta"></a>
-## Programa interactivo: cuenta.cbl
+<a id="programa-gestion-bancaria"></a>
+## Programa interactivo: gestion-bancaria.cbl
 
 ### Menú principal
 
@@ -527,7 +527,7 @@ Todo `FILE STATUS` inesperado pasa por `9000-ERROR-ARCHIVO`, que muestra la oper
 
 #### Divisiones
 
-- **IDENTIFICATION DIVISION**: nombre del programa (`CUENTA`). Es lo único obligatorio. `AUTHOR` y `DATE-WRITTEN` están obsoletas (GnuCOBOL emite warning), por eso autor y fecha figuran en el comentario de cabecera.
+- **IDENTIFICATION DIVISION**: nombre del programa (`GESTION-BANCARIA`). Es lo único obligatorio. `AUTHOR` y `DATE-WRITTEN` están obsoletas (GnuCOBOL emite warning), por eso autor y fecha figuran en el comentario de cabecera.
 - **ENVIRONMENT DIVISION**:
   - `SPECIAL-NAMES`: define la clase `CLASE-TELEFONO` (dígitos, `+`, `-`, `(`, `)` y espacio), usada para validar el teléfono con `IS NOT CLASE-TELEFONO`.
   - `INPUT-OUTPUT SECTION` / `FILE-CONTROL`: asocia `ARCH-CLIENTES` con `clientes_v3.dat` (indexado, clave `CLI-DNI`).
@@ -642,7 +642,7 @@ Numeración de párrafos: 0xxx apertura/cierre, 1xxx menú, 2xxx–7xxx procesos
 
 #### Formato fijo: recordatorio de columnas
 
-Aplica tanto a `cuenta.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` (el `COPY` inserta el copybook tal cual, columna por columna, en el punto donde aparece `COPY CLIENTE.`).
+Aplica tanto a `gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` (el `COPY` inserta el copybook tal cual, columna por columna, en el punto donde aparece `COPY CLIENTE.`).
 
 | Columnas | Contenido |
 |----------|-----------|
@@ -676,7 +676,7 @@ Aplica tanto a `cuenta.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` (el `COPY`
 <a id="proceso-batch-cierre"></a>
 ## Proceso batch de cierre: BATCH-CIERRE.cbl
 
-`BATCH-CIERRE.cbl` es un programa COBOL **separado** de `cuenta.cbl` (no interactivo, sin menú) que recorre toda la cartera de clientes y acredita el interés mensual de las cuentas habilitadas para operar. Representa el tipo de proceso batch nocturno típico de un sistema bancario: correrlo es la forma de "cerrar el día" y actualizar los saldos con el interés devengado.
+`BATCH-CIERRE.cbl` es un programa COBOL **separado** de `gestion-bancaria.cbl` (no interactivo, sin menú) que recorre toda la cartera de clientes y acredita el interés mensual de las cuentas habilitadas para operar. Representa el tipo de proceso batch nocturno típico de un sistema bancario: correrlo es la forma de "cerrar el día" y actualizar los saldos con el interés devengado.
 
 ### Regla de negocio
 
@@ -696,7 +696,7 @@ La tasa está en `WORKING-STORAGE`, en `WS-TASA-INTERES`, con valor inicial **0,
 
 Si sumar el interés desbordara el campo del saldo (caso extremo, saldo ya cercano al máximo representable), ese cliente se deja sin cambios, se avisa por pantalla y se cuenta aparte (`Clientes con error o estado desconocido`); no se pierde el resto del cierre por un único registro.
 
-> **Nota técnica (para quien modifique `1200-ACREDITAR-INTERES`):** ese control de desborde usa un indicador propio (`WS-INTERES-OK`) y un `IF` después del `ADD`, en vez de poner la lógica directamente dentro de `ON SIZE ERROR` / `NOT ON SIZE ERROR`. Se probó así al principio y **GnuCOBOL 2.0 genera código incorrecto** cuando una sentencia aritmética (por ejemplo, otro `ADD`) queda dentro de la rama `ON SIZE ERROR` de un `ADD ... NOT ON SIZE ERROR`: la rama `NOT ON SIZE ERROR` (y todo lo que sigue en el párrafo) se salteaba en silencio incluso cuando no había ningún error. Se confirmó con un programa mínimo de 13 líneas que aísla el problema. `cuenta.cbl` no lo sufre porque su único `ON SIZE ERROR` (en el depósito) solo tiene un `DISPLAY`, sin aritmética adentro.
+> **Nota técnica (para quien modifique `1200-ACREDITAR-INTERES`):** ese control de desborde usa un indicador propio (`WS-INTERES-OK`) y un `IF` después del `ADD`, en vez de poner la lógica directamente dentro de `ON SIZE ERROR` / `NOT ON SIZE ERROR`. Se probó así al principio y **GnuCOBOL 2.0 genera código incorrecto** cuando una sentencia aritmética (por ejemplo, otro `ADD`) queda dentro de la rama `ON SIZE ERROR` de un `ADD ... NOT ON SIZE ERROR`: la rama `NOT ON SIZE ERROR` (y todo lo que sigue en el párrafo) se salteaba en silencio incluso cuando no había ningún error. Se confirmó con un programa mínimo de 13 líneas que aísla el problema. `gestion-bancaria.cbl` no lo sufre porque su único `ON SIZE ERROR` (en el depósito) solo tiene un `DISPLAY`, sin aritmética adentro.
 
 ### Cómo ejecutarlo localmente
 
@@ -718,7 +718,7 @@ Archivo de texto (secuencial, se sobreescribe en cada corrida) con, en este orde
 1. **Fecha del proceso**, tomada de `FUNCTION CURRENT-DATE`, en formato `DD/MM/AAAA`.
 2. **Detalle de clientes procesados** (uno por línea, solo los `A`/`R`): DNI, nombre, saldo anterior, interés acreditado y saldo nuevo. Si no hay ninguno, dice explícitamente que no había clientes activos ni reactivados para procesar.
 3. **Detalle de clientes Inactivos** (sin movimiento): DNI, nombre y saldo de cada cliente con estado `I`, sin columnas de interés ni saldo nuevo, porque no se les calcula nada. Si no hay ninguno, dice explícitamente que no hay clientes inactivos.
-4. **Resumen final**: cantidad de clientes procesados (A/R), cantidad de inactivos excluidos, total de intereses acreditados y **saldo total de la cartera**, que suma los saldos de **todos** los clientes después del cierre —activos, reactivados e inactivos—, aunque a los inactivos no se les haya acreditado interés. (En la práctica, un cliente inactivo siempre tiene saldo 0, porque `cuenta.cbl` no permite dar de baja con saldo distinto de cero; pero el total se calcula sumando a todos igual, por las dudas.)
+4. **Resumen final**: cantidad de clientes procesados (A/R), cantidad de inactivos excluidos, total de intereses acreditados y **saldo total de la cartera**, que suma los saldos de **todos** los clientes después del cierre —activos, reactivados e inactivos—, aunque a los inactivos no se les haya acreditado interés. (En la práctica, un cliente inactivo siempre tiene saldo 0, porque `gestion-bancaria.cbl` no permite dar de baja con saldo distinto de cero; pero el total se calcula sumando a todos igual, por las dudas.)
 
 Ejemplo:
 
@@ -757,7 +757,7 @@ El programa también muestra por pantalla un resumen breve equivalente, confirma
 
 ### El copybook CLIENTE.cpy
 
-`cuenta.cbl` y `BATCH-CIERRE.cbl` incluyen el layout del registro de cliente con `COPY CLIENTE.` en vez de declararlo cada uno por su cuenta, para que sea imposible que se desincronicen y terminen leyendo/escribiendo `clientes_v3.dat` con formatos distintos. **Los dos programas se recompilan siempre juntos** cuando cambia `CLIENTE.cpy`. Ver la tabla «Registro» y la nota «Por qué el archivo se llama `clientes_v3.dat`», en [Persistencia](#programa-cuenta), que siguen aplicando igual.
+`gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` incluyen el layout del registro de cliente con `COPY CLIENTE.` en vez de declararlo cada uno por su cuenta, para que sea imposible que se desincronicen y terminen leyendo/escribiendo `clientes_v3.dat` con formatos distintos. **Los dos programas se recompilan siempre juntos** cuando cambia `CLIENTE.cpy`. Ver la tabla «Registro» y la nota «Por qué el archivo se llama `clientes_v3.dat`», en [Persistencia](#programa-gestion-bancaria), que siguen aplicando igual.
 
 ### El JCL de referencia (`batch_cierre.jcl`)
 
@@ -765,25 +765,25 @@ El programa también muestra por pantalla un resumen breve equivalente, confirma
 
 En este entorno de desarrollo local, el equivalente funcional de ese JCL es `correr_batch_cierre.bat`.
 
-### ⚠ No correr `cuenta.exe` y el batch al mismo tiempo
+### ⚠ No correr `gestion-bancaria.exe` y el batch al mismo tiempo
 
-**`cuenta.cbl` y `BATCH-CIERRE.cbl` no deben ejecutarse simultáneamente sobre el mismo `clientes_v3.dat`.** Ninguno de los dos programas implementa bloqueo de registros ni control de concurrencia (ver [Limitaciones y mejoras futuras](#limitaciones-y-mejoras)), así que correrlos al mismo tiempo puede producir:
+**`gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` no deben ejecutarse simultáneamente sobre el mismo `clientes_v3.dat`.** Ninguno de los dos programas implementa bloqueo de registros ni control de concurrencia (ver [Limitaciones y mejoras futuras](#limitaciones-y-mejoras)), así que correrlos al mismo tiempo puede producir:
 
 - un `FILE STATUS` de "archivo en uso" (`61`) al intentar abrir el segundo programa,
 - una condición de carrera si ambos leen y graban el mismo cliente casi a la vez, con el riesgo de que una de las dos escrituras se pierda.
 
-Es el mismo comportamiento que tendría este proceso en un entorno de producción real: un cierre nocturno corre con el sistema transaccional (acá, `cuenta.cbl`) fuera de línea o en una ventana de mantenimiento, nunca en simultáneo. En este entorno local, la forma práctica de respetarlo es simplemente no tener `cuenta.exe` abierto (esperando en el menú) mientras se corre `correr_batch_cierre.bat`, y viceversa. Esto vale para las **dos** pasadas que hace el batch sobre el archivo, no solo para la primera.
+Es el mismo comportamiento que tendría este proceso en un entorno de producción real: un cierre nocturno corre con el sistema transaccional (acá, `gestion-bancaria.cbl`) fuera de línea o en una ventana de mantenimiento, nunca en simultáneo. En este entorno local, la forma práctica de respetarlo es simplemente no tener `gestion-bancaria.exe` abierto (esperando en el menú) mientras se corre `correr_batch_cierre.bat`, y viceversa. Esto vale para las **dos** pasadas que hace el batch sobre el archivo, no solo para la primera.
 
 <a id="listado-clientes"></a>
 ## Listado de clientes (solo lectura): LISTADO-CLIENTES.cbl
 
-`LISTADO-CLIENTES.cbl` es un tercer programa, también separado de `cuenta.cbl` y de `BATCH-CIERRE.cbl`, para **consultar** la cartera completa sin operar sobre ella. A diferencia del batch de cierre, **este programa nunca modifica nada**: no acredita interés, no cambia estados, no toca saldos.
+`LISTADO-CLIENTES.cbl` es un tercer programa, también separado de `gestion-bancaria.cbl` y de `BATCH-CIERRE.cbl`, para **consultar** la cartera completa sin operar sobre ella. A diferencia del batch de cierre, **este programa nunca modifica nada**: no acredita interés, no cambia estados, no toca saldos.
 
 ### Por qué es seguro correrlo en cualquier momento
 
 - Abre `clientes_v3.dat` únicamente con `OPEN INPUT` (solo lectura). En ningún punto del código hay un `OPEN I-O`, un `OPEN OUTPUT`, ni una sentencia `WRITE`, `REWRITE` o `DELETE` sobre ese archivo.
 - Se verificó tomando un hash del archivo antes y después de correr el programa (incluso dos veces seguidas): **queda byte a byte idéntico**.
-- Por esto no tiene la misma restricción de "no correr al mismo tiempo" que `BATCH-CIERRE.cbl`: como no escribe, no hay riesgo de perder una actualización. Aun así, para no arrastrar un `FILE STATUS` de "archivo en uso" (`61`) si `cuenta.cbl` tiene el archivo abierto en ese instante puntual, lo más prolijo sigue siendo correrlo con `cuenta.exe` en el menú principal (no a mitad de una operación).
+- Por esto no tiene la misma restricción de "no correr al mismo tiempo" que `BATCH-CIERRE.cbl`: como no escribe, no hay riesgo de perder una actualización. Aun así, para no arrastrar un `FILE STATUS` de "archivo en uso" (`61`) si `gestion-bancaria.cbl` tiene el archivo abierto en ese instante puntual, lo más prolijo sigue siendo correrlo con `gestion-bancaria.exe` en el menú principal (no a mitad de una operación).
 
 ### Qué muestra
 
@@ -793,7 +793,7 @@ El listado agrupa a los clientes en tres secciones, en este orden, y termina con
 2. **Clientes Reactivados (R)**
 3. **Clientes Inactivos (I)**
 
-En cada sección, un bloque por cliente con DNI, Nombre, Dirección, Teléfono, Saldo y Estado (el mismo formato de bloque que ya usa `cuenta.cbl` en su consulta). Si una sección no tiene clientes, lo dice explícitamente en vez de quedar vacía sin explicación.
+En cada sección, un bloque por cliente con DNI, Nombre, Dirección, Teléfono, Saldo y Estado (el mismo formato de bloque que ya usa `gestion-bancaria.cbl` en su consulta). Si una sección no tiene clientes, lo dice explícitamente en vez de quedar vacía sin explicación.
 
 El resumen final muestra, en este orden: cantidad de clientes por cada estado (Activos, Inactivos, Reactivados), la cantidad total de clientes del archivo, y el **saldo total de la cartera**, sumando a todos los clientes sin importar su estado.
 
@@ -868,7 +868,7 @@ Los cinco casos más simples y lineales de esa matriz —sin ramificaciones ni c
 | CP-04 | `entrada_extraccion.txt` | `salida_extraccion.txt` | `esperado_extraccion.txt` | Extracción exitosa (fondos suficientes) |
 | CP-06 | `entrada_consulta.txt` | `salida_consulta.txt` | `esperado_consulta.txt` | Consulta muestra todos los datos, incluido Estado |
 
-Cada `esperado_*.txt` es la salida ya verificada a mano contra el "Resultado esperado" de `CASOS_DE_PRUEBA.md`, guardada como referencia fija. Si en el futuro se cambia a propósito algo que afecta la salida de `cuenta.cbl` (por ejemplo, se redacta distinto un mensaje), hay que revisar el nuevo `salida_*.txt` a mano una vez y, si es correcto, actualizar el `esperado_*.txt` correspondiente — la comparación automática no sabe distinguir un cambio intencional de una regresión, solo detecta que algo cambió.
+Cada `esperado_*.txt` es la salida ya verificada a mano contra el "Resultado esperado" de `CASOS_DE_PRUEBA.md`, guardada como referencia fija. Si en el futuro se cambia a propósito algo que afecta la salida de `gestion-bancaria.cbl` (por ejemplo, se redacta distinto un mensaje), hay que revisar el nuevo `salida_*.txt` a mano una vez y, si es correcto, actualizar el `esperado_*.txt` correspondiente — la comparación automática no sabe distinguir un cambio intencional de una regresión, solo detecta que algo cambió.
 
 ### Cómo correrlos
 
@@ -878,7 +878,7 @@ La forma más simple y confiable:
 correr_pruebas_automatizadas.bat
 ```
 
-Compila `cuenta.exe` **en `bin\`**, corre ahí los 5 pares entrada/salida (leyendo cada `entrada_*.txt` y escribiendo cada `salida_*.txt` en la raíz del proyecto) con el runtime de GnuCOBOL correctamente puesto en el `PATH` para esa sesión (mismo mecanismo de respaldo que `correr_batch_cierre.bat` y `ver_listado_clientes.bat`), y **compara cada `salida_*.txt` contra su `esperado_*.txt` con `fc`**, mostrando al final un resumen del tipo:
+Compila `gestion-bancaria.exe` **en `bin\`**, corre ahí los 5 pares entrada/salida (leyendo cada `entrada_*.txt` y escribiendo cada `salida_*.txt` en la raíz del proyecto) con el runtime de GnuCOBOL correctamente puesto en el `PATH` para esa sesión (mismo mecanismo de respaldo que `correr_batch_cierre.bat` y `ver_listado_clientes.bat`), y **compara cada `salida_*.txt` contra su `esperado_*.txt` con `fc`**, mostrando al final un resumen del tipo:
 
 ```
 [pruebas]   OK     - alta_ok
@@ -900,10 +900,10 @@ También se puede correr cada caso a mano, uno por uno, desde `bin\`:
 
 ```bat
 cd bin
-cuenta.exe < ..\entrada_alta_ok.txt > ..\salida_alta_ok.txt
+gestion-bancaria.exe < ..\entrada_alta_ok.txt > ..\salida_alta_ok.txt
 ```
 
-Y así con cada par. **Para esto, el `PATH` de esa terminal tiene que incluir el runtime de GnuCOBOL** (lo mismo que hace falta para compilar); si no, `cuenta.exe` falla al arrancar sin mostrar ningún error y el `salida_*.txt` queda en 0 bytes — ver [Solución de problemas](#solucion-de-problemas), «El archivo de salida queda en 0 bytes al redirigir la entrada». Por eso conviene usar `correr_pruebas_automatizadas.bat`, que ya se ocupa de eso.
+Y así con cada par. **Para esto, el `PATH` de esa terminal tiene que incluir el runtime de GnuCOBOL** (lo mismo que hace falta para compilar); si no, `gestion-bancaria.exe` falla al arrancar sin mostrar ningún error y el `salida_*.txt` queda en 0 bytes — ver [Solución de problemas](#solucion-de-problemas), «El archivo de salida queda en 0 bytes al redirigir la entrada». Por eso conviene usar `correr_pruebas_automatizadas.bat`, que ya se ocupa de eso.
 
 Cada `entrada_*.txt` es autocontenido (da de alta su propio cliente de prueba, con un DNI dedicado en el rango `800000XX` para no chocar con los DNIs que usa la matriz manual) y **termina siempre en `0`**, la opción de salir del menú: es necesario para que no quede colgado, porque una entrada redirigida por archivo que se queda sin líneas antes de un `0` no corta sola (ver [Solución de problemas](#solucion-de-problemas), «Si la entrada se redirige…»).
 
@@ -915,7 +915,7 @@ Los siete casos restantes (CP-05, CP-07 a CP-12) quedan como pruebas manuales en
 
 Los 12 casos de prueba de `CASOS_DE_PRUEBA.md` (los 5 automatizados y los 7 manuales) están además cargados como Tests en Jira, usando Xray como plugin de gestión de pruebas, cada uno con su Resumen, Descripción, pasos estructurados (Acción / Datos / Resultado Esperado) y — en los automatizados — la referencia a los archivos `entrada_*.txt` / `esperado_*.txt` correspondientes.
 
-Los 12 Tests están agrupados en una Ejecución de Tests (Test Execution) donde quedó registrada la corrida completa: los 5 automatizados con el resultado real obtenido al correr `correr_pruebas_automatizadas.bat`, y los 7 manuales ejecutados paso a paso contra `cuenta.exe`, marcando cada paso (y el resultado general de cada caso) como PASS o FAIL según lo observado. La última ejecución completa cerró en **12 de 12 casos PASSED**.
+Los 12 Tests están agrupados en una Ejecución de Tests (Test Execution) donde quedó registrada la corrida completa: los 5 automatizados con el resultado real obtenido al correr `correr_pruebas_automatizadas.bat`, y los 7 manuales ejecutados paso a paso contra `gestion-bancaria.exe`, marcando cada paso (y el resultado general de cada caso) como PASS o FAIL según lo observado. La última ejecución completa cerró en **12 de 12 casos PASSED**.
 
 Esto documenta, además del código, la práctica de gestión y trazabilidad de QA sobre el proyecto: diseño de casos, automatización de los que se prestan a un script simple, ejecución manual del resto, y registro de resultados en una herramienta de test management real.
 
@@ -936,22 +936,22 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 
 **Aparecen clientes "que no existen" o no aparecen los que cargué.** Probablemente se está ejecutando desde otra carpeta y se está usando otro `clientes_v3.dat` (ver «Dónde vive `clientes_v3.dat`», en [Compilación y ejecución](#compilacion-y-ejecucion)), o los clientes se cargaron con una versión anterior del programa (archivo distinto).
 
-**El archivo de salida queda en 0 bytes al redirigir la entrada (`cuenta.exe < entrada.txt > salida.txt`), sin ningún mensaje de error.** No es un problema de *buffering* del `DISPLAY` ni hace falta tocar `cuenta.cbl`: es que `cuenta.exe` no encuentra el runtime de GnuCOBOL (`libcob` y sus DLL) en el `PATH` de esa terminal. Windows falla al arrancar el programa (`STATUS_DLL_NOT_FOUND`, código de salida `-1073741515`) **sin mostrar ningún texto de error** en pantalla; pero `cmd` ya había creado el archivo de salida (vacío) al armar la redirección, así que el único síntoma visible es un archivo de 0 bytes. Se confirmó reproduciéndolo: la *misma* terminal, el *mismo* comando, con y sin el `PATH` del runtime, da exactamente `0 bytes` / archivo completo según corresponda.
+**El archivo de salida queda en 0 bytes al redirigir la entrada (`gestion-bancaria.exe < entrada.txt > salida.txt`), sin ningún mensaje de error.** No es un problema de *buffering* del `DISPLAY` ni hace falta tocar `gestion-bancaria.cbl`: es que `gestion-bancaria.exe` no encuentra el runtime de GnuCOBOL (`libcob` y sus DLL) en el `PATH` de esa terminal. Windows falla al arrancar el programa (`STATUS_DLL_NOT_FOUND`, código de salida `-1073741515`) **sin mostrar ningún texto de error** en pantalla; pero `cmd` ya había creado el archivo de salida (vacío) al armar la redirección, así que el único síntoma visible es un archivo de 0 bytes. Se confirmó reproduciéndolo: la *misma* terminal, el *mismo* comando, con y sin el `PATH` del runtime, da exactamente `0 bytes` / archivo completo según corresponda.
 
 - Cómo verificarlo: después de correr el comando, mirar el código de salida (`echo %ERRORLEVEL%` en `cmd`, o `$LASTEXITCODE` en PowerShell). Un número muy negativo (o `-1073741515` puntualmente) confirma este diagnóstico; `0` significa que sí corrió.
 - Solución recomendada: usar **`correr_pruebas_automatizadas.bat`** para los 5 casos semi-automatizados (ver [Testing](#testing)), que ya deja el `PATH` bien puesto para esa corrida, igual que `correr_batch_cierre.bat` y `ver_listado_clientes.bat` lo hacen para sus programas.
-- Si se prefiere correr `cuenta.exe < entrada.txt > salida.txt` a mano, hay que asegurarse de que la terminal tenga el runtime de GnuCOBOL en el `PATH` (lo mismo que hace falta para compilar con `cobc`); si se compiló en una terminal y se corre en otra sin ese `PATH`, pasa esto.
+- Si se prefiere correr `gestion-bancaria.exe < entrada.txt > salida.txt` a mano, hay que asegurarse de que la terminal tenga el runtime de GnuCOBOL en el `PATH` (lo mismo que hace falta para compilar con `cobc`); si se compiló en una terminal y se corre en otra sin ese `PATH`, pasa esto.
 
 <a id="limitaciones-y-mejoras"></a>
 ## Limitaciones y mejoras futuras
 
-### Limitaciones de `cuenta.cbl`
+### Limitaciones de `gestion-bancaria.cbl`
 
 - La modificación del **saldo** permite fijar cualquier valor válido sin dejar registro: no hay historial ni auditoría de movimientos. El nombre, el DNI y el estado no se pueden editar por esa vía.
 - La reactivación no pide confirmación ni deja constancia de cuándo ni por qué se hizo.
 - El estado `R` no distingue cuántas veces se reactivó un cliente ni se puede volver a `A`.
 - Un DNI dado de baja (`I`) sigue ocupado: no se puede reutilizar en un alta, solo reactivar al cliente.
-- Un solo usuario a la vez: no hay bloqueo de registros ni control de concurrencia. Esto incluye a `BATCH-CIERRE.cbl` (ver «No correr `cuenta.exe` y el batch al mismo tiempo», en [Proceso batch de cierre](#proceso-batch-cierre)).
+- Un solo usuario a la vez: no hay bloqueo de registros ni control de concurrencia. Esto incluye a `BATCH-CIERRE.cbl` (ver «No correr `gestion-bancaria.exe` y el batch al mismo tiempo», en [Proceso batch de cierre](#proceso-batch-cierre)).
 - Si el programa se interrumpe de forma abrupta con el archivo abierto, éste podría quedar inconsistente; no hay respaldo ni recuperación.
 - Sin autenticación ni historial de movimientos: solo se guarda el saldo actual.
 - Sin migración desde los archivos de versiones anteriores (`clientes.dat`, `clientes_v2.dat`).
@@ -966,7 +966,7 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 - **Sin control de corridas duplicadas.** Nada impide correr el batch dos veces el mismo día; cada corrida vuelve a acreditar interés sobre el saldo ya actualizado (interés compuesto entre corridas, aunque simple dentro de una misma corrida). En un entorno real, el scheduler (o el propio JCL) garantizaría una sola corrida por período.
 - **Tasa fija en el código.** Cambiarla requiere editar `WS-TASA-INTERES` y recompilar; no se lee de un archivo de parámetros ni se puede pasar por línea de comandos.
 - **Reporte no acumulativo.** `reporte_cierre.txt` se sobreescribe en cada corrida; no queda un historial local de cierres anteriores (a diferencia del JCL de referencia, que documenta un dataset generacional (GDG) para eso).
-- **Sin control de concurrencia con `cuenta.cbl`.** Ver «No correr `cuenta.exe` y el batch al mismo tiempo», en [Proceso batch de cierre](#proceso-batch-cierre).
+- **Sin control de concurrencia con `gestion-bancaria.cbl`.** Ver «No correr `gestion-bancaria.exe` y el batch al mismo tiempo», en [Proceso batch de cierre](#proceso-batch-cierre).
 - **No hay historial de movimientos.** El interés acreditado queda en el reporte de esa corrida, pero no se guarda en el archivo de clientes como un movimiento separado; solo se ve reflejado en el saldo.
 
 ### Posibles mejoras futuras
@@ -977,7 +977,7 @@ Cada limitación de arriba sugiere una mejora natural. Algunas, en orden aproxim
 - **Control de corridas del batch.** Un archivo o registro de "último cierre corrido" que rechace o avise ante una segunda corrida del mismo período.
 - **Parametrizar la tasa de interés.** Leerla de un archivo o de un parámetro de ejecución en vez de tenerla fija en `WORKING-STORAGE`, para no depender de recompilar.
 - **Migración automática entre versiones del archivo.** Un programa que lea `clientes_v2.dat` (o `clientes.dat`) y regrabe los registros en el formato actual, en vez de tener que dar de alta a mano.
-- **Bloqueo de registros / control de concurrencia real.** Para que `cuenta.cbl` y `BATCH-CIERRE.cbl` puedan convivir sin la restricción manual de "no correrlos juntos" — en GnuCOBOL, vía `LOCK` en el `OPEN`, o una cola de trabajos si se migrara a una arquitectura cliente-servidor.
+- **Bloqueo de registros / control de concurrencia real.** Para que `gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` puedan convivir sin la restricción manual de "no correrlos juntos" — en GnuCOBOL, vía `LOCK` en el `OPEN`, o una cola de trabajos si se migrara a una arquitectura cliente-servidor.
 - **Reactivar con confirmación y trazabilidad**, y una forma de volver a `A` desde `R` si no se necesita distinguir "nunca estuvo inactivo" de "fue reactivado".
 - **Autenticación** de quién opera el programa, más allá del acceso físico a la terminal.
 - **Reporte acumulativo del batch**, con una generación por corrida (análogo al GDG del JCL de referencia) en vez de sobreescribir siempre el mismo `reporte_cierre.txt`.

@@ -1,10 +1,10 @@
 # Demo web: terminal en el navegador sobre el programa COBOL
 
-Interfaz web que muestra el programa `cuenta` (Gestion de Cuentas Bancarias) dentro de una
+Interfaz web que muestra el programa `gestion-bancaria` (Gestion de Cuentas Bancarias) dentro de una
 terminal en el navegador. Es un enfoque de *rehosting*: no se modifica ni una linea del COBOL.
 
 ## Como funciona
-- `app.py`: servidor Flask + Flask-SocketIO. Por cada usuario lanza `cuenta.exe` dentro de una
+- `app.py`: servidor Flask + Flask-SocketIO. Por cada usuario lanza `gestion-bancaria.exe` dentro de una
   pseudo-terminal (pty) y reenvia por WebSocket lo que el programa imprime y lo que el usuario tipea.
 - `templates/index.html`: la pagina, con una terminal visual (xterm.js).
 - `static/`: xterm.js, su addon de ajuste y el cliente de socket.io, incluidos en el repo

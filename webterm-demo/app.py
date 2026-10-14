@@ -4,7 +4,7 @@ Interfaz web tipo "terminal" para el programa COBOL de Gestion de Cuentas Bancar
 Que hace este archivo:
 - Levanta un servidor web con Flask.
 - Cuando alguien abre la pagina, el navegador se conecta por WebSocket (Flask-SocketIO).
-- Por cada usuario conectado, lanzamos el ejecutable COBOL "cuenta" dentro de una
+- Por cada usuario conectado, lanzamos el ejecutable COBOL "gestion-bancaria" dentro de una
   pseudo-terminal (pty), exactamente como si lo hubieras corrido vos en la consola.
 - Todo lo que el programa COBOL imprime se manda en tiempo real al navegador.
 - Todo lo que el usuario tipea en la paginita se manda en tiempo real al programa COBOL,
@@ -37,8 +37,8 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO
 
 # Ruta al ejecutable COBOL dentro del contenedor/servidor Linux.
-# En Azure/Docker va a estar en /app/bin/cuenta (lo copiamos ahi en el Dockerfile).
-COBOL_BINARY = os.environ.get("COBOL_BINARY_PATH", "/app/bin/cuenta")
+# En Azure/Docker va a estar en /app/bin/gestion-bancaria.exe (lo copiamos ahi en el Dockerfile).
+COBOL_BINARY = os.environ.get("COBOL_BINARY_PATH", "/app/bin/gestion-bancaria.exe")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "cambiar-esto-en-produccion"

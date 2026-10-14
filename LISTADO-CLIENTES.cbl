@@ -2,7 +2,8 @@
       * PROGRAMA    : LISTADO-CLIENTES
       * DESCRIPCION : Listado de consulta de la cartera de clientes,
       *               de SOLO LECTURA. Recorre clientes_v3.dat (el
-      *               mismo archivo indexado que usan CUENTA y
+      *               mismo archivo indexado que usan
+      *               GESTION-BANCARIA y
       *               BATCH-CIERRE) y muestra a los clientes
       *               agrupados en tres secciones por estado:
       *               Activos (A), Reactivados (R) e Inactivos (I),
@@ -18,8 +19,8 @@
       *               circunstancia. A diferencia de BATCH-CIERRE.cbl
       *               se puede correr en cualquier momento sin
       *               riesgo para los datos (aunque igual conviene
-      *               no correrlo mientras CUENTA esta escribiendo
-      *               un registro puntual, ver README.md).
+      *               no correrlo mientras GESTION-BANCARIA esta
+      *               escribiendo un registro puntual, ver README.md).
       * EJECUCION   : ver_listado_clientes.bat (compila y ejecuta).
       ******************************************************************
        IDENTIFICATION DIVISION.
@@ -32,9 +33,10 @@
 
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
-      * Mismo archivo fisico que usan CUENTA y BATCH-CIERRE. Acceso
-      * SEQUENTIAL: este listado recorre todos los registros en
-      * orden de clave (DNI), no busca clientes puntuales.
+      * Mismo archivo fisico que usan GESTION-BANCARIA y
+      * BATCH-CIERRE. Acceso SEQUENTIAL: este listado recorre todos
+      * los registros en orden de clave (DNI), no busca clientes
+      * puntuales.
            SELECT ARCH-CLIENTES ASSIGN TO "clientes_v3.dat"
                ORGANIZATION IS INDEXED
                ACCESS MODE IS SEQUENTIAL
@@ -48,9 +50,9 @@
        DATA DIVISION.
        FILE SECTION.
        FD  ARCH-CLIENTES.
-      * Mismo layout que usan CUENTA y BATCH-CIERRE (ver CLIENTE.cpy).
-      * Los tres programas se recompilan siempre juntos si el
-      * layout cambia.
+      * Mismo layout que usan GESTION-BANCARIA y BATCH-CIERRE
+      * (ver CLIENTE.cpy). Los tres programas se recompilan siempre
+      * juntos si el layout cambia.
            COPY CLIENTE.
 
        FD  ARCH-LISTADO.

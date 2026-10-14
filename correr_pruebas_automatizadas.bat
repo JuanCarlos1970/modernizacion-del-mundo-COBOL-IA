@@ -7,7 +7,7 @@ cd /d "%~dp0"
 rem =================================================================
 rem  correr_pruebas_automatizadas.bat
 rem
-rem  Compila cuenta.exe, corre los 5 casos de prueba automatizados
+rem  Compila gestion-bancaria.exe, corre los 5 casos de prueba automatizados
 rem  de CASOS_DE_PRUEBA.md (entrada_*.txt -> salida_*.txt) y ademas
 rem  compara cada salida_*.txt contra su resultado esperado
 rem  (esperado_*.txt) con "fc" (File Compare, incluido en Windows,
@@ -25,15 +25,15 @@ rem  el archivo queda para abrirlo con cualquier editor de texto.
 rem
 rem  Los esperado_*.txt son la salida ya verificada manualmente
 rem  contra CASOS_DE_PRUEBA.md al momento de escribir este script:
-rem  si en el futuro cuenta.cbl cambia a proposito (por ejemplo, se
+rem  si en el futuro gestion-bancaria.cbl cambia a proposito (por ejemplo, se
 rem  redacta distinto un mensaje), hay que regenerar el esperado_*.txt
 rem  correspondiente a mano una vez, revisando que el nuevo texto sea
 rem  correcto, y no automaticamente.
 rem
 rem  Por que hace falta este script y no alcanza con escribir
-rem  "cuenta.exe < entrada.txt > salida.txt" a mano: si la terminal
+rem  "gestion-bancaria.exe < entrada.txt > salida.txt" a mano: si la terminal
 rem  donde se corre ese comando no tiene el runtime de GnuCOBOL
-rem  (libcob y sus DLL) en el PATH, cuenta.exe falla al arrancar
+rem  (libcob y sus DLL) en el PATH, gestion-bancaria.exe falla al arrancar
 rem  (Windows STATUS_DLL_NOT_FOUND) SIN mostrar ningun mensaje de
 rem  error visible, y el archivo de salida queda en 0 bytes, porque
 rem  cmd ya lo habia creado (vacio) por la redireccion antes de que
@@ -42,7 +42,7 @@ rem  problemas", para el detalle.
 rem
 rem  IMPORTANTE: el .exe se compila DENTRO de bin\ y se ejecuta ahi
 rem  mismo, para que los clientes de prueba (DNI 800000XX) queden
-rem  en bin\clientes_v3.dat, el MISMO archivo que usan cuenta.exe,
+rem  en bin\clientes_v3.dat, el MISMO archivo que usan gestion-bancaria.exe,
 rem  BATCH-CIERRE.exe y LISTADO-CLIENTES.exe (no en uno aparte en
 rem  esta carpeta). Los entrada_*.txt se leen desde aca y los
 rem  salida_*.txt, esperado_*.txt y resultado_pruebas.txt tambien
@@ -84,12 +84,12 @@ if errorlevel 1 (
     )
 )
 
-echo [pruebas] Compilando cuenta.cbl en bin\ ...
-cobc -x -Wall -o "bin\cuenta.exe" cuenta.cbl
+echo [pruebas] Compilando gestion-bancaria.cbl en bin\ ...
+cobc -x -Wall -o "bin\gestion-bancaria.exe" gestion-bancaria.cbl
 if errorlevel 1 (
     echo [pruebas] ERROR: fallo la compilacion. Revise los mensajes
     echo [pruebas] de cobc arriba.
-    echo ERROR: fallo la compilacion de cuenta.cbl. >> "%LOGFILE%"
+    echo ERROR: fallo la compilacion de gestion-bancaria.cbl. >> "%LOGFILE%"
     exit /b 1
 )
 
@@ -116,7 +116,7 @@ for %%C in (alta_ok alta_dni_invalido deposito extraccion consulta) do (
         exit /b 1
     )
 
-    ".\cuenta.exe" < "..\entrada_%%C.txt" > "..\salida_%%C.txt"
+    ".\gestion-bancaria.exe" < "..\entrada_%%C.txt" > "..\salida_%%C.txt"
 
     fc "..\esperado_%%C.txt" "..\salida_%%C.txt" >nul
     if errorlevel 1 (
@@ -150,7 +150,7 @@ if !FALLO! GTR 0 (
     echo [pruebas]   fc esperado_alta_ok.txt salida_alta_ok.txt
     echo.
     echo [pruebas] Si el cambio de salida es esperado ^(por ejemplo,
-    echo [pruebas] se modifico a proposito un mensaje de cuenta.cbl^),
+    echo [pruebas] se modifico a proposito un mensaje de gestion-bancaria.cbl^),
     echo [pruebas] revise el nuevo salida_*.txt a mano contra
     echo [pruebas] CASOS_DE_PRUEBA.md y, si esta correcto, actualice
     echo [pruebas] el esperado_*.txt correspondiente.

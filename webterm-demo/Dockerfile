@@ -1,6 +1,6 @@
 # Dockerfile de la DEMO WEB (terminal en el navegador sobre el programa COBOL).
 # Vive en la carpeta webterm-demo/, pero se construye desde la RAIZ del repo,
-# porque necesita cuenta.cbl, que esta en la raiz:
+# porque necesita gestion-bancaria.cbl, que esta en la raiz:
 #
 #   docker build -f webterm-demo/Dockerfile -t cobol-web-demo .
 #   docker run -p 5000:5000 cobol-web-demo
@@ -24,7 +24,7 @@ COPY . .
 
 # Compila el programa COBOL.
 RUN mkdir -p bin && \
-    cobc -x -Wall -o bin/cuenta.exe cuenta.cbl
+    cobc -x -Wall -o bin/gestion-bancaria.exe gestion-bancaria.cbl
 
 # Librerias Python de la interfaz web.
 COPY webterm-demo/requirements.txt /app/requirements_web.txt
@@ -35,7 +35,7 @@ COPY webterm-demo/app.py /app/app.py
 COPY webterm-demo/templates/ /app/templates/
 COPY webterm-demo/static/ /app/static/
 
-ENV COBOL_BINARY_PATH=/app/bin/cuenta.exe
+ENV COBOL_BINARY_PATH=/app/bin/gestion-bancaria.exe
 ENV PORT=5000
 EXPOSE 5000
 
