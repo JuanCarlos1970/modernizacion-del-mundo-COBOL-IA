@@ -1,4 +1,4 @@
-# CUENTA – Gestión de cuentas bancarias en COBOL
+# Gestión de Cuentas Bancarias
 
 <a id="sobre-este-proyecto"></a>
 ## Sobre este proyecto
@@ -15,6 +15,8 @@ El código, la arquitectura y cada decisión de diseño fueron guiados y revisad
 `gestion-bancaria.cbl` es un programa COBOL interactivo (consola) para gestionar clientes y saldos de una cuenta bancaria simple. Es un ejemplo didáctico, pensado para mostrar patrones típicos de un sistema bancario legacy: archivos indexados, procesos batch nocturnos, y las decisiones de diseño (y las limitaciones) que eso implica.
 
 Funciones del programa interactivo: **alta**, **modificación**, **baja lógica** y **reactivación** de clientes; **depósito**, **extracción** y **consulta de saldo**. Cada cliente tiene DNI, nombre, dirección, teléfono, saldo y **estado** (Activo / Inactivo / Reactivado). Los datos se guardan en un **archivo indexado** (`clientes_v3.dat`, clave = DNI) y sobreviven al cerrar y reabrir el programa.
+
+Desde la **Evolución 1 / Etapa 1** el menú incluye además la opción **Intereses**, que administra la tabla de tasas (TNA) por moneda y plazo que va a usar el Plazo Fijo, guardada en otro archivo indexado (`intereses.dat`). Las otras opciones nuevas (Cuenta corriente / Caja de ahorro, Plazo fijo, Historial de movimientos y Pago de servicios) por ahora solo muestran `Opcion en desarrollo.`.
 
 Además del programa interactivo, el proyecto incluye:
 
@@ -55,15 +57,20 @@ Además del programa interactivo, el proyecto incluye:
 | `BATCH-CIERRE.cbl` | Proceso batch de cierre: acredita interés mensual — ver [Proceso batch de cierre](#proceso-batch-cierre) |
 | `LISTADO-CLIENTES.cbl` | Listado de consulta de **solo lectura**: no modifica datos — ver [Listado de clientes (solo lectura)](#listado-clientes) |
 | `CLIENTE.cpy` | Copybook con el layout del registro de cliente, compartido por los tres programas de arriba |
+| `INTERES.cpy` | Copybook con el layout del registro de tasas (`intereses.dat`), incluido por `gestion-bancaria.cbl` |
 | `correr_batch_cierre.bat` | Compila `BATCH-CIERRE.cbl` en `bin\` y lo ejecuta ahí |
 | `ver_listado_clientes.bat` | Compila `LISTADO-CLIENTES.cbl` en `bin\` y lo ejecuta ahí |
-| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados — ver [Testing](#testing) |
+| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados y, después, los casos de INTERESES — ver [Testing](#testing) |
+| `correr_pruebas_intereses.sh` | Lo mismo que la segunda parte del `.bat`, pero para Linux (Docker y GitHub Actions) |
+| `.gitattributes` | Fuerza fin de línea LF en los `.sh` (con CRLF, bash no los puede ejecutar) |
+| `.dockerignore` | Deja `bin\` afuera de la imagen de Docker: los `.dat` creados en Windows no se pueden leer con el GnuCOBOL de Linux |
 | `batch_cierre.jcl` | JCL de **referencia/documentación**: cómo correría el mismo cierre en un mainframe z/OS real (no se ejecuta en este entorno) |
 | `README.md` | Esta documentación |
 | `CASOS_DE_PRUEBA.md` | Matriz de casos de prueba (QA) — ver [Testing](#testing) |
 | `LICENSE` | Licencia del proyecto — ver [Licencia](#licencia) |
-| `entrada_*.txt` | Entradas de los 5 casos de prueba semi-automatizados (`alta_ok`, `alta_dni_invalido`, `deposito`, `extraccion`, `consulta`) |
-| `salida_*.txt` | Salidas correspondientes a cada `entrada_*.txt`, generadas al correr las pruebas |
+| `entrada_*.txt` | Entradas de los casos de prueba automatizados: los 5 de clientes (`alta_ok`, `alta_dni_invalido`, `deposito`, `extraccion`, `consulta`) y los de INTERESES (`entrada_menu01_1.txt`, `entrada_int01_1.txt`, ..., uno por paso) |
+| `esperado_*.txt` | Salida de referencia, verificada a mano, de cada caso automatizado |
+| `salida_*.txt` | Salidas correspondientes a cada caso, generadas al correr las pruebas (no se suben al repositorio) |
 
 **Se generan al compilar y ejecutar, dentro de `bin\`** (no forman parte del código fuente; ver [Compilación y ejecución](#compilacion-y-ejecucion)):
 
@@ -73,6 +80,7 @@ Además del programa interactivo, el proyecto incluye:
 | `BATCH-CIERRE.exe` | Ejecutable de `BATCH-CIERRE.cbl` |
 | `LISTADO-CLIENTES.exe` | Ejecutable de `LISTADO-CLIENTES.cbl` |
 | `clientes_v3.dat` | Archivo de datos indexado, compartido por los tres programas. **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl` |
+| `intereses.dat` | Archivo indexado de tasas (opción 8 - Intereses). **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl`, junto a `clientes_v3.dat` |
 | `reporte_cierre.txt` | Reporte del cierre, generado por `BATCH-CIERRE.cbl` en cada corrida |
 | `listado_clientes.txt` | Listado de clientes, generado por `LISTADO-CLIENTES.cbl` en cada corrida |
 
@@ -134,7 +142,7 @@ Probado con GnuCOBOL 2.0.0 (el que trae OpenCobolIDE): los tres programas compil
 
 ```
   ======================================
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
 
      1 - Alta de cliente
@@ -142,6 +150,11 @@ Probado con GnuCOBOL 2.0.0 (el que trae OpenCobolIDE): los tres programas compil
      3 - Deposito
      4 - Extraccion
      5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
 
      0 - Salir
 
@@ -155,7 +168,11 @@ Probado con GnuCOBOL 2.0.0 (el que trae OpenCobolIDE): los tres programas compil
 | 3 | Suma un monto al saldo. Bloqueado si el cliente está **inactivo** |
 | 4 | Resta un monto del saldo (sin descubierto). Bloqueado si el cliente está **inactivo** |
 | 5 | Muestra todos los datos del cliente, incluido el estado |
-| 0 | Cierra el archivo y sale |
+| 6, 7, 9, 10 | En desarrollo: muestran `Opcion en desarrollo.` y vuelven al menú |
+| 8 | Submenú de **tasas de interés** (alta, modificación y baja) — ver [Intereses (opción 8)](#intereses) |
+| 0 | Cierra los archivos y sale |
+
+El "10" tiene dos dígitos, por eso la opción se lee en un campo de 2 caracteres (`WS-OPCION PIC X(2)`). Una opción de un dígito queda guardada como `"1 "` (con un espacio), y COBOL la compara igual contra `"1"`, porque completa con espacios el valor más corto.
 
 Cualquier otro valor muestra `Opcion invalida.` y vuelve al menú. Si el cliente no existe, todas las operaciones muestran `Cliente no encontrado.`.
 
@@ -328,7 +345,7 @@ La baja es **lógica**: el registro **no se elimina del archivo**, solo se pone 
 
 #### Retorno al menú principal
 
-Tanto la modificación (al elegir `4 - Terminar modificacion`) como la baja y la reactivación terminan mostrando los datos actualizados del cliente y **volviendo directamente al menú principal de 6 opciones** (1-Alta, 2-Modificar/Baja, 3-Depósito, 4-Extracción, 5-Consulta de saldo, 0-Salir). El único submenú que se repite es el de campos a modificar (`1`-`4`), y solo mientras se sigue eligiendo `1`, `2` o `3`; en cuanto se elige `4` no queda ningún submenú abierto.
+Tanto la modificación (al elegir `4 - Terminar modificacion`) como la baja y la reactivación terminan mostrando los datos actualizados del cliente y **volviendo directamente al menú principal**. El único submenú que se repite es el de campos a modificar (`1`-`4`), y solo mientras se sigue eligiendo `1`, `2` o `3`; en cuanto se elige `4` no queda ningún submenú abierto.
 
 ### Depósito y extracción (opciones 3 y 4)
 
@@ -342,12 +359,89 @@ Flujo: DNI → búsqueda → **verificación de estado** → monto → operació
 - Extracción: el monto no puede superar el saldo (`Saldo insuficiente.`).
 - Si todo es válido, se graba y se muestra `Saldo actual: ...`.
 
+<a id="intereses"></a>
+### Intereses (opción 8)
+
+Administra la **tabla de tasas** que va a usar el Plazo Fijo: una TNA (tasa nominal anual, en porcentaje) para cada combinación de **moneda** (`P` = pesos, `D` = dólares) y **plazo** (30, 60, 90 o 120 días). Las tasas se guardan en `intereses.dat` (ver [Persistencia](#persistencia-intereses)).
+
+```
+  ======================================
+                INTERESES
+  ======================================
+
+  Fecha de proceso: 14/10/2026
+
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+
+     4 - Volver
+
+  Opcion:
+```
+
+Cada operación pide primero la **moneda** y los **días**. Si un dato es inválido, avisa y **lo vuelve a pedir** (no cancela la operación). Al terminar, muestra la tasa completa:
+
+```
+Moneda:        P - Pesos
+Dias:          30
+TNA:           45.50 %
+TNA anterior:  0.00 %
+Vigente desde: 15/10/2026
+Estado:        A - Activa
+```
+
+- **1 - Alta.** Si la combinación ya existe y está activa: `Ya existe una tasa activa para esa moneda y plazo. No se modifico nada.` (no pide la TNA). Si existe pero está dada de baja (`B`), **la reactiva** con la TNA nueva y avisa `Tasa reactivada (estaba dada de baja).`. En el alta y en la reactivación: `TNA anterior` = 0 y `Vigente desde` = próximo día hábil.
+- **2 - Modificación.** Muestra la tasa actual y pide la TNA nueva. Si la TNA actual **ya está vigente** (fecha de proceso igual o posterior a `Vigente desde`), pasa a `TNA anterior`. Si en cambio había un cambio **pendiente** (todavía no vigente), `TNA anterior` no se toca: sigue guardando la tasa que rige hoy. La TNA nueva rige desde el próximo día hábil. Una tasa dada de baja no se puede modificar (`Use la opcion 1 - Alta para reactivarla.`).
+- **3 - Baja.** Baja lógica: pone el estado en `B` y **rige de inmediato**. El registro no se borra y no pide confirmación.
+- **4 - Volver.** Vuelve al menú principal.
+
+#### Próximo día hábil
+
+Toda tasa que se carga o modifica rige desde el **próximo día hábil** (lunes a viernes; **no se consideran feriados**):
+
+| Fecha de proceso | Vigente desde |
+|------------------|---------------|
+| lunes a jueves | el día siguiente |
+| viernes | el lunes siguiente (+3) |
+| sábado | el lunes siguiente (+2) |
+| domingo | el lunes siguiente (+1) |
+
+Cómo lo calcula el programa (`8060-CALCULAR-PROX-HABIL`):
+
+1. `FUNCTION INTEGER-OF-DATE(fecha)` convierte la fecha `AAAAMMDD` en un número de día. El día 1 es el 01/01/1601, que fue **lunes**.
+2. `FUNCTION MOD(número, 7)` da el resto de dividir por 7, que es el día de la semana: 1 = lunes … 5 = viernes, 6 = sábado, 0 = domingo.
+3. Según ese resto se suma 1, 2 o 3 días al número.
+4. `FUNCTION DATE-OF-INTEGER` convierte el número de vuelta a `AAAAMMDD`.
+
+#### Fecha de proceso y la variable `FECHA_PROCESO`
+
+La "fecha de hoy" para el programa es la **fecha del sistema**, salvo que exista la variable de entorno **`FECHA_PROCESO`** con una fecha `AAAAMMDD`; en ese caso se usa esa. Sirve para que las pruebas usen siempre la misma fecha: si no, el resultado (`Vigente desde`) cambiaría según el día en que se corran. Se muestra en el submenú (`Fecha de proceso: DD/MM/AAAA`).
+
+```bat
+REM Windows (cmd), desde bin\
+set FECHA_PROCESO=20261016
+gestion-bancaria.exe
+set FECHA_PROCESO=
+```
+
+```bash
+# Linux / Docker
+FECHA_PROCESO=20261016 ./gestion-bancaria.exe
+```
+
+Si `FECHA_PROCESO` existe pero no es una fecha válida, el programa avisa (`FECHA_PROCESO invalida (use AAAAMMDD):` / `se usa la fecha del sistema.`) y usa la del sistema.
+
 <a id="validaciones-cuenta"></a>
 ### Validaciones
 
 | Dato | Reglas |
 |------|--------|
-| **Opción del menú principal** | `1`–`5` o `0`; cualquier otro valor: `Opcion invalida.` |
+| **Opción del menú principal** | `1`–`10` o `0`; cualquier otro valor: `Opcion invalida.` |
+| **Opción del submenú Intereses** | `1`–`4`; cualquier otro valor: `Opcion invalida.` |
+| **Moneda** (Intereses) | `P` o `D`, en mayúscula o minúscula; si no: `Moneda invalida: ingrese P o D.` y la vuelve a pedir |
+| **Días** (Intereses) | `30`, `60`, `90` o `120`; si no: `Dias invalidos: ingrese 30, 60, 90 o 120.` y los vuelve a pedir |
+| **TNA** (Intereses) | No vacía, numérica, mayor que 0, hasta `999.99` y con hasta 2 decimales (más decimales **se rechazan**, no se truncan); el punto decimal es `.`. Si no, avisa el motivo y la vuelve a pedir |
 | **Respuesta Modificar / Baja** | `M`, `m`, `B` o `b`; cualquier otra: `Opcion invalida: use M o B.` |
 | **Opción del submenú de modificación** | `1`–`4`; cualquier otro valor: `Opcion invalida.` |
 | **Respuesta S/N** (confirmación de baja) | `S` o `s` = sí; cualquier otra = no |
@@ -371,7 +465,7 @@ Lo que tipea el usuario es el número que va al lado de `Opcion:` (en la misma l
 
 ```
   ======================================
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
 
      1 - Alta de cliente
@@ -379,6 +473,11 @@ Lo que tipea el usuario es el número que va al lado de `Opcion:` (en la misma l
      3 - Deposito
      4 - Extraccion
      5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
 
      0 - Salir
 
@@ -394,7 +493,7 @@ Telefono (hasta 15 caracteres):
 Cliente dado de alta.
 
   ======================================      <- vuelve al menu principal
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
      (... mismas opciones de arriba ...)
   Opcion: 2
@@ -421,7 +520,7 @@ Saldo:                0.00
 Estado:    I - Inactivo
 
   ======================================      <- vuelve al menu principal
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
      (... mismas opciones de arriba ...)
   Opcion: 3
@@ -430,7 +529,7 @@ DNI (8 digitos):
 Cliente inactivo: no se puede operar.
 
   ======================================      <- vuelve al menu principal
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
      (... mismas opciones de arriba ...)
   Opcion: 2
@@ -450,7 +549,7 @@ Saldo:                0.00
 Estado:    R - Reactivado
 
   ======================================      <- vuelve al menu principal
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
      (... mismas opciones de arriba ...)
   Opcion:
@@ -523,6 +622,32 @@ Todo `FILE STATUS` inesperado pasa por `9000-ERROR-ARCHIVO`, que muestra la oper
 - El formato es binario y depende del manejador de archivos de GnuCOBOL: no es legible ni necesariamente portable a otro compilador.
 - No hay bloqueo de registros: pensado para un solo usuario a la vez.
 
+<a id="persistencia-intereses"></a>
+#### Archivo de tasas: `intereses.dat`
+
+Sigue el mismo patrón que `clientes_v3.dat`: archivo indexado, nombre sin carpeta (así queda en `bin\`, junto a `clientes_v3.dat`), y si no existe se crea vacío al arrancar (`0150-ABRIR-INTERESES`, igual que `0100-ABRIR-ARCHIVO`). El layout está en el copybook `INTERES.cpy`, como el de clientes está en `CLIENTE.cpy`, para que otro programa (por ejemplo, el futuro Plazo Fijo) lo lea con exactamente el mismo formato.
+
+```cobol
+SELECT ARCH-INTERESES ASSIGN TO "intereses.dat"
+    ORGANIZATION IS INDEXED
+    ACCESS MODE IS RANDOM
+    RECORD KEY IS INT-CLAVE
+    FILE STATUS IS WS-FS.
+```
+
+Registro `REG-INTERES` (23 bytes). La clave `INT-CLAVE` es un grupo formado por moneda + días, así que no puede haber dos tasas para la misma combinación:
+
+| Campo | PIC | Bytes | Nota |
+|-------|-----|-------|------|
+| `INT-MONEDA` | `X` | 1 | **Clave** (1ra parte). `P` = pesos, `D` = dólares. Niveles 88 `MONEDA-PESOS`, `MONEDA-DOLARES` |
+| `INT-DIAS` | `9(3)` | 3 | **Clave** (2da parte). 30, 60, 90 o 120 |
+| `INT-TNA` | `9(3)V99` | 5 | Tasa nominal anual en %, mayor que 0 |
+| `INT-TNA-ANTERIOR` | `9(3)V99` | 5 | Tasa que regía antes del último cambio; cero en un alta nueva o en una reactivación |
+| `INT-VIGENTE-DESDE` | `9(8)` | 8 | `AAAAMMDD`: fecha desde la cual rige `INT-TNA` |
+| `INT-ESTADO` | `X` | 1 | `A` = activa, `B` = baja lógica. Niveles 88 `TASA-ACTIVA`, `TASA-BAJA` |
+
+Los errores de archivo pasan por el mismo `9000-ERROR-ARCHIVO`, que ahora informa **cuál** de los dos archivos falló (`WS-ARCHIVO`). Para empezar la tabla de tasas de cero, borrar `bin\intereses.dat` (no afecta a los clientes).
+
 ### Estructura del programa
 
 #### Divisiones
@@ -530,7 +655,7 @@ Todo `FILE STATUS` inesperado pasa por `9000-ERROR-ARCHIVO`, que muestra la oper
 - **IDENTIFICATION DIVISION**: nombre del programa (`GESTION-BANCARIA`). Es lo único obligatorio. `AUTHOR` y `DATE-WRITTEN` están obsoletas (GnuCOBOL emite warning), por eso autor y fecha figuran en el comentario de cabecera.
 - **ENVIRONMENT DIVISION**:
   - `SPECIAL-NAMES`: define la clase `CLASE-TELEFONO` (dígitos, `+`, `-`, `(`, `)` y espacio), usada para validar el teléfono con `IS NOT CLASE-TELEFONO`.
-  - `INPUT-OUTPUT SECTION` / `FILE-CONTROL`: asocia `ARCH-CLIENTES` con `clientes_v3.dat` (indexado, clave `CLI-DNI`).
+  - `INPUT-OUTPUT SECTION` / `FILE-CONTROL`: asocia `ARCH-CLIENTES` con `clientes_v3.dat` (indexado, clave `CLI-DNI`) y `ARCH-INTERESES` con `intereses.dat` (indexado, clave `INT-CLAVE` = moneda + días).
 - **DATA DIVISION**:
   - `FILE SECTION`: el registro `REG-CLIENTE`, incluido con `COPY CLIENTE.` desde `CLIENTE.cpy` (con el campo `CLI-ESTADO` y sus niveles 88) en vez de declararse ahí mismo, para compartir exactamente el mismo layout con `BATCH-CIERRE.cbl` (ver [Proceso batch de cierre](#proceso-batch-cierre)).
   - `WORKING-STORAGE SECTION`: el resto de las variables.
@@ -545,7 +670,19 @@ Todo `FILE STATUS` inesperado pasa por `9000-ERROR-ARCHIVO`, que muestra la oper
 | | `OPC-DEPOSITO` | `3` | Depósito |
 | | `OPC-EXTRACCION` | `4` | Extracción |
 | | `OPC-CONSULTA` | `5` | Consulta de saldo |
+| | `OPC-CTA-CTE-CAJA` | `6` | Cuenta corriente / Caja de ahorro (en desarrollo) |
+| | `OPC-PLAZO-FIJO` | `7` | Plazo fijo (en desarrollo) |
+| | `OPC-INTERESES` | `8` | Intereses |
+| | `OPC-HISTORIAL` | `9` | Historial de movimientos (en desarrollo) |
+| | `OPC-PAGO-SERVICIOS` | `10` | Pago de servicios (en desarrollo) |
 | | `OPC-SALIR` | `0` | Salir |
+| `WS-OPC-INT` | `OPI-ALTA` | `1` | Alta de tasa |
+| | `OPI-MODIFICACION` | `2` | Modificación de tasa |
+| | `OPI-BAJA` | `3` | Baja de tasa |
+| | `OPI-VOLVER` | `4` | Volver al menú principal |
+| `INT-MONEDA` (registro) | `MONEDA-PESOS` / `MONEDA-DOLARES` | `P` / `D` | Moneda de la tasa |
+| `INT-ESTADO` (registro) | `TASA-ACTIVA` / `TASA-BAJA` | `A` / `B` | Estado de la tasa |
+| `WS-TASA-ENC` | `TASA-ENCONTRADA` / `TASA-NO-ENC` | `S` / `N` | Resultado de buscar una tasa |
 | `WS-OPC-MB` | `MB-MODIFICAR` | `M`, `m` | Modificar (o reactivar) |
 | | `MB-BAJA` | `B`, `b` | Baja |
 | `WS-CONFIRMA` | `CONFIRMA-SI` | `S`, `s` | Confirma la baja |
@@ -563,7 +700,17 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 
 | Variable | PIC | Uso |
 |----------|-----|-----|
-| `WS-OPCION` | `X` | Opción del menú principal |
+| `WS-OPCION` | `X(2)` | Opción del menú principal (2 caracteres por la opción `10`) |
+| `WS-OPC-INT` | `X` | Opción del submenú Intereses |
+| `WS-ARCHIVO` | `X(16)` | Archivo de la operación en curso (`clientes_v3.dat` o `intereses.dat`), solo para informar errores |
+| `WS-MONEDA`, `WS-DIAS`, `WS-TNA` | `X`, `9(3)`, `9(3)V99` | Moneda, días y TNA ya validados |
+| `WS-TNA-CALC` | `S9(5)V9(6)` | TNA tipeada con decimales de sobra, para detectar si tiene más de 2 |
+| `WS-DIAS-EDIT`, `WS-TNA-EDIT` | `ZZ9`, `ZZ9.99` | Campos editados para mostrar días y TNA |
+| `WS-FECHA-PROCESO` | `9(8)` | "Hoy" para el programa (`AAAAMMDD`): fecha del sistema o `FECHA_PROCESO` |
+| `WS-PROX-HABIL` | `9(8)` | Próximo día hábil calculado |
+| `WS-FECHA-INT`, `WS-DIA-SEMANA` | `9(7)`, `9` | Número de día (`INTEGER-OF-DATE`) y resto de dividirlo por 7 |
+| `WS-FECHA-ENV`, `WS-FECHA-HORA` | `X(20)`, `X(21)` | Valor de `FECHA_PROCESO` y resultado de `FUNCTION CURRENT-DATE` |
+| `WS-FECHA-AUX` / `WS-FECHA-EDIT` | `9(8)` / `X(10)` | Fecha a mostrar (`AAAAMMDD`, con `REDEFINES` en año/mes/día) y su versión `DD/MM/AAAA` |
 | `WS-OPC-MB` | `X` | Respuesta a "Modificar o Baja" |
 | `WS-CONFIRMA` | `X` | Respuesta S/N: confirmación de baja |
 | `WS-OPC-MOD` | `X` | Opción del submenú de campos a modificar |
@@ -584,8 +731,9 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 
 | Párrafo | Responsabilidad |
 |---------|-----------------|
-| `0000-PRINCIPAL` | Abre el archivo, repite el menú hasta elegir salir, cierra el archivo y ejecuta `STOP RUN` |
-| `0100-ABRIR-ARCHIVO` / `0200-CERRAR-ARCHIVO` | Apertura (creándolo si no existe) y cierre |
+| `0000-PRINCIPAL` | Abre los dos archivos, repite el menú hasta elegir salir, los cierra y ejecuta `STOP RUN` |
+| `0100-ABRIR-ARCHIVO` / `0200-CERRAR-ARCHIVO` | Apertura (creándolo si no existe) y cierre de `clientes_v3.dat` |
+| `0150-ABRIR-INTERESES` / `0250-CERRAR-INTERESES` | Lo mismo para `intereses.dat` |
 | `1000-PROCESAR-MENU` | Lee la opción y despacha con `EVALUATE TRUE`. Al terminar cada operación se vuelve aquí y se muestra de nuevo el menú principal |
 | `1100-MOSTRAR-MENU` | Imprime el menú principal |
 | `2000-ALTA-CLIENTE` | Pide y valida el DNI; verifica que no exista |
@@ -596,6 +744,14 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 | `3000-DEPOSITO` / `3100-PROCESAR-DEPOSITO` | Búsqueda + verificación de estado / pedido de monto y suma |
 | `4000-EXTRACCION` / `4100-PROCESAR-EXTRACCION` | Búsqueda + verificación de estado / pedido de monto y resta |
 | `5000-CONSULTA-SALDO` | Consulta: muestra todos los datos del cliente |
+| `5500-INTERESES` / `5510-MENU-INTERESES` | **Opción 8.** Fija la fecha de proceso y repite el submenú Intereses hasta elegir `4 - Volver` |
+| `5600-ALTA-TASA` | Alta (o reactivación de una tasa en `B`); avisa si ya existe activa |
+| `5700-MODIFICAR-TASA` | Cambia la TNA; decide si la actual pasa a `TNA anterior` según si ya estaba vigente |
+| `5800-BAJA-TASA` | Baja lógica (estado `B`) |
+| `5910-PEDIR-MONEDA` / `5920-PEDIR-DIAS` / `5930-PEDIR-TNA` / `5935-VALIDAR-TNA` | Piden y validan cada dato, y lo vuelven a pedir hasta que sea válido |
+| `5940-BUSCAR-TASA` | `READ` por clave (moneda + días); marca encontrada / no encontrada |
+| `5950-GRABAR-TASA-NUEVA` / `5955-ACTUALIZAR-TASA` | `WRITE` / `REWRITE` del registro de tasa |
+| `5960-MOSTRAR-TASA` | Muestra moneda, días, TNA, TNA anterior, vigente desde y estado |
 | `6000-MODIFICACION` | Decide según el estado: `I` → `6500-REACTIVAR-CLIENTE`; `A` o `R` → `6100-MODIFICAR-DATOS` |
 | `6100-MODIFICAR-DATOS` | Repite el submenú de campos (`6150`) hasta elegir Terminar; al salir, informa si no hubo cambios y muestra los datos actualizados |
 | `6150-MENU-CAMPO` | Muestra el submenú `1-Dirección / 2-Teléfono / 3-Saldo / 4-Terminar`, pide el dato elegido, lo valida y llama a `6200` si es válido |
@@ -604,6 +760,9 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 | `7000-BAJA-CLIENTE` | Verifica que no esté ya inactivo y que el saldo sea cero |
 | `7100-CONFIRMAR-BAJA` | Pide confirmación, pone estado `I`, hace `REWRITE` y muestra los datos actualizados |
 | `8000-BUSCAR-CLIENTE` | `READ` por clave (DNI); marca encontrado / no encontrado |
+| `8050-FIJAR-FECHA-PROCESO` | Toma la fecha del sistema o, si existe y es válida, la de `FECHA_PROCESO` |
+| `8060-CALCULAR-PROX-HABIL` | Calcula el próximo día hábil (lunes a viernes) con `INTEGER-OF-DATE`, `MOD 7` y `DATE-OF-INTEGER` |
+| `8070-EDITAR-FECHA` | Pasa una fecha `AAAAMMDD` a `DD/MM/AAAA` para mostrarla |
 | `8100-PEDIR-DNI` | Lectura y validación de DNI (`IS NUMERIC`, 8 dígitos) |
 | `8200-PEDIR-MONTO` | Lectura de monto con `FUNCTION NUMVAL` y validación `> 0` |
 | `8250-PEDIR-SALDO` / `8260-VALIDAR-SALDO-NUEVO` | Lectura del saldo nuevo con `TEST-NUMVAL` / validación de que no sea negativo |
@@ -613,7 +772,7 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 | `8710-VALIDAR-TELEFONO` | Verifica caracteres permitidos y mínimo de 6 dígitos |
 | `8800-MOSTRAR-CLIENTE` | Muestra nombre, DNI, dirección, teléfono, saldo y estado (`A - Activo`, `I - Inactivo`, `R - Reactivado`) |
 | `8900-VERIFICAR-ACTIVO` | Marca al cliente operable si su estado es `A` o `R`; si no, muestra `Cliente inactivo: no se puede operar.` |
-| `9000-ERROR-ARCHIVO` | Informa operación, `FILE STATUS` y significado, y termina |
+| `9000-ERROR-ARCHIVO` | Informa operación, archivo, `FILE STATUS` y significado, cierra los dos archivos y termina |
 
 Numeración de párrafos: 0xxx apertura/cierre, 1xxx menú, 2xxx–7xxx procesos de negocio, 8xxx rutinas compartidas, 9xxx manejo de errores. Los prefijos de los procesos no siguen el número de opción del menú: el alta es `2000` (opción 1); `3000`, `4000` y `5000` coinciden por casualidad con las opciones 3, 4 y 5; modificación (`6000`) y baja (`7000`) cuelgan ambas de la opción 2.
 
@@ -637,6 +796,11 @@ Numeración de párrafos: 0xxx apertura/cierre, 1xxx menú, 2xxx–7xxx procesos
      ├─ 3 → 3000-DEPOSITO    → buscar → 8900-VERIFICAR-ACTIVO → 3100-PROCESAR-DEPOSITO
      ├─ 4 → 4000-EXTRACCION  → buscar → 8900-VERIFICAR-ACTIVO → 4100-PROCESAR-EXTRACCION
      ├─ 5 → 5000-CONSULTA-SALDO
+     ├─ 6, 7, 9, 10 → "Opcion en desarrollo."
+     ├─ 8 → 5500-INTERESES → 5510-MENU-INTERESES  (repite hasta 4 - Volver)
+     │        ├─ 1 → 5600-ALTA-TASA        (alta, o reactivacion si estaba en B)
+     │        ├─ 2 → 5700-MODIFICAR-TASA   (TNA nueva desde el proximo dia habil)
+     │        └─ 3 → 5800-BAJA-TASA        (estado B, de inmediato)
      └─ 0 → sale del bucle
 ```
 
@@ -672,6 +836,12 @@ Aplica tanto a `gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` 
 - **`FILE STATUS` en todas las operaciones de E/S.** Se distinguen los casos esperados (clave no encontrada, duplicada, archivo inexistente) de los errores reales, que terminan el programa con un mensaje claro.
 - **Prompts y `WITH NO ADVANCING`.** Los prompts `Opcion:` del menú principal y del submenú de modificación usan `WITH NO ADVANCING`, así que la opción se tipea en la misma línea; los dos se probaron en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y el prompt se ve antes de tipear. Los prompts de datos mantienen el formato anterior (terminan en salto de línea), porque fuera de una consola real ese texto podría no mostrarse mientras se espera la entrada (ver [Solución de problemas](#solucion-de-problemas)).
 - **Archivo con versión en el nombre** (`_v3`), por los cambios de layout (ver «Por qué el archivo se llama `clientes_v3.dat`», en Persistencia).
+- **Intereses: los datos inválidos se vuelven a pedir.** A diferencia del alta de clientes (que cancela al primer error), en Intereses un dato inválido se informa y se vuelve a pedir, como pide la especificación de la Etapa 1.
+- **Intereses: alta duplicada sin pedir la TNA.** Si la combinación ya existe y está activa, se avisa apenas se ingresan moneda y días, para no hacer tipear una TNA que no se va a usar.
+- **Intereses: se muestra la tasa completa después de cada operación** (incluidos `TNA anterior` y `Vigente desde`), para que el usuario vea cuándo entra en vigencia el cambio y para que las pruebas lo puedan verificar.
+- **Intereses: la TNA con más de 2 decimales se rechaza** (en el monto y el saldo se truncan): para una tasa, perder decimales sin avisar cambiaría el valor cargado.
+- **`FECHA_PROCESO`.** Fijar la fecha con una variable de entorno permite probar cualquier día de la semana sin tocar el reloj de la máquina ni el código.
+- **El `CR` de Windows se descarta en las opciones y los datos de Intereses** (`INSPECT ... REPLACING ALL X"0D" BY SPACE`). Si una entrada con fin de línea CRLF llega al programa compilado en Linux, el `CR` quedaría como parte de lo tipeado (por ejemplo, `0` + `CR` no sería la opción Salir y el menú no terminaría nunca).
 
 <a id="proceso-batch-cierre"></a>
 ## Proceso batch de cierre: BATCH-CIERRE.cbl
@@ -854,7 +1024,7 @@ Igual que `BATCH-CIERRE.cbl` con sus tablas de Activos/Reactivados e Inactivos, 
 <a id="testing"></a>
 ## Testing
 
-El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo).
+El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo). Desde la Evolución 1 / Etapa 1 suma 12 casos más (MENU-01 e INT-01 a INT-11) para el menú nuevo y las tasas de Intereses, todos automatizados (ver [Casos de INTERESES](#casos-de-intereses-evolución-1--etapa-1)).
 
 ### Casos automatizados
 
@@ -911,6 +1081,23 @@ Si se corren a mano (fuera de `correr_pruebas_automatizadas.bat`), hay que compa
 
 Los siete casos restantes (CP-05, CP-07 a CP-12) quedan como pruebas manuales en `CASOS_DE_PRUEBA.md`: tienen ramificaciones (confirmaciones S/N, submenús, un estado previo que hay que preparar, o el batch de cierre) que no se prestan a una sola pasada de entrada redirigida.
 
+### Casos de INTERESES (Evolución 1 / Etapa 1)
+
+`CASOS_DE_PRUEBA.md` tiene además los casos **MENU-01** e **INT-01 a INT-11**, todos automatizados. Se corren en la segunda parte de `correr_pruebas_automatizadas.bat`, que tiene su propio resumen (`Resumen intereses: 12 OK / 0 FALLO (de 12)`), o en Linux/Docker/CI con `correr_pruebas_intereses.sh`:
+
+```bash
+docker build -t gestion-bancaria .
+docker run --rm gestion-bancaria bash correr_pruebas_intereses.sh
+```
+
+Se diferencian de los 5 casos de clientes en tres cosas:
+
+- **Fecha fija.** El resultado depende de la fecha (por ejemplo, `Vigente desde`), así que cada paso se corre con la variable de entorno `FECHA_PROCESO` fija (ver [Intereses (opción 8)](#intereses)).
+- **Archivo vacío.** Cada caso corre en `bin\prueba_int\`, una carpeta que el script borra y vuelve a crear, así arranca con un `intereses.dat` vacío **sin tocar el `bin\intereses.dat` real**.
+- **Pasos.** Un caso puede tener varios pasos (`entrada_int04_1.txt`, `entrada_int04_2.txt`), cada uno con su fecha, sobre el mismo archivo. Por ejemplo, alta un miércoles y modificación el viernes. Las salidas se juntan en un solo `salida_<caso>.txt`.
+
+En Linux el script quita al vuelo los `\r` de los `.txt` (`tr -d '\r'`), compara ignorándolos (`diff --strip-trailing-cr`) y corta cada ejecución a los 10 segundos (`timeout 10`) por si una entrada quedara incompleta.
+
 ### Gestión de casos y ejecución en Jira/Xray
 
 Los 12 casos de prueba de `CASOS_DE_PRUEBA.md` (los 5 automatizados y los 7 manuales) están además cargados como Tests en Jira, usando Xray como plugin de gestión de pruebas, cada uno con su Resumen, Descripción, pasos estructurados (Acción / Datos / Resultado Esperado) y — en los automatizados — la referencia a los archivos `entrada_*.txt` / `esperado_*.txt` correspondientes.
@@ -958,8 +1145,12 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 - El DNI y el nombre no se pueden corregir; ante un error hay que dar de baja (lógica) y usar otro DNI, o borrar el archivo.
 - Un monto o saldo con más de 2 decimales se **trunca** (`10.999` pasa a `10.99`); el punto decimal debe ser `.`.
 - Un dato inválido en el alta cancela toda la operación (no se vuelve a pedir el campo); una respuesta distinta de `M`/`B` en la opción 2 también vuelve al menú sin repetir la pregunta.
-- Si la entrada se redirige desde un archivo o pipe y termina sin un `0` de salida, el programa no detecta el fin de entrada y repite el menú. Con teclado no ocurre.
-- No hay monedas múltiples.
+- Si la entrada se redirige desde un archivo o pipe y termina sin un `0` de salida, el programa no detecta el fin de entrada y repite el menú. Con teclado no ocurre. Lo mismo pasa con los datos de Intereses (moneda, días, TNA), que se vuelven a pedir hasta que sean válidos: GnuCOBOL entrega el fin de entrada como un renglón vacío, que es indistinguible de un Enter sin datos.
+- Las cuentas no tienen moneda: la moneda solo existe en la tabla de tasas de Intereses (pesos / dólares).
+- Intereses: el próximo día hábil **no considera feriados** (solo sábados y domingos).
+- Intereses: no hay historial de tasas; solo se guardan la TNA actual y la anterior.
+- Intereses: la baja no pide confirmación (rige de inmediato); se puede revertir con un alta (reactivación).
+- `BATCH-CIERRE.cbl` todavía no usa la tabla de tasas de `intereses.dat`, y su reporte sigue titulado `CUENTA BANCARIA`.
 
 ### Limitaciones de `BATCH-CIERRE.cbl`
 
@@ -973,6 +1164,8 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 
 Cada limitación de arriba sugiere una mejora natural. Algunas, en orden aproximado de impacto/esfuerzo:
 
+- **PENDIENTE (próximo paso después de la Etapa 1): protección contra el bucle infinito al terminarse la entrada.** Hoy, si la entrada se acaba (archivo redirigido incompleto, o Ctrl+Z / Ctrl+D en el teclado), los datos de Intereses que se vuelven a pedir (moneda, días, TNA) y el menú principal repiten el aviso para siempre, porque GnuCOBOL entrega el fin de entrada como una línea vacía. Propuesta: un **límite de intentos**. Cada dato cuenta los valores inválidos seguidos y, al llegar a 5, cancela la operación (`Demasiados intentos: operacion cancelada.`) sin grabar nada. Los menús cuentan las opciones inválidas seguidas y, al llegar a 10, cierran los archivos y terminan el programa en orden. Alternativa más completa (y más invasiva): leer el teclado como un archivo (`ASSIGN TO KEYBOARD`) y detectar el fin con `AT END`.
+- **PENDIENTE: título del reporte de `BATCH-CIERRE.cbl`.** Sigue diciendo `CUENTA BANCARIA` (no se tocó en la Etapa 1).
 - **Historial de movimientos.** Un archivo de transacciones (depósitos, extracciones, modificaciones, intereses) separado del maestro de clientes, para auditoría y para poder reconstruir cómo se llegó a un saldo.
 - **Control de corridas del batch.** Un archivo o registro de "último cierre corrido" que rechace o avise ante una segunda corrida del mismo período.
 - **Parametrizar la tasa de interés.** Leerla de un archivo o de un parámetro de ejecución en vez de tenerla fija en `WORKING-STORAGE`, para no depender de recompilar.

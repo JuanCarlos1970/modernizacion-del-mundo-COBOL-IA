@@ -56,7 +56,7 @@ No correr `gestion-bancaria.exe` y el batch al mismo tiempo sobre el mismo
 
 ## Regla 1 — Después de cualquier cambio en `gestion-bancaria.cbl`
 
-Recompilar y correr los 12 casos de `CASOS_DE_PRUEBA.md`:
+Recompilar y correr los 24 casos de `CASOS_DE_PRUEBA.md`:
 
 - 5 automáticos (CP-01, CP-02, CP-03, CP-04, CP-06):
   `cmd /c correr_pruebas_automatizadas.bat`. Tiene que decir
@@ -66,6 +66,10 @@ Recompilar y correr los 12 casos de `CASOS_DE_PRUEBA.md`:
   CP-12 incluye correr `correr_batch_cierre.bat` y revisar
   `bin\reporte_cierre.txt` (interés de 50,00 sobre 10.000,00 con la
   tasa por defecto de 0,50%).
+- 12 automáticos de INTERESES (MENU-01 e INT-01 a INT-11): los corre
+  la segunda parte de `cmd /c correr_pruebas_automatizadas.bat`, que
+  tiene que decir `Resumen intereses: 12 OK / 0 FALLO (de 12)`. En
+  Docker: `docker run --rm gestion-bancaria bash correr_pruebas_intereses.sh`.
 - Usar los DNIs indicados en la matriz (800000XX para los automáticos,
   900000XX para los manuales).
 - En cada caso manual, mostrarle al usuario qué se hizo: qué datos se

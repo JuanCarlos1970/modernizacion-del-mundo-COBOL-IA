@@ -1,0 +1,73 @@
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 19/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares):
+Dias (30, 60, 90 o 120):
+TNA en % (mayor que 0, hasta 999.99):
+Tasa dada de alta.
+Moneda:        P - Pesos
+Dias:          30
+TNA:           45.50 %
+TNA anterior:  0.00 %
+Vigente desde: 20/10/2026
+Estado:        A - Activa
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 19/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: Hasta luego.

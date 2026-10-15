@@ -1,0 +1,6 @@
+# bin/ no se copia a la imagen: tiene los .exe de Windows y los .dat
+# (clientes_v3.dat, intereses.dat) creados por GnuCOBOL de Windows,
+# cuyo formato el GnuCOBOL de Linux no puede leer ("BDB1009 ...
+# unsupported btree version"). El Dockerfile crea bin/ vacio y compila
+# ahi; los .dat se crean solos al correr el programa en el contenedor.
+bin/

@@ -12,6 +12,13 @@
       *               La baja es logica: el cliente pasa a estado I
       *               (Inactivo) y su registro NO se elimina. Un
       *               cliente inactivo se puede reactivar (estado R).
+      *               Las tasas de interes (TNA por moneda y plazo)
+      *               se guardan en otro archivo indexado,
+      *               intereses.dat (clave = moneda + dias), en la
+      *               misma carpeta que clientes_v3.dat.
+      *               La fecha de proceso es la del sistema, salvo que
+      *               exista la variable de entorno FECHA_PROCESO
+      *               (AAAAMMDD), que se usa para fijarla en pruebas.
       ******************************************************************
        IDENTIFICATION DIVISION.
        PROGRAM-ID. GESTION-BANCARIA.
@@ -35,6 +42,15 @@
                RECORD KEY IS CLI-DNI
                FILE STATUS IS WS-FS.
 
+      * Tabla de tasas (menu INTERESES). Mismo patron que
+      * clientes_v3.dat: nombre sin carpeta, asi queda en la carpeta
+      * desde donde se ejecuta el programa (bin\).
+           SELECT ARCH-INTERESES ASSIGN TO "intereses.dat"
+               ORGANIZATION IS INDEXED
+               ACCESS MODE IS RANDOM
+               RECORD KEY IS INT-CLAVE
+               FILE STATUS IS WS-FS.
+
        DATA DIVISION.
        FILE SECTION.
        FD  ARCH-CLIENTES.
@@ -43,16 +59,34 @@
       * ambos programas se recompilan siempre juntos.
            COPY CLIENTE.
 
+       FD  ARCH-INTERESES.
+      * Layout del registro de tasas (ver INTERES.cpy).
+           COPY INTERES.
+
        WORKING-STORAGE SECTION.
 
-      * Opcion elegida en el menu principal
-       01  WS-OPCION               PIC X      VALUE SPACE.
+      * Opcion elegida en el menu principal. Ocupa 2 caracteres
+      * porque hay una opcion "10"; una opcion de un digito queda
+      * como "1 " y se compara igual contra "1".
+       01  WS-OPCION               PIC X(2)   VALUE SPACES.
            88  OPC-ALTA                       VALUE "1".
            88  OPC-MODIF-BAJA                 VALUE "2".
            88  OPC-DEPOSITO                   VALUE "3".
            88  OPC-EXTRACCION                 VALUE "4".
            88  OPC-CONSULTA                   VALUE "5".
+           88  OPC-CTA-CTE-CAJA               VALUE "6".
+           88  OPC-PLAZO-FIJO                 VALUE "7".
+           88  OPC-INTERESES                  VALUE "8".
+           88  OPC-HISTORIAL                  VALUE "9".
+           88  OPC-PAGO-SERVICIOS             VALUE "10".
            88  OPC-SALIR                      VALUE "0".
+
+      * Opcion elegida en el submenu INTERESES
+       01  WS-OPC-INT              PIC X      VALUE SPACE.
+           88  OPI-ALTA                       VALUE "1".
+           88  OPI-MODIFICACION               VALUE "2".
+           88  OPI-BAJA                       VALUE "3".
+           88  OPI-VOLVER                     VALUE "4".
 
       * Respuesta a "Modificar o Baja" (opcion 2 del menu principal)
        01  WS-OPC-MB               PIC X      VALUE SPACE.
@@ -81,6 +115,8 @@
            88  FS-NO-EXISTE                   VALUE "35".
       * Nombre de la operacion en curso, para informar el error
        01  WS-OPERACION            PIC X(10)  VALUE SPACES.
+      * Archivo sobre el que se hace la operacion en curso
+       01  WS-ARCHIVO              PIC X(16)  VALUE SPACES.
 
       * Campos de entrada (texto tal cual lo tipea el usuario)
        01  WS-DNI-TXT              PIC X(8).
@@ -98,6 +134,34 @@
        01  WS-CANT-DIG             PIC 99.
        01  WS-SALDO-EDIT           PIC -ZZZ,ZZZ,ZZ9.99.
 
+      * Campos de trabajo de INTERESES
+       01  WS-MONEDA               PIC X.
+       01  WS-DIAS                 PIC 9(3).
+       01  WS-TNA                  PIC 9(3)V99.
+      * La TNA tipeada, con decimales de sobra para detectar si
+      * tiene mas de 2 (al pasarla a WS-TNA se perderian sin aviso)
+       01  WS-TNA-CALC             PIC S9(5)V9(6).
+       01  WS-DIAS-EDIT            PIC ZZ9.
+       01  WS-TNA-EDIT             PIC ZZ9.99.
+
+      * Fechas. WS-FECHA-PROCESO es "hoy" para el programa: sale
+      * del sistema o de la variable de entorno FECHA_PROCESO.
+       01  WS-FECHA-ENV            PIC X(20).
+       01  WS-FECHA-HORA           PIC X(21).
+       01  WS-FECHA-PROCESO        PIC 9(8).
+       01  WS-PROX-HABIL           PIC 9(8).
+      * Numero de dia (1 = 01/01/1601, que fue lunes)
+       01  WS-FECHA-INT            PIC 9(7).
+      * Resto de dividir por 7: 1 = lunes ... 6 = sabado, 0 = domingo
+       01  WS-DIA-SEMANA           PIC 9.
+      * Fecha a mostrar (AAAAMMDD) y su version DD/MM/AAAA
+       01  WS-FECHA-AUX            PIC 9(8).
+       01  WS-FECHA-AUX-R REDEFINES WS-FECHA-AUX.
+           05  WS-FA-ANIO          PIC 9(4).
+           05  WS-FA-MES           PIC 99.
+           05  WS-FA-DIA           PIC 99.
+       01  WS-FECHA-EDIT           PIC X(10).
+
       * Indicadores de validacion / busqueda
        01  WS-DNI-OK               PIC X      VALUE "N".
            88  DNI-VALIDO                     VALUE "S".
@@ -114,23 +178,29 @@
        01  WS-OPERABLE             PIC X      VALUE "N".
            88  CLIENTE-OPERABLE               VALUE "S".
            88  CLIENTE-NO-OPERABLE            VALUE "N".
+       01  WS-TASA-ENC             PIC X      VALUE "N".
+           88  TASA-ENCONTRADA                VALUE "S".
+           88  TASA-NO-ENC                    VALUE "N".
 
        PROCEDURE DIVISION.
 
       ******************************************************************
-      * Programa principal: abre el archivo, repite el menu hasta que
-      * se elige salir y cierra el archivo
+      * Programa principal: abre los archivos, repite el menu hasta
+      * que se elige salir y cierra los archivos
       ******************************************************************
        0000-PRINCIPAL.
            PERFORM 0100-ABRIR-ARCHIVO
+           PERFORM 0150-ABRIR-INTERESES
            PERFORM 1000-PROCESAR-MENU UNTIL OPC-SALIR
            PERFORM 0200-CERRAR-ARCHIVO
+           PERFORM 0250-CERRAR-INTERESES
            DISPLAY "Hasta luego."
            STOP RUN.
 
       * Abre el archivo para lectura/escritura. Si todavia no existe
       * (FILE STATUS 35) lo crea vacio y lo vuelve a abrir.
        0100-ABRIR-ARCHIVO.
+           MOVE "clientes_v3.dat" TO WS-ARCHIVO
            MOVE "OPEN I-O" TO WS-OPERACION
            OPEN I-O ARCH-CLIENTES
            IF FS-NO-EXISTE
@@ -152,8 +222,40 @@
            END-IF.
 
        0200-CERRAR-ARCHIVO.
+           MOVE "clientes_v3.dat" TO WS-ARCHIVO
            MOVE "CLOSE" TO WS-OPERACION
            CLOSE ARCH-CLIENTES
+           IF NOT FS-OK
+               PERFORM 9000-ERROR-ARCHIVO
+           END-IF.
+
+      * Igual que 0100-ABRIR-ARCHIVO, pero para intereses.dat.
+       0150-ABRIR-INTERESES.
+           MOVE "intereses.dat" TO WS-ARCHIVO
+           MOVE "OPEN I-O" TO WS-OPERACION
+           OPEN I-O ARCH-INTERESES
+           IF FS-NO-EXISTE
+               MOVE "OPEN OUT" TO WS-OPERACION
+               OPEN OUTPUT ARCH-INTERESES
+               IF NOT FS-OK
+                   PERFORM 9000-ERROR-ARCHIVO
+               END-IF
+               MOVE "CLOSE" TO WS-OPERACION
+               CLOSE ARCH-INTERESES
+               IF NOT FS-OK
+                   PERFORM 9000-ERROR-ARCHIVO
+               END-IF
+               MOVE "OPEN I-O" TO WS-OPERACION
+               OPEN I-O ARCH-INTERESES
+           END-IF
+           IF NOT FS-OK
+               PERFORM 9000-ERROR-ARCHIVO
+           END-IF.
+
+       0250-CERRAR-INTERESES.
+           MOVE "intereses.dat" TO WS-ARCHIVO
+           MOVE "CLOSE" TO WS-OPERACION
+           CLOSE ARCH-INTERESES
            IF NOT FS-OK
                PERFORM 9000-ERROR-ARCHIVO
            END-IF.
@@ -161,22 +263,34 @@
        1000-PROCESAR-MENU.
            PERFORM 1100-MOSTRAR-MENU
            ACCEPT WS-OPCION
+      * Si la entrada llega con fin de linea de Windows (CRLF) a un
+      * programa compilado en Linux, el CR (X"0D") queda en el
+      * segundo caracter ("0" + CR no es "0" y no se podria salir).
+           INSPECT WS-OPCION REPLACING ALL X"0D" BY SPACE
            EVALUATE TRUE
                WHEN OPC-ALTA        PERFORM 2000-ALTA-CLIENTE
                WHEN OPC-MODIF-BAJA  PERFORM 2500-MODIFICAR-O-BAJA
                WHEN OPC-DEPOSITO    PERFORM 3000-DEPOSITO
                WHEN OPC-EXTRACCION  PERFORM 4000-EXTRACCION
                WHEN OPC-CONSULTA    PERFORM 5000-CONSULTA-SALDO
+               WHEN OPC-INTERESES   PERFORM 5500-INTERESES
+               WHEN OPC-CTA-CTE-CAJA
+               WHEN OPC-PLAZO-FIJO
+               WHEN OPC-HISTORIAL
+               WHEN OPC-PAGO-SERVICIOS
+                                    DISPLAY "Opcion en desarrollo."
                WHEN OPC-SALIR       CONTINUE
                WHEN OTHER           DISPLAY "Opcion invalida."
            END-EVALUATE.
 
       * Solo presentacion: lineas en blanco y sangria con espacios.
-      * Los numeros de opcion (1-5 y 0) no cambian.
+      * Las opciones 1 a 10 van en un solo bloque; el "10" lleva un
+      * espacio menos de sangria para que los guiones queden
+      * alineados.
        1100-MOSTRAR-MENU.
            DISPLAY " "
            DISPLAY "  ======================================"
-           DISPLAY "             CUENTA BANCARIA"
+           DISPLAY "             GESTION BANCARIA"
            DISPLAY "  ======================================"
            DISPLAY " "
            DISPLAY "     1 - Alta de cliente"
@@ -184,6 +298,11 @@
            DISPLAY "     3 - Deposito"
            DISPLAY "     4 - Extraccion"
            DISPLAY "     5 - Consulta de saldo"
+           DISPLAY "     6 - Cuenta corriente / Caja de ahorro"
+           DISPLAY "     7 - Plazo fijo"
+           DISPLAY "     8 - Intereses"
+           DISPLAY "     9 - Historial de movimientos"
+           DISPLAY "    10 - Pago de servicios"
            DISPLAY " "
            DISPLAY "     0 - Salir"
            DISPLAY " "
@@ -227,6 +346,7 @@
            MOVE WS-DNI TO CLI-DNI
            MOVE 0      TO CLI-SALDO
            SET CLIENTE-ACTIVO TO TRUE
+           MOVE "clientes_v3.dat" TO WS-ARCHIVO
            MOVE "WRITE" TO WS-OPERACION
            WRITE REG-CLIENTE
                INVALID KEY
@@ -339,6 +459,262 @@
                    PERFORM 8800-MOSTRAR-CLIENTE
                END-IF
            END-IF.
+
+      ******************************************************************
+      * 8 - Intereses: tabla de TNA por moneda (P/D) y plazo (30, 60,
+      *     90 o 120 dias). Toda tasa que se carga o modifica rige
+      *     desde el PROXIMO DIA HABIL (lunes a viernes, sin contar
+      *     feriados). La baja es logica (estado B) y rige de
+      *     inmediato. Al elegir 4 se vuelve al menu principal.
+      ******************************************************************
+       5500-INTERESES.
+           PERFORM 8050-FIJAR-FECHA-PROCESO
+           MOVE SPACE TO WS-OPC-INT
+           PERFORM 5510-MENU-INTERESES UNTIL OPI-VOLVER.
+
+      * Mismo formato que 1100-MOSTRAR-MENU (solo presentacion).
+       5510-MENU-INTERESES.
+           MOVE WS-FECHA-PROCESO TO WS-FECHA-AUX
+           PERFORM 8070-EDITAR-FECHA
+           DISPLAY " "
+           DISPLAY "  ======================================"
+           DISPLAY "                INTERESES"
+           DISPLAY "  ======================================"
+           DISPLAY " "
+           DISPLAY "  Fecha de proceso: " WS-FECHA-EDIT
+           DISPLAY " "
+           DISPLAY "     1 - Alta"
+           DISPLAY "     2 - Modificacion"
+           DISPLAY "     3 - Baja"
+           DISPLAY " "
+           DISPLAY "     4 - Volver"
+           DISPLAY " "
+           DISPLAY "  Opcion: " WITH NO ADVANCING
+           ACCEPT WS-OPC-INT
+           EVALUATE TRUE
+               WHEN OPI-ALTA          PERFORM 5600-ALTA-TASA
+               WHEN OPI-MODIFICACION  PERFORM 5700-MODIFICAR-TASA
+               WHEN OPI-BAJA          PERFORM 5800-BAJA-TASA
+               WHEN OPI-VOLVER        CONTINUE
+               WHEN OTHER             DISPLAY "Opcion invalida."
+           END-EVALUATE.
+
+      * 8/1 - Alta. Si la combinacion moneda + dias ya existe:
+      *   - activa (A): avisa y no la toca (no pide la TNA).
+      *   - en baja (B): la reactiva con la TNA nueva.
+      * En el alta y en la reactivacion: TNA-ANTERIOR en cero y
+      * VIGENTE-DESDE = proximo dia habil.
+       5600-ALTA-TASA.
+           PERFORM 5910-PEDIR-MONEDA
+           PERFORM 5920-PEDIR-DIAS
+           PERFORM 5940-BUSCAR-TASA
+           IF TASA-ENCONTRADA AND TASA-ACTIVA
+               DISPLAY "Ya existe una tasa activa para esa moneda"
+               DISPLAY "y plazo. No se modifico nada."
+               PERFORM 5960-MOSTRAR-TASA
+           ELSE
+               PERFORM 5930-PEDIR-TNA
+               PERFORM 8060-CALCULAR-PROX-HABIL
+               MOVE WS-MONEDA     TO INT-MONEDA
+               MOVE WS-DIAS       TO INT-DIAS
+               MOVE WS-TNA        TO INT-TNA
+               MOVE 0             TO INT-TNA-ANTERIOR
+               MOVE WS-PROX-HABIL TO INT-VIGENTE-DESDE
+               SET TASA-ACTIVA TO TRUE
+               IF TASA-ENCONTRADA
+                   PERFORM 5955-ACTUALIZAR-TASA
+                   DISPLAY "Tasa reactivada (estaba dada de baja)."
+               ELSE
+                   PERFORM 5950-GRABAR-TASA-NUEVA
+                   DISPLAY "Tasa dada de alta."
+               END-IF
+               PERFORM 5960-MOSTRAR-TASA
+           END-IF.
+
+      * 8/2 - Modificacion de la TNA de una combinacion activa.
+      * Si la tasa actual ya esta vigente (fecha de proceso igual o
+      * posterior a VIGENTE-DESDE) pasa a TNA-ANTERIOR. Si todavia
+      * no estaba vigente (cambio pendiente), TNA-ANTERIOR no se
+      * toca: sigue guardando la tasa que rige hoy.
+       5700-MODIFICAR-TASA.
+           PERFORM 5910-PEDIR-MONEDA
+           PERFORM 5920-PEDIR-DIAS
+           PERFORM 5940-BUSCAR-TASA
+           EVALUATE TRUE
+               WHEN TASA-NO-ENC
+                   DISPLAY "No existe una tasa para esa moneda y plazo."
+               WHEN TASA-BAJA
+                   DISPLAY "La tasa esta dada de baja."
+                   DISPLAY "Use la opcion 1 - Alta para reactivarla."
+               WHEN OTHER
+                   DISPLAY "Tasa actual:"
+                   PERFORM 5960-MOSTRAR-TASA
+                   PERFORM 5930-PEDIR-TNA
+                   IF WS-FECHA-PROCESO >= INT-VIGENTE-DESDE
+                       MOVE INT-TNA TO INT-TNA-ANTERIOR
+                   END-IF
+                   PERFORM 8060-CALCULAR-PROX-HABIL
+                   MOVE WS-TNA        TO INT-TNA
+                   MOVE WS-PROX-HABIL TO INT-VIGENTE-DESDE
+                   PERFORM 5955-ACTUALIZAR-TASA
+                   DISPLAY "Tasa modificada."
+                   PERFORM 5960-MOSTRAR-TASA
+           END-EVALUATE.
+
+      * 8/3 - Baja logica: estado B, rige de inmediato. El registro
+      * no se borra y VIGENTE-DESDE no cambia.
+       5800-BAJA-TASA.
+           PERFORM 5910-PEDIR-MONEDA
+           PERFORM 5920-PEDIR-DIAS
+           PERFORM 5940-BUSCAR-TASA
+           EVALUATE TRUE
+               WHEN TASA-NO-ENC
+                   DISPLAY "No existe una tasa para esa moneda y plazo."
+               WHEN TASA-BAJA
+                   DISPLAY "La tasa ya esta dada de baja."
+               WHEN OTHER
+                   SET TASA-BAJA TO TRUE
+                   PERFORM 5955-ACTUALIZAR-TASA
+                   DISPLAY "Tasa dada de baja."
+                   PERFORM 5960-MOSTRAR-TASA
+           END-EVALUATE.
+
+      * Pide la moneda hasta que sea P o D (acepta minusculas).
+       5910-PEDIR-MONEDA.
+           SET CAMPO-INVALIDO TO TRUE
+           PERFORM UNTIL CAMPO-VALIDO
+               DISPLAY "Moneda (P = pesos, D = dolares):"
+               ACCEPT WS-TEXTO
+               INSPECT WS-TEXTO REPLACING ALL X"0D" BY SPACE
+               MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(WS-TEXTO))
+                   TO WS-TEXTO
+               IF WS-TEXTO = "P" OR WS-TEXTO = "D"
+                   MOVE WS-TEXTO(1:1) TO WS-MONEDA
+                   SET CAMPO-VALIDO TO TRUE
+               ELSE
+                   DISPLAY "Moneda invalida: ingrese P o D."
+               END-IF
+           END-PERFORM.
+
+      * Pide el plazo hasta que sea 30, 60, 90 o 120.
+       5920-PEDIR-DIAS.
+           SET CAMPO-INVALIDO TO TRUE
+           PERFORM UNTIL CAMPO-VALIDO
+               DISPLAY "Dias (30, 60, 90 o 120):"
+               ACCEPT WS-TEXTO
+               INSPECT WS-TEXTO REPLACING ALL X"0D" BY SPACE
+               MOVE FUNCTION TRIM(WS-TEXTO) TO WS-TEXTO
+               IF WS-TEXTO = "30" OR WS-TEXTO = "60"
+                  OR WS-TEXTO = "90" OR WS-TEXTO = "120"
+                   COMPUTE WS-DIAS = FUNCTION NUMVAL(WS-TEXTO)
+                   SET CAMPO-VALIDO TO TRUE
+               ELSE
+                   DISPLAY "Dias invalidos: ingrese 30, 60, 90 o 120."
+               END-IF
+           END-PERFORM.
+
+      * Pide la TNA hasta que sea un numero mayor que 0, de hasta
+      * 999.99 (lo maximo que entra en 9(3)V99) y con hasta 2
+      * decimales. Como en el monto, se usa el punto decimal.
+       5930-PEDIR-TNA.
+           SET CAMPO-INVALIDO TO TRUE
+           PERFORM UNTIL CAMPO-VALIDO
+               DISPLAY "TNA en % (mayor que 0, hasta 999.99):"
+               ACCEPT WS-MONTO-TXT
+               INSPECT WS-MONTO-TXT REPLACING ALL X"0D" BY SPACE
+               IF WS-MONTO-TXT = SPACES
+                   DISPLAY "La TNA no puede estar vacia."
+               ELSE
+                   IF FUNCTION TEST-NUMVAL(WS-MONTO-TXT) NOT = 0
+                       DISPLAY "TNA invalida: ingrese un numero."
+                   ELSE
+                       COMPUTE WS-TNA-CALC =
+                           FUNCTION NUMVAL(WS-MONTO-TXT)
+                           ON SIZE ERROR
+                               DISPLAY "TNA invalida: maximo 999.99."
+                           NOT ON SIZE ERROR
+                               PERFORM 5935-VALIDAR-TNA
+                       END-COMPUTE
+                   END-IF
+               END-IF
+           END-PERFORM.
+
+       5935-VALIDAR-TNA.
+           EVALUATE TRUE
+               WHEN WS-TNA-CALC NOT > 0
+                   DISPLAY "TNA invalida: debe ser mayor que 0."
+               WHEN WS-TNA-CALC > 999.99
+                   DISPLAY "TNA invalida: maximo 999.99."
+               WHEN OTHER
+                   MOVE WS-TNA-CALC TO WS-TNA
+                   IF WS-TNA NOT = WS-TNA-CALC
+                       DISPLAY "TNA invalida: maximo 2 decimales."
+                   ELSE
+                       SET CAMPO-VALIDO TO TRUE
+                   END-IF
+           END-EVALUATE.
+
+      * Lee la tasa con clave WS-MONEDA + WS-DIAS. Si existe, sus
+      * datos quedan en REG-INTERES y TASA-ENCONTRADA es verdadero.
+       5940-BUSCAR-TASA.
+           SET TASA-NO-ENC TO TRUE
+           MOVE WS-MONEDA TO INT-MONEDA
+           MOVE WS-DIAS   TO INT-DIAS
+           MOVE "intereses.dat" TO WS-ARCHIVO
+           MOVE "READ" TO WS-OPERACION
+           READ ARCH-INTERESES KEY IS INT-CLAVE
+               INVALID KEY
+                   SET TASA-NO-ENC TO TRUE
+               NOT INVALID KEY
+                   SET TASA-ENCONTRADA TO TRUE
+           END-READ
+           IF NOT FS-OK AND NOT FS-CLAVE-NO-ENC
+               PERFORM 9000-ERROR-ARCHIVO
+           END-IF.
+
+       5950-GRABAR-TASA-NUEVA.
+           MOVE "intereses.dat" TO WS-ARCHIVO
+           MOVE "WRITE" TO WS-OPERACION
+           WRITE REG-INTERES
+           IF NOT FS-OK
+               PERFORM 9000-ERROR-ARCHIVO
+           END-IF.
+
+       5955-ACTUALIZAR-TASA.
+           MOVE "intereses.dat" TO WS-ARCHIVO
+           MOVE "REWRITE" TO WS-OPERACION
+           REWRITE REG-INTERES
+           IF NOT FS-OK
+               PERFORM 9000-ERROR-ARCHIVO
+           END-IF.
+
+      * Muestra todos los datos de la tasa que esta en REG-INTERES.
+       5960-MOSTRAR-TASA.
+           EVALUATE TRUE
+               WHEN MONEDA-PESOS
+                   DISPLAY "Moneda:        P - Pesos"
+               WHEN MONEDA-DOLARES
+                   DISPLAY "Moneda:        D - Dolares"
+               WHEN OTHER
+                   DISPLAY "Moneda:        ? - Desconocida"
+           END-EVALUATE
+           MOVE INT-DIAS TO WS-DIAS-EDIT
+           DISPLAY "Dias:          " FUNCTION TRIM(WS-DIAS-EDIT)
+           MOVE INT-TNA TO WS-TNA-EDIT
+           DISPLAY "TNA:           " FUNCTION TRIM(WS-TNA-EDIT) " %"
+           MOVE INT-TNA-ANTERIOR TO WS-TNA-EDIT
+           DISPLAY "TNA anterior:  " FUNCTION TRIM(WS-TNA-EDIT) " %"
+           MOVE INT-VIGENTE-DESDE TO WS-FECHA-AUX
+           PERFORM 8070-EDITAR-FECHA
+           DISPLAY "Vigente desde: " WS-FECHA-EDIT
+           EVALUATE TRUE
+               WHEN TASA-ACTIVA
+                   DISPLAY "Estado:        A - Activa"
+               WHEN TASA-BAJA
+                   DISPLAY "Estado:        B - Baja"
+               WHEN OTHER
+                   DISPLAY "Estado:        ? - Desconocido"
+           END-EVALUATE.
 
       ******************************************************************
       * 2/M - Modificacion. El cliente ya esta leido y mostrado.
@@ -475,6 +851,7 @@
        8000-BUSCAR-CLIENTE.
            SET CLIENTE-NO-ENC TO TRUE
            MOVE WS-DNI TO CLI-DNI
+           MOVE "clientes_v3.dat" TO WS-ARCHIVO
            MOVE "READ" TO WS-OPERACION
            READ ARCH-CLIENTES KEY IS CLI-DNI
                INVALID KEY
@@ -485,6 +862,57 @@
            IF NOT FS-OK AND NOT FS-CLAVE-NO-ENC
                PERFORM 9000-ERROR-ARCHIVO
            END-IF.
+
+      * Fija WS-FECHA-PROCESO ("hoy" para el programa). Si existe la
+      * variable de entorno FECHA_PROCESO con una fecha AAAAMMDD
+      * valida, se usa esa (sirve para que las pruebas usen siempre
+      * la misma fecha). Si no existe, se usa la fecha del sistema.
+      * Si existe pero no es una fecha valida, avisa y usa la del
+      * sistema (asi un error de tipeo no graba una fecha basura).
+       8050-FIJAR-FECHA-PROCESO.
+           MOVE FUNCTION CURRENT-DATE TO WS-FECHA-HORA
+           MOVE WS-FECHA-HORA(1:8) TO WS-FECHA-PROCESO
+           MOVE SPACES TO WS-FECHA-ENV
+           ACCEPT WS-FECHA-ENV FROM ENVIRONMENT "FECHA_PROCESO"
+           IF WS-FECHA-ENV NOT = SPACES
+               IF WS-FECHA-ENV(1:8) IS NUMERIC
+                  AND WS-FECHA-ENV(9:) = SPACES
+                   MOVE WS-FECHA-ENV(1:8) TO WS-FECHA-AUX
+               ELSE
+                   MOVE 0 TO WS-FECHA-AUX
+               END-IF
+               IF FUNCTION TEST-DATE-YYYYMMDD(WS-FECHA-AUX) = 0
+                   MOVE WS-FECHA-AUX TO WS-FECHA-PROCESO
+               ELSE
+                   DISPLAY "FECHA_PROCESO invalida (use AAAAMMDD):"
+                   DISPLAY "se usa la fecha del sistema."
+               END-IF
+           END-IF.
+
+      * Calcula WS-PROX-HABIL: el proximo dia habil (lunes a
+      * viernes) despues de WS-FECHA-PROCESO. No considera feriados.
+      * INTEGER-OF-DATE numera los dias desde el 01/01/1601, que fue
+      * lunes; por eso el resto de dividir por 7 da el dia de la
+      * semana: 1 = lunes ... 5 = viernes, 6 = sabado, 0 = domingo.
+      *   lunes a jueves: +1    viernes: +3 (lunes)
+      *   sabado: +2 (lunes)    domingo: +1 (lunes)
+       8060-CALCULAR-PROX-HABIL.
+           COMPUTE WS-FECHA-INT =
+               FUNCTION INTEGER-OF-DATE(WS-FECHA-PROCESO)
+           COMPUTE WS-DIA-SEMANA = FUNCTION MOD(WS-FECHA-INT, 7)
+           EVALUATE WS-DIA-SEMANA
+               WHEN 5      ADD 3 TO WS-FECHA-INT
+               WHEN 6      ADD 2 TO WS-FECHA-INT
+               WHEN OTHER  ADD 1 TO WS-FECHA-INT
+           END-EVALUATE
+           COMPUTE WS-PROX-HABIL =
+               FUNCTION DATE-OF-INTEGER(WS-FECHA-INT).
+
+      * Pasa WS-FECHA-AUX (AAAAMMDD) a WS-FECHA-EDIT (DD/MM/AAAA).
+       8070-EDITAR-FECHA.
+           MOVE SPACES TO WS-FECHA-EDIT
+           STRING WS-FA-DIA "/" WS-FA-MES "/" WS-FA-ANIO
+               DELIMITED BY SIZE INTO WS-FECHA-EDIT.
 
       * Pide un DNI de exactamente 8 digitos.
       * NOTA: los prompts "Opcion:" del menu principal y del submenu
@@ -556,6 +984,7 @@
 
       * Graba en el archivo el registro modificado.
        8400-ACTUALIZAR-CLIENTE.
+           MOVE "clientes_v3.dat" TO WS-ARCHIVO
            MOVE "REWRITE" TO WS-OPERACION
            REWRITE REG-CLIENTE
            IF NOT FS-OK
@@ -662,31 +1091,40 @@
            END-IF.
 
       * Error de E/S inesperado: informa operacion, FILE STATUS y
-      * su significado, y termina el programa.
+      * su significado, y termina el programa. WS-ARCHIVO dice cual
+      * de los dos archivos fallo (clientes_v3.dat o intereses.dat).
+      * Se cierran los dos: cerrar uno que no estaba abierto solo da
+      * FILE STATUS 42, que aca se ignora.
        9000-ERROR-ARCHIVO.
            DISPLAY "Error de archivo en " WS-OPERACION
            DISPLAY "FILE STATUS: " WS-FS
            EVALUATE WS-FS
                WHEN "30"
-                   DISPLAY "clientes_v3.dat ilegible o corrupto."
+                   DISPLAY FUNCTION TRIM(WS-ARCHIVO)
+                       " ilegible o corrupto."
                    DISPLAY "Borrelo para que se cree de nuevo."
                WHEN "35"
-                   DISPLAY "El archivo clientes_v3.dat no existe."
+                   DISPLAY "El archivo " FUNCTION TRIM(WS-ARCHIVO)
+                       " no existe."
                WHEN "37"
-                   DISPLAY "Sin permisos sobre clientes_v3.dat."
+                   DISPLAY "Sin permisos sobre "
+                       FUNCTION TRIM(WS-ARCHIVO) "."
                WHEN "39"
-                   DISPLAY "clientes_v3.dat: formato incompatible."
+                   DISPLAY FUNCTION TRIM(WS-ARCHIVO)
+                       ": formato incompatible."
                    DISPLAY "Borrelo para que se cree de nuevo."
                WHEN "41"
                    DISPLAY "El archivo ya estaba abierto."
                WHEN "42"
                    DISPLAY "El archivo no estaba abierto."
                WHEN "61"
-                   DISPLAY "clientes_v3.dat esta en uso por otro"
+                   DISPLAY FUNCTION TRIM(WS-ARCHIVO)
+                       " esta en uso por otro"
                    DISPLAY "programa."
                WHEN OTHER
                    DISPLAY "Codigo no previsto; revisar el archivo."
            END-EVALUATE
            CLOSE ARCH-CLIENTES
+           CLOSE ARCH-INTERESES
            MOVE 1 TO RETURN-CODE
            STOP RUN.

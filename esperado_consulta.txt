@@ -1,6 +1,6 @@
  
   ======================================
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
  
      1 - Alta de cliente
@@ -8,6 +8,11 @@
      3 - Deposito
      4 - Extraccion
      5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
  
      0 - Salir
  
@@ -18,7 +23,7 @@ Telefono (hasta 15 caracteres):
 Cliente dado de alta.
  
   ======================================
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
  
      1 - Alta de cliente
@@ -26,6 +31,11 @@ Cliente dado de alta.
      3 - Deposito
      4 - Extraccion
      5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
  
      0 - Salir
  
@@ -38,7 +48,7 @@ Saldo:                0.00
 Estado:    A - Activo
  
   ======================================
-             CUENTA BANCARIA
+             GESTION BANCARIA
   ======================================
  
      1 - Alta de cliente
@@ -46,6 +56,11 @@ Estado:    A - Activo
      3 - Deposito
      4 - Extraccion
      5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
  
      0 - Salir
  

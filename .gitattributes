@@ -1,0 +1,4 @@
+# Los scripts de bash tienen que tener fin de linea LF siempre (aun
+# con core.autocrlf=true en Windows): con CRLF, bash lee el \r como
+# parte de cada comando y el script falla dentro de Docker / CI.
+*.sh text eol=lf

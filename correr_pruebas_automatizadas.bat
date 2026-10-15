@@ -15,6 +15,10 @@ rem  no requiere instalar nada). Al final muestra un resumen
 rem  PASS/FALLO de los 5 casos, en vez de dejar la comparacion para
 rem  hacer a mano contra CASOS_DE_PRUEBA.md.
 rem
+rem  Despues corre, en una segunda parte con su propio resumen, los
+rem  casos de INTERESES (MENU-01 e INT-01 a INT-11), cada uno con un
+rem  intereses.dat vacio y con fecha de proceso fija (ver mas abajo).
+rem
 rem  El resumen se muestra en pantalla Y ADEMAS se guarda en
 rem  resultado_pruebas.txt (en esta misma carpeta), igual que
 rem  correr_batch_cierre.bat deja bin\reporte_cierre.txt y
@@ -142,6 +146,52 @@ echo ========================================== >> "%LOGFILE%"
 echo  Resumen: !OK! OK / !FALLO! FALLO (de 5) >> "%LOGFILE%"
 echo ========================================== >> "%LOGFILE%"
 
+rem -----------------------------------------------------------------
+rem  Segunda parte: casos de la Evolucion 1 / Etapa 1 (MENU-01 e
+rem  INT-01 a INT-11 de CASOS_DE_PRUEBA.md). Misma logica que
+rem  correr_pruebas_intereses.sh (Linux / Docker / CI):
+rem   - cada caso corre en bin\prueba_int\, una carpeta que se borra y
+rem     se vuelve a crear, asi arranca con un intereses.dat vacio sin
+rem     tocar nunca el bin\intereses.dat de verdad;
+rem   - cada paso (entrada_<caso>_1.txt, _2.txt...) es una ejecucion
+rem     con su propia fecha de proceso fija (FECHA_PROCESO); las
+rem     salidas de todos los pasos se juntan en salida_<caso>.txt.
+rem  Fechas de octubre de 2026: 14 = miercoles, 15 = jueves,
+rem  16 = viernes, 17 = sabado, 18 = domingo, 19 = lunes.
+rem -----------------------------------------------------------------
+echo.
+echo [pruebas] Corriendo y verificando los casos de INTERESES ...
+echo.
+
+set /a OK_INT=0
+set /a FALLO_INT=0
+set /a TOTAL_INT=0
+
+call :caso_int menu01 20261014
+call :caso_int int01  20261019
+call :caso_int int02  20261014
+call :caso_int int03  20261014
+call :caso_int int04  20261014 20261016
+call :caso_int int05  20261014
+call :caso_int int06  20261014
+call :caso_int int07  20261016
+call :caso_int int08  20261017 20261018
+call :caso_int int09  20261014 20261015
+call :caso_int int10  20261014 20261015
+call :caso_int int11  20261014
+
+echo.
+echo [pruebas] ==========================================
+echo [pruebas]  Resumen intereses: !OK_INT! OK / !FALLO_INT! FALLO ^(de !TOTAL_INT!^)
+echo [pruebas] ==========================================
+
+echo. >> "%LOGFILE%"
+echo ========================================== >> "%LOGFILE%"
+echo  Resumen intereses: !OK_INT! OK / !FALLO_INT! FALLO (de !TOTAL_INT!) >> "%LOGFILE%"
+echo ========================================== >> "%LOGFILE%"
+
+set /a FALLO+=FALLO_INT
+
 if !FALLO! GTR 0 (
     echo.
     echo [pruebas] Casos que fallaron:!CASOS_FALLIDOS!
@@ -167,9 +217,51 @@ if !FALLO! GTR 0 (
 )
 
 echo.
-echo [pruebas] Los 5 casos automatizados pasaron.
-echo Los 5 casos automatizados pasaron. >> "%LOGFILE%"
+echo [pruebas] Todos los casos automatizados pasaron.
+echo Todos los casos automatizados pasaron. >> "%LOGFILE%"
 echo.
 echo [pruebas] Resultado guardado en resultado_pruebas.txt
 endlocal
 exit /b 0
+
+rem =================================================================
+rem  :caso_int <caso> <fecha paso 1> [<fecha paso 2> ...]
+rem  Corre un caso de INTERESES (ver la segunda parte, arriba).
+rem =================================================================
+:caso_int
+set "CASO=%~1"
+shift
+if exist "bin\prueba_int" rmdir /s /q "bin\prueba_int"
+mkdir "bin\prueba_int"
+type nul > "salida_%CASO%.txt"
+set /a PASO=1
+:caso_int_paso
+if "%~1"=="" goto caso_int_comparar
+if not exist "entrada_%CASO%_!PASO!.txt" (
+    echo [pruebas] ERROR: no se encuentra entrada_%CASO%_!PASO!.txt
+    echo ERROR: no se encuentra entrada_%CASO%_!PASO!.txt >> "%LOGFILE%"
+    goto caso_int_comparar
+)
+set "FECHA_PROCESO=%~1"
+pushd "bin\prueba_int"
+"..\gestion-bancaria.exe" < "..\..\entrada_%CASO%_!PASO!.txt" >> "..\..\salida_%CASO%.txt"
+popd
+set "FECHA_PROCESO="
+set /a PASO+=1
+shift
+goto caso_int_paso
+:caso_int_comparar
+rmdir /s /q "bin\prueba_int"
+set /a TOTAL_INT+=1
+fc "esperado_%CASO%.txt" "salida_%CASO%.txt" >nul
+if errorlevel 1 (
+    echo [pruebas]   FALLO  - %CASO%
+    echo   FALLO  - %CASO% >> "%LOGFILE%"
+    set /a FALLO_INT+=1
+    set "CASOS_FALLIDOS=!CASOS_FALLIDOS! %CASO%"
+) else (
+    echo [pruebas]   OK     - %CASO%
+    echo   OK     - %CASO% >> "%LOGFILE%"
+    set /a OK_INT+=1
+)
+goto :eof
