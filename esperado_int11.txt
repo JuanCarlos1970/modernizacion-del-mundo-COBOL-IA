@@ -29,28 +29,16 @@
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Moneda invalida: ingrese P o D.
-Moneda (P = pesos, D = dolares):
-Moneda invalida: ingrese P o D.
-Moneda (P = pesos, D = dolares):
-Moneda invalida: ingrese P o D.
-Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-TNA en % (mayor que 0, hasta 999.99):
-TNA invalida: ingrese un numero.
-TNA en % (mayor que 0, hasta 999.99):
-TNA invalida: debe ser mayor que 0.
-TNA en % (mayor que 0, hasta 999.99):
-TNA invalida: debe ser mayor que 0.
-TNA en % (mayor que 0, hasta 999.99):
-TNA invalida: maximo 999.99.
-TNA en % (mayor que 0, hasta 999.99):
-TNA invalida: maximo 2 decimales.
-TNA en % (mayor que 0, hasta 999.99):
-La TNA no puede estar vacia.
-TNA en % (mayor que 0, hasta 999.99):
-Tasa dada de alta.
+  Opcion: Moneda (P = pesos, D = dolares): Moneda invalida: ingrese P o D.
+Moneda (P = pesos, D = dolares): Moneda invalida: ingrese P o D.
+Moneda (P = pesos, D = dolares): Moneda invalida: ingrese P o D.
+Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): TNA invalida: ingrese un numero.
+TNA en % (mayor que 0, hasta 999.99): TNA invalida: debe ser mayor que 0.
+TNA en % (mayor que 0, hasta 999.99): TNA invalida: debe ser mayor que 0.
+TNA en % (mayor que 0, hasta 999.99): TNA invalida: maximo 999.99.
+TNA en % (mayor que 0, hasta 999.99): TNA invalida: maximo 2 decimales.
+TNA en % (mayor que 0, hasta 999.99): La TNA no puede estar vacia.
+TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
 Moneda:        D - Dolares
 Dias:          90
 TNA:           5.50 %

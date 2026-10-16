@@ -29,10 +29,7 @@
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-TNA en % (mayor que 0, hasta 999.99):
-Tasa dada de alta.
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
 Moneda:        P - Pesos
 Dias:          30
 TNA:           40.00 %
@@ -102,17 +99,14 @@ Estado:        A - Activa
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-Tasa actual:
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): Tasa actual:
 Moneda:        P - Pesos
 Dias:          30
 TNA:           40.00 %
 TNA anterior:  0.00 %
 Vigente desde: 15/10/2026
 Estado:        A - Activa
-TNA en % (mayor que 0, hasta 999.99):
-Tasa modificada.
+TNA en % (mayor que 0, hasta 999.99): Tasa modificada.
 Moneda:        P - Pesos
 Dias:          30
 TNA:           42.00 %
@@ -132,17 +126,14 @@ Estado:        A - Activa
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-Tasa actual:
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): Tasa actual:
 Moneda:        P - Pesos
 Dias:          30
 TNA:           42.00 %
 TNA anterior:  40.00 %
 Vigente desde: 16/10/2026
 Estado:        A - Activa
-TNA en % (mayor que 0, hasta 999.99):
-Tasa modificada.
+TNA en % (mayor que 0, hasta 999.99): Tasa modificada.
 Moneda:        P - Pesos
 Dias:          30
 TNA:           44.00 %

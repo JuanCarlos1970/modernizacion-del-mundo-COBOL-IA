@@ -379,7 +379,8 @@
       * Cualquier respuesta distinta de M o B se rechaza y se vuelve
       * al menu principal.
        2600-ELEGIR-MODIF-O-BAJA.
-           DISPLAY "Desea (M)odificar o (B)aja el cliente?"
+           DISPLAY "Desea (M)odificar o (B)aja el cliente? "
+               WITH NO ADVANCING
            ACCEPT WS-OPC-MB
            EVALUATE TRUE
                WHEN MB-MODIFICAR  PERFORM 6000-MODIFICACION
@@ -583,7 +584,8 @@
        5910-PEDIR-MONEDA.
            SET CAMPO-INVALIDO TO TRUE
            PERFORM UNTIL CAMPO-VALIDO
-               DISPLAY "Moneda (P = pesos, D = dolares):"
+               DISPLAY "Moneda (P = pesos, D = dolares): "
+                   WITH NO ADVANCING
                ACCEPT WS-TEXTO
                INSPECT WS-TEXTO REPLACING ALL X"0D" BY SPACE
                MOVE FUNCTION UPPER-CASE(FUNCTION TRIM(WS-TEXTO))
@@ -600,7 +602,7 @@
        5920-PEDIR-DIAS.
            SET CAMPO-INVALIDO TO TRUE
            PERFORM UNTIL CAMPO-VALIDO
-               DISPLAY "Dias (30, 60, 90 o 120):"
+               DISPLAY "Dias (30, 60, 90 o 120): " WITH NO ADVANCING
                ACCEPT WS-TEXTO
                INSPECT WS-TEXTO REPLACING ALL X"0D" BY SPACE
                MOVE FUNCTION TRIM(WS-TEXTO) TO WS-TEXTO
@@ -619,7 +621,8 @@
        5930-PEDIR-TNA.
            SET CAMPO-INVALIDO TO TRUE
            PERFORM UNTIL CAMPO-VALIDO
-               DISPLAY "TNA en % (mayor que 0, hasta 999.99):"
+               DISPLAY "TNA en % (mayor que 0, hasta 999.99): "
+                   WITH NO ADVANCING
                ACCEPT WS-MONTO-TXT
                INSPECT WS-MONTO-TXT REPLACING ALL X"0D" BY SPACE
                IF WS-MONTO-TXT = SPACES
@@ -829,7 +832,7 @@
            END-IF.
 
        7100-CONFIRMAR-BAJA.
-           DISPLAY "Confirma la baja? (S/N):"
+           DISPLAY "Confirma la baja? (S/N): " WITH NO ADVANCING
            ACCEPT WS-CONFIRMA
            IF CONFIRMA-SI
                SET CLIENTE-INACTIVO TO TRUE
@@ -915,16 +918,17 @@
                DELIMITED BY SIZE INTO WS-FECHA-EDIT.
 
       * Pide un DNI de exactamente 8 digitos.
-      * NOTA: los prompts "Opcion:" del menu principal y del submenu
-      * de modificacion usan WITH NO ADVANCING (el del menu principal
-      * se probo en la terminal web: Docker, Ubuntu). Los prompts de
-      * datos, como este, mantienen el salto de linea: con WITH NO
-      * ADVANCING el texto podria no mostrarse mientras se
-      * espera el ACCEPT (stdout redirigido o buffer de algunas
-      * consolas), y pareceria que el programa se colgo.
+      * NOTA: todos los prompts (los "Opcion:" de los menus y los de
+      * datos, como este) usan WITH NO ADVANCING: el dato se tipea en
+      * la misma linea, despues de los dos puntos y un espacio. Se
+      * probo en la terminal web (Docker, Ubuntu). Cuidado: si la
+      * salida no va a una consola real (stdout redirigido o buffer
+      * de algunas consolas o IDEs), el texto podria no mostrarse
+      * mientras se espera el ACCEPT, y pareceria que el programa se
+      * colgo.
        8100-PEDIR-DNI.
            SET DNI-INVALIDO TO TRUE
-           DISPLAY "DNI (8 digitos):"
+           DISPLAY "DNI (8 digitos): " WITH NO ADVANCING
            ACCEPT WS-DNI-TXT
            IF WS-DNI-TXT IS NUMERIC
                MOVE WS-DNI-TXT TO WS-DNI
@@ -936,7 +940,7 @@
       * Pide un monto positivo (se admiten hasta 2 decimales).
        8200-PEDIR-MONTO.
            SET MONTO-INVALIDO TO TRUE
-           DISPLAY "Monto:"
+           DISPLAY "Monto: " WITH NO ADVANCING
            ACCEPT WS-MONTO-TXT
            COMPUTE WS-MONTO = FUNCTION NUMVAL(WS-MONTO-TXT)
                ON SIZE ERROR MOVE 0 TO WS-MONTO
@@ -953,7 +957,7 @@
       * un "0" de un texto que no es un numero.
        8250-PEDIR-SALDO.
            SET CAMPO-INVALIDO TO TRUE
-           DISPLAY "Nuevo saldo (cero o mayor):"
+           DISPLAY "Nuevo saldo (cero o mayor): " WITH NO ADVANCING
            ACCEPT WS-MONTO-TXT
            IF WS-MONTO-TXT = SPACES
                DISPLAY "El saldo no puede estar vacio."
@@ -996,7 +1000,7 @@
       * (un ACCEPT directo al campo final truncaria sin avisar).
        8500-PEDIR-NOMBRE.
            SET CAMPO-INVALIDO TO TRUE
-           DISPLAY "Nombre (hasta 30 caracteres):"
+           DISPLAY "Nombre (hasta 30 caracteres): " WITH NO ADVANCING
            ACCEPT WS-TEXTO
            IF WS-TEXTO = SPACES
                DISPLAY "El nombre no puede estar vacio."
@@ -1012,7 +1016,7 @@
       * Pide la direccion: obligatoria, hasta 40 caracteres.
        8600-PEDIR-DIRECCION.
            SET CAMPO-INVALIDO TO TRUE
-           DISPLAY "Direccion (hasta 40 caracteres):"
+           DISPLAY "Direccion (hasta 40 caracteres): " WITH NO ADVANCING
            ACCEPT WS-TEXTO
            IF WS-TEXTO = SPACES
                DISPLAY "La direccion no puede estar vacia."
@@ -1029,7 +1033,7 @@
       * digitos, + - ( ) y espacios, con al menos 6 digitos.
        8700-PEDIR-TELEFONO.
            SET CAMPO-INVALIDO TO TRUE
-           DISPLAY "Telefono (hasta 15 caracteres):"
+           DISPLAY "Telefono (hasta 15 caracteres): " WITH NO ADVANCING
            ACCEPT WS-TEXTO
            IF WS-TEXTO = SPACES
                DISPLAY "El telefono no puede estar vacio."

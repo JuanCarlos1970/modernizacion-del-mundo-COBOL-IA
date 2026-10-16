@@ -16,11 +16,7 @@
  
      0 - Salir
  
-  Opcion: DNI (8 digitos):
-Nombre (hasta 30 caracteres):
-Direccion (hasta 40 caracteres):
-Telefono (hasta 15 caracteres):
-Cliente dado de alta.
+  Opcion: DNI (8 digitos): Nombre (hasta 30 caracteres): Direccion (hasta 40 caracteres): Telefono (hasta 15 caracteres): Cliente dado de alta.
  
   ======================================
              GESTION BANCARIA
@@ -39,9 +35,7 @@ Cliente dado de alta.
  
      0 - Salir
  
-  Opcion: DNI (8 digitos):
-Monto:
-Saldo actual:        1,000.00
+  Opcion: DNI (8 digitos): Monto: Saldo actual:        1,000.00
  
   ======================================
              GESTION BANCARIA
@@ -60,9 +54,7 @@ Saldo actual:        1,000.00
  
      0 - Salir
  
-  Opcion: DNI (8 digitos):
-Monto:
-Saldo actual:          749.50
+  Opcion: DNI (8 digitos): Monto: Saldo actual:          749.50
  
   ======================================
              GESTION BANCARIA
@@ -81,8 +73,7 @@ Saldo actual:          749.50
  
      0 - Salir
  
-  Opcion: DNI (8 digitos):
-Nombre:    Carla Extraccion
+  Opcion: DNI (8 digitos): Nombre:    Carla Extraccion
 DNI:       80000004
 Direccion: Calle Extraccion 300
 Telefono:  011 5000-0004

@@ -288,8 +288,7 @@ Ejemplo, modificando dirección y saldo en la misma operación:
 
 ```
   Opcion: 1
-Direccion (hasta 40 caracteres):
-Nueva 456
+Direccion (hasta 40 caracteres): Nueva 456
 Dato modificado.
 
   ======================================
@@ -303,8 +302,7 @@ Dato modificado.
      4 - Terminar modificacion
 
   Opcion: 3
-Nuevo saldo (cero o mayor):
-500
+Nuevo saldo (cero o mayor): 500
 Dato modificado.
 
   ======================================
@@ -461,7 +459,7 @@ El monto de un depósito/extracción y el saldo nuevo se validan distinto a prop
 
 #### Ejemplo de sesión
 
-Lo que tipea el usuario es el número que va al lado de `Opcion:` (en la misma línea) y las líneas `12345678`, `Ana Perez`, etc.
+Lo que tipea el usuario va siempre en la misma línea del prompt, después de los dos puntos: el número al lado de `Opcion:`, el `12345678` al lado de `DNI (8 digitos):`, `Ana Perez` al lado de `Nombre (hasta 30 caracteres):`, etc.
 
 ```
   ======================================
@@ -482,14 +480,10 @@ Lo que tipea el usuario es el número que va al lado de `Opcion:` (en la misma l
      0 - Salir
 
   Opcion: 1
-DNI (8 digitos):
-12345678
-Nombre (hasta 30 caracteres):
-Ana Perez
-Direccion (hasta 40 caracteres):
-Calle 1
-Telefono (hasta 15 caracteres):
-011 4444-5555
+DNI (8 digitos): 12345678
+Nombre (hasta 30 caracteres): Ana Perez
+Direccion (hasta 40 caracteres): Calle 1
+Telefono (hasta 15 caracteres): 011 4444-5555
 Cliente dado de alta.
 
   ======================================      <- vuelve al menu principal
@@ -497,18 +491,15 @@ Cliente dado de alta.
   ======================================
      (... mismas opciones de arriba ...)
   Opcion: 2
-DNI (8 digitos):
-12345678
+DNI (8 digitos): 12345678
 Nombre:    Ana Perez
 DNI:       12345678
 Direccion: Calle 1
 Telefono:  011 4444-5555
 Saldo:                0.00
 Estado:    A - Activo
-Desea (M)odificar o (B)aja el cliente?
-B
-Confirma la baja? (S/N):
-S
+Desea (M)odificar o (B)aja el cliente? B
+Confirma la baja? (S/N): S
 Cliente dado de baja (estado Inactivo).
 
 Datos actualizados del cliente:
@@ -524,8 +515,7 @@ Estado:    I - Inactivo
   ======================================
      (... mismas opciones de arriba ...)
   Opcion: 3
-DNI (8 digitos):
-12345678
+DNI (8 digitos): 12345678
 Cliente inactivo: no se puede operar.
 
   ======================================      <- vuelve al menu principal
@@ -533,11 +523,9 @@ Cliente inactivo: no se puede operar.
   ======================================
      (... mismas opciones de arriba ...)
   Opcion: 2
-DNI (8 digitos):
-12345678
+DNI (8 digitos): 12345678
    (... muestra los datos, Estado: I - Inactivo ...)
-Desea (M)odificar o (B)aja el cliente?
-M
+Desea (M)odificar o (B)aja el cliente? M
 Cliente reactivado (estado R).
 
 Datos actualizados del cliente:
@@ -834,7 +822,7 @@ Aplica tanto a `gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` 
 - **Alta atómica.** Los campos se validan antes de grabar; si uno falla, no se escribe nada.
 - **Aritmética decimal.** `PIC S9(9)V99` usa decimales exactos (sin errores de punto flotante), lo habitual para dinero en COBOL. `ADD ... ON SIZE ERROR` y `COMPUTE ... ON SIZE ERROR` evitan truncamientos silenciosos.
 - **`FILE STATUS` en todas las operaciones de E/S.** Se distinguen los casos esperados (clave no encontrada, duplicada, archivo inexistente) de los errores reales, que terminan el programa con un mensaje claro.
-- **Prompts y `WITH NO ADVANCING`.** Los prompts `Opcion:` del menú principal y del submenú de modificación usan `WITH NO ADVANCING`, así que la opción se tipea en la misma línea; los dos se probaron en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y el prompt se ve antes de tipear. Los prompts de datos mantienen el formato anterior (terminan en salto de línea), porque fuera de una consola real ese texto podría no mostrarse mientras se espera la entrada (ver [Solución de problemas](#solucion-de-problemas)).
+- **Prompts y `WITH NO ADVANCING`.** Todos los prompts (los `Opcion:` de los menús y los de datos: DNI, nombre, monto, moneda, etc.) usan `DISPLAY "texto: " WITH NO ADVANCING`, así que el dato se tipea en la misma línea, después de los dos puntos y un espacio. Se probaron en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y en una pseudo-terminal de Linux, y el prompt se ve antes de tipear. Fuera de una consola real el texto podría no mostrarse mientras se espera la entrada (ver [Solución de problemas](#solucion-de-problemas)). En las pruebas automáticas, como la entrada viene de un archivo, lo tipeado no aparece en la salida y los prompts quedan seguidos en una misma línea de los `esperado_*.txt` (por ejemplo `DNI (8 digitos): Nombre (hasta 30 caracteres): ...`).
 - **Archivo con versión en el nombre** (`_v3`), por los cambios de layout (ver «Por qué el archivo se llama `clientes_v3.dat`», en Persistencia).
 - **Intereses: los datos inválidos se vuelven a pedir.** A diferencia del alta de clientes (que cancela al primer error), en Intereses un dato inválido se informa y se vuelve a pedir, como pide la especificación de la Etapa 1.
 - **Intereses: alta duplicada sin pedir la TNA.** Si la combinación ya existe y está activa, se avisa apenas se ingresan moneda y días, para no hacer tipear una TNA que no se va a usar.
@@ -1109,7 +1097,7 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 <a id="solucion-de-problemas"></a>
 ## Solución de problemas
 
-**Parece colgado después de ingresar un dato (no aparece el siguiente prompt).** Con `DISPLAY "..." WITH NO ADVANCING`, cuando la salida no va a una consola real (por ejemplo el panel de un IDE, o salida redirigida), el texto puede no mostrarse mientras el programa espera en un `ACCEPT`: el programa no está colgado, espera datos que el usuario no sabe que debe ingresar. Por eso los prompts de datos terminan en salto de línea y lo tipeado va en la línea siguiente. La excepción son los prompts `Opcion:` del menú principal y del submenú de modificación, que sí usan `WITH NO ADVANCING`; los dos se probaron en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y se ven correctamente antes de tipear.
+**Parece colgado después de ingresar un dato (no aparece el siguiente prompt).** Con `DISPLAY "..." WITH NO ADVANCING`, cuando la salida no va a una consola real (por ejemplo el panel de un IDE, o salida redirigida), el texto puede no mostrarse mientras el programa espera en un `ACCEPT`: el programa no está colgado, espera datos que el usuario no sabe que debe ingresar. Todos los prompts del programa usan `WITH NO ADVANCING` (el dato se tipea en la misma línea); se probaron en la terminal web (`webterm-demo`, Docker sobre Ubuntu) y se ven correctamente antes de tipear. Si en tu consola o IDE no aparecen, ejecutá el programa en una consola real (cmd, PowerShell o `docker run -it --rm gestion-bancaria`).
 
 **Elegí la opción 2 y me pide un DNI, no `M` o `B`.** Es lo esperado: primero se pide el DNI y se muestran los datos; la pregunta `M`/`B` viene después.
 

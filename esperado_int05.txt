@@ -29,10 +29,7 @@
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-TNA en % (mayor que 0, hasta 999.99):
-Tasa dada de alta.
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
 Moneda:        P - Pesos
 Dias:          90
 TNA:           40.00 %
@@ -52,9 +49,7 @@ Estado:        A - Activa
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-Tasa dada de baja.
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): Tasa dada de baja.
 Moneda:        P - Pesos
 Dias:          90
 TNA:           40.00 %
@@ -74,9 +69,7 @@ Estado:        B - Baja
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-La tasa ya esta dada de baja.
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): La tasa ya esta dada de baja.
  
   ======================================
                 INTERESES
@@ -90,9 +83,7 @@ La tasa ya esta dada de baja.
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-La tasa esta dada de baja.
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): La tasa esta dada de baja.
 Use la opcion 1 - Alta para reactivarla.
  
   ======================================
@@ -107,9 +98,7 @@ Use la opcion 1 - Alta para reactivarla.
  
      4 - Volver
  
-  Opcion: Moneda (P = pesos, D = dolares):
-Dias (30, 60, 90 o 120):
-No existe una tasa para esa moneda y plazo.
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): No existe una tasa para esa moneda y plazo.
  
   ======================================
                 INTERESES

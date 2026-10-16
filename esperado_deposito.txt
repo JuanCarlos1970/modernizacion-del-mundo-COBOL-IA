@@ -16,11 +16,7 @@
  
      0 - Salir
  
-  Opcion: DNI (8 digitos):
-Nombre (hasta 30 caracteres):
-Direccion (hasta 40 caracteres):
-Telefono (hasta 15 caracteres):
-Cliente dado de alta.
+  Opcion: DNI (8 digitos): Nombre (hasta 30 caracteres): Direccion (hasta 40 caracteres): Telefono (hasta 15 caracteres): Cliente dado de alta.
  
   ======================================
              GESTION BANCARIA
@@ -39,9 +35,7 @@ Cliente dado de alta.
  
      0 - Salir
  
-  Opcion: DNI (8 digitos):
-Monto:
-Saldo actual:          500.75
+  Opcion: DNI (8 digitos): Monto: Saldo actual:          500.75
  
   ======================================
              GESTION BANCARIA
@@ -60,8 +54,7 @@ Saldo actual:          500.75
  
      0 - Salir
  
-  Opcion: DNI (8 digitos):
-Nombre:    Bruno Deposito
+  Opcion: DNI (8 digitos): Nombre:    Bruno Deposito
 DNI:       80000003
 Direccion: Calle Deposito 200
 Telefono:  011 5000-0003
