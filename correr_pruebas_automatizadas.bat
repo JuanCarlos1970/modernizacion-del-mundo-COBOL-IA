@@ -18,8 +18,10 @@ rem
 rem  Despues corre, en una segunda parte con su propio resumen, los
 rem  casos de INTERESES (MENU-01 e INT-01 a INT-11), cada uno con un
 rem  intereses.dat vacio y con fecha de proceso fija (ver mas abajo).
-rem  Y por ultimo, en una tercera parte, los casos de PLAZO FIJO
-rem  (PF-01 a PF-17), con la misma tecnica.
+rem  En una tercera parte, los casos de PLAZO FIJO (PF-01 a PF-17),
+rem  con la misma tecnica. Y por ultimo, en una cuarta parte, los
+rem  casos de VENCIMIENTOS (VTO-01 a VTO-12), que ademas corren el
+rem  batch de cierre (BATCH-CIERRE.exe).
 rem
 rem  El resumen se muestra en pantalla Y ADEMAS se guarda en
 rem  resultado_pruebas.txt (en esta misma carpeta), igual que
@@ -239,8 +241,63 @@ echo ========================================== >> "%LOGFILE%"
 echo  Resumen plazo fijo: !OK_PF! OK / !FALLO_PF! FALLO (de !TOTAL_PF!) >> "%LOGFILE%"
 echo ========================================== >> "%LOGFILE%"
 
+rem -----------------------------------------------------------------
+rem  Cuarta parte: casos de la Evolucion 1 / Etapa 3 (VTO-01 a VTO-12
+rem  de CASOS_DE_PRUEBA.md: vencimientos de plazo fijo en el batch de
+rem  cierre). Misma logica que correr_pruebas_vencimientos.sh (Linux
+rem  / Docker / CI), en la carpeta descartable bin\prueba_vto\. La
+rem  diferencia con la tercera parte es que un caso mezcla corridas
+rem  de los dos programas. Cada paso de la lista es una fecha:
+rem    AAAAMMDD    corre gestion-bancaria.exe con la siguiente
+rem                entrada del caso (entrada_<caso>_1.txt, _2.txt...).
+rem    B:AAAAMMDD  corre BATCH-CIERRE.exe con esa fecha y agrega a la
+rem                salida su codigo de salida y el reporte_cierre.txt
+rem                que genero (antes se borra el anterior).
+rem  14/10 = miercoles, 15/10 = jueves (alta del plazo fijo a 30
+rem  dias), 13/11 = viernes, 14/11 = sabado (vencimiento),
+rem  16/11 = lunes.
+rem -----------------------------------------------------------------
+echo.
+echo [pruebas] Compilando BATCH-CIERRE.cbl en bin\ ...
+cobc -x -Wall -o "bin\BATCH-CIERRE.exe" BATCH-CIERRE.cbl
+if errorlevel 1 (
+    echo [pruebas] ERROR: fallo la compilacion de BATCH-CIERRE.cbl.
+    echo ERROR: fallo la compilacion de BATCH-CIERRE.cbl. >> "%LOGFILE%"
+    exit /b 1
+)
+echo [pruebas] Corriendo y verificando los casos de VENCIMIENTOS ...
+echo.
+
+set /a OK_VTO=0
+set /a FALLO_VTO=0
+set /a TOTAL_VTO=0
+
+call :caso_vto vto01 20261014 20261015 B:20261114 20261114
+call :caso_vto vto02 20261014 20261015 B:20261113 20261113
+call :caso_vto vto03 20261014 20261015 B:20261116 20261116
+call :caso_vto vto04 20261014 20261015 B:20261114 20261114
+call :caso_vto vto05 20261014 20261015 B:20261114 B:20261114 20261114
+call :caso_vto vto06 20261014 20261015 B:20261114 20261114
+call :caso_vto vto07 20261014 20261015 B:20261114 20261116 B:20261116 20261116
+call :caso_vto vto08 20261014 20261015 B:20261114 20261114
+call :caso_vto vto09 B:20261114
+call :caso_vto vto10 20261014 20261015 B:20261114 20261114
+call :caso_vto vto11 20261014 20261015 B:2026111 20261114
+call :caso_vto vto12 20261014 20261015 B:20261114 20261114
+
+echo.
+echo [pruebas] ==========================================
+echo [pruebas]  Resumen vencimientos: !OK_VTO! OK / !FALLO_VTO! FALLO ^(de !TOTAL_VTO!^)
+echo [pruebas] ==========================================
+
+echo. >> "%LOGFILE%"
+echo ========================================== >> "%LOGFILE%"
+echo  Resumen vencimientos: !OK_VTO! OK / !FALLO_VTO! FALLO (de !TOTAL_VTO!) >> "%LOGFILE%"
+echo ========================================== >> "%LOGFILE%"
+
 set /a FALLO+=FALLO_INT
 set /a FALLO+=FALLO_PF
+set /a FALLO+=FALLO_VTO
 
 if !FALLO! GTR 0 (
     echo.
@@ -357,5 +414,72 @@ if errorlevel 1 (
     echo [pruebas]   OK     - %CASO%
     echo   OK     - %CASO% >> "%LOGFILE%"
     set /a OK_PF+=1
+)
+goto :eof
+
+rem =================================================================
+rem  :caso_vto <caso> <paso 1> [<paso 2> ...]
+rem  Corre un caso de VENCIMIENTOS (ver la cuarta parte, arriba).
+rem  Los pasos AAAAMMDD son como en :caso_pf; los pasos B:AAAAMMDD
+rem  corren el batch de cierre. Las lineas "-----" que se agregan a
+rem  la salida son las mismas que escribe
+rem  correr_pruebas_vencimientos.sh, asi un mismo esperado_*.txt
+rem  sirve en Windows y en Linux.
+rem =================================================================
+:caso_vto
+set "CASO=%~1"
+shift
+if exist "bin\prueba_vto" rmdir /s /q "bin\prueba_vto"
+mkdir "bin\prueba_vto"
+type nul > "salida_%CASO%.txt"
+set /a PASO=1
+:caso_vto_paso
+if "%~1"=="" goto caso_vto_comparar
+set "ARG=%~1"
+if /i "%ARG:~0,2%"=="B:" goto caso_vto_batch
+if not exist "entrada_%CASO%_!PASO!.txt" (
+    echo [pruebas] ERROR: no se encuentra entrada_%CASO%_!PASO!.txt
+    echo ERROR: no se encuentra entrada_%CASO%_!PASO!.txt >> "%LOGFILE%"
+    goto caso_vto_comparar
+)
+set "FECHA_PROCESO=%~1"
+pushd "bin\prueba_vto"
+"..\gestion-bancaria.exe" < "..\..\entrada_%CASO%_!PASO!.txt" >> "..\..\salida_%CASO%.txt"
+popd
+set "FECHA_PROCESO="
+set /a PASO+=1
+shift
+goto caso_vto_paso
+:caso_vto_batch
+if exist "bin\prueba_vto\reporte_cierre.txt" del /q "bin\prueba_vto\reporte_cierre.txt"
+set "FECHA_PROCESO=%ARG:~2%"
+pushd "bin\prueba_vto"
+"..\BATCH-CIERRE.exe" < nul >> "..\..\salida_%CASO%.txt"
+set "RC=%ERRORLEVEL%"
+popd
+set "FECHA_PROCESO="
+>>"salida_%CASO%.txt" echo ----- codigo de salida del batch: %RC%
+if exist "bin\prueba_vto\reporte_cierre.txt" (
+    >>"salida_%CASO%.txt" echo ----- reporte_cierre.txt
+    type "bin\prueba_vto\reporte_cierre.txt" >> "salida_%CASO%.txt"
+    >>"salida_%CASO%.txt" echo ----- fin de reporte_cierre.txt
+) else (
+    >>"salida_%CASO%.txt" echo ----- no se genero reporte_cierre.txt
+)
+shift
+goto caso_vto_paso
+:caso_vto_comparar
+rmdir /s /q "bin\prueba_vto"
+set /a TOTAL_VTO+=1
+fc "esperado_%CASO%.txt" "salida_%CASO%.txt" >nul
+if errorlevel 1 (
+    echo [pruebas]   FALLO  - %CASO%
+    echo   FALLO  - %CASO% >> "%LOGFILE%"
+    set /a FALLO_VTO+=1
+    set "CASOS_FALLIDOS=!CASOS_FALLIDOS! %CASO%"
+) else (
+    echo [pruebas]   OK     - %CASO%
+    echo   OK     - %CASO% >> "%LOGFILE%"
+    set /a OK_VTO+=1
 )
 goto :eof

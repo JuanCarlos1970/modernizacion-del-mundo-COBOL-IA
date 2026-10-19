@@ -4,8 +4,8 @@
       *               plazofijo.dat (plazos fijos constituidos). Lo
       *               incluye GESTION-BANCARIA, que da de alta,
       *               cancela y consulta plazos fijos (menu PLAZO
-      *               FIJO). En la Etapa 3 lo va a incluir tambien el
-      *               batch de cierre, para procesar los vencimientos.
+      *               FIJO), y BATCH-CIERRE, que procesa los
+      *               vencimientos (Etapa 3).
       * CLAVE       : PF-NRO (numero correlativo, se asigna solo).
       * LARGO       : 79 bytes.
       * USO         : Se incluye con "COPY PLAZOFIJO." inmediatamente

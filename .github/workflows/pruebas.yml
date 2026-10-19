@@ -2,7 +2,8 @@ name: Pruebas automatizadas
 
 # Corre los 5 casos de prueba automatizados (CP-01 a CP-04 y CP-06 de
 # CASOS_DE_PRUEBA.md), despues los de INTERESES (MENU-01 e INT-01 a
-# INT-11) y los de PLAZO FIJO (PF-01 a PF-17), en cada push o pull
+# INT-11), los de PLAZO FIJO (PF-01 a PF-17) y los de VENCIMIENTOS
+# (VTO-01 a VTO-12, con el batch de cierre), en cada push o pull
 # request a main, compilando
 # gestion-bancaria.cbl con GnuCOBOL en un runner Linux y comparando cada salida
 # contra su esperado_*.txt de referencia.
@@ -74,3 +75,10 @@ jobs:
       # fecha de proceso fija. Ver correr_pruebas_plazofijo.sh.
       - name: Correr los casos de PLAZO FIJO y comparar contra lo esperado
         run: bash correr_pruebas_plazofijo.sh
+
+      # Casos de VENCIMIENTOS (VTO-01 a VTO-12): mezclan corridas de
+      # gestion-bancaria.exe y del batch de cierre (BATCH-CIERRE.exe,
+      # que el script compila), y comparan tambien el reporte
+      # reporte_cierre.txt. Ver correr_pruebas_vencimientos.sh.
+      - name: Correr los casos de VENCIMIENTOS y comparar contra lo esperado
+        run: bash correr_pruebas_vencimientos.sh

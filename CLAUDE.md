@@ -2,13 +2,15 @@
 
 Proyecto COBOL (GnuCOBOL) de gestión de cuentas bancarias:
 - `gestion-bancaria.cbl`: programa interactivo (menú).
-- `BATCH-CIERRE.cbl`: proceso batch nocturno de cierre (acredita intereses).
+- `BATCH-CIERRE.cbl`: proceso batch nocturno de cierre (acredita intereses
+  y procesa los vencimientos de plazo fijo).
 - `LISTADO-CLIENTES.cbl`: listado de solo lectura.
 - `CLIENTE.cpy`: layout del registro del archivo indexado `clientes_v3.dat`
   (lo incluyen los tres programas con `COPY CLIENTE.`).
 - `INTERES.cpy` y `PLAZOFIJO.cpy`: layouts de `intereses.dat` (tasas) y
-  `plazofijo.dat` (plazos fijos); por ahora solo los incluye
-  `gestion-bancaria.cbl`.
+  `plazofijo.dat` (plazos fijos). `INTERES.cpy` lo incluye solo
+  `gestion-bancaria.cbl`; `PLAZOFIJO.cpy`, `gestion-bancaria.cbl` y
+  `BATCH-CIERRE.cbl`.
 - `batch_cierre.jcl`: JCL de referencia para z/OS.
 
 El usuario está aprendiendo: explicar todo con lenguaje simple, sin jerga
@@ -57,9 +59,9 @@ runtime de GnuCOBOL en el PATH (ver README, "Solución de problemas").
 No correr `gestion-bancaria.exe` y el batch al mismo tiempo sobre el mismo
 `clientes_v3.dat`.
 
-## Regla 1 — Después de cualquier cambio en `gestion-bancaria.cbl`
+## Regla 1 — Después de cualquier cambio en `gestion-bancaria.cbl` o en `BATCH-CIERRE.cbl`
 
-Recompilar y correr los 41 casos de `CASOS_DE_PRUEBA.md`:
+Recompilar y correr los 53 casos de `CASOS_DE_PRUEBA.md`:
 
 - 5 automáticos (CP-01, CP-02, CP-03, CP-04, CP-06):
   `cmd /c correr_pruebas_automatizadas.bat`. Tiene que decir
@@ -79,9 +81,16 @@ Recompilar y correr los 41 casos de `CASOS_DE_PRUEBA.md`:
   `docker run --rm gestion-bancaria bash correr_pruebas_plazofijo.sh`.
   Corren en la carpeta descartable `bin\prueba_pf` (no tocan los `.dat`
   de `bin\`).
+- 12 automáticos de VENCIMIENTOS (VTO-01 a VTO-12): los corre la
+  cuarta parte de `cmd /c correr_pruebas_automatizadas.bat` (que
+  también compila `BATCH-CIERRE.cbl` en `bin\`), que tiene que decir
+  `Resumen vencimientos: 12 OK / 0 FALLO (de 12)`. En Docker:
+  `docker run --rm gestion-bancaria bash correr_pruebas_vencimientos.sh`.
+  Corren en la carpeta descartable `bin\prueba_vto` y comparan también
+  el `reporte_cierre.txt` de cada corrida del batch.
 - Usar los DNIs indicados en la matriz (800000XX para los automáticos
-  de clientes, 800001XX para los de plazo fijo, 900000XX para los
-  manuales).
+  de clientes, 800001XX para los de plazo fijo, 800002XX para los de
+  vencimientos, 900000XX para los manuales).
 - Si `cmd /c correr_pruebas_automatizadas.bat` responde "no se reconoce
   como un comando", pasar la ruta completa del `.bat`.
 - En cada caso manual, mostrarle al usuario qué se hizo: qué datos se
@@ -89,8 +98,9 @@ Recompilar y correr los 41 casos de `CASOS_DE_PRUEBA.md`:
   esperado" de la matriz.
 - Al terminar, informar un resumen caso por caso (OK / FALLO).
 - Si un automático falla por "Ya existe un cliente con ese DNI", es por
-  datos de una corrida anterior en `bin\clientes_v3.dat`. Avisar y
-  preguntar antes de borrar ese archivo.
+  datos de una corrida anterior en `bin\clientes_v3.dat` (pasa en toda
+  segunda corrida seguida del `.bat`, porque los 5 de clientes graban
+  en ese archivo). Avisar y preguntar antes de borrar ese archivo.
 
 ## Regla 2 — Si algún caso falla
 

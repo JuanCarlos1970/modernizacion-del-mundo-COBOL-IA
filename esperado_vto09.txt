@@ -1,0 +1,51 @@
+ 
+=== BATCH DE CIERRE - CUENTA BANCARIA ===
+Fecha de proceso: 14/11/2026
+No se encontro clientes_v3.dat: no hay
+clientes para procesar en este cierre.
+ 
+Cierre finalizado.
+Clientes procesados (Activos/Reactivados):          0
+Clientes inactivos excluidos:                        0
+Total de intereses acreditados:      $             0.00
+Plazos fijos vencidos acreditados:                  0
+Acreditado por vencimientos:         $             0.00
+Plazos fijos en dolares (pago por caja):            0
+A pagar por caja en dolares:       U$S             0.00
+Plazos fijos vencidos pendientes:                   0
+Saldo total de la cartera:           $             0.00
+Reporte generado: reporte_cierre.txt
+ 
+----- codigo de salida del batch: 0
+----- reporte_cierre.txt
+====================================================================================================
+PROCESO BATCH DE CIERRE - CUENTA BANCARIA
+Fecha del proceso: 14/11/2026
+====================================================================================================
+
+Detalle de clientes procesados (Activos / Reactivados):
+
+No hay clientes activos ni reactivados para procesar.
+
+Detalle de clientes Inactivos (sin movimiento):
+
+No hay clientes inactivos.
+
+Detalle de vencimientos de plazo fijo:
+
+No hay plazos fijos vencidos.
+
+====================================================================================================
+RESUMEN DEL CIERRE
+====================================================================================================
+Clientes procesados (Activos/Reactivados):          0
+Clientes inactivos excluidos:                        0
+Total de intereses acreditados:      $             0.00
+Plazos fijos vencidos acreditados:                  0
+Acreditado por vencimientos:         $             0.00
+Plazos fijos en dolares (pago por caja):            0
+A pagar por caja en dolares:       U$S             0.00
+Plazos fijos vencidos pendientes:                   0
+Saldo total de la cartera:           $             0.00
+====================================================================================================
+----- fin de reporte_cierre.txt

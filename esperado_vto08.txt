@@ -1,0 +1,526 @@
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: DNI (8 digitos): Nombre (hasta 30 caracteres): Direccion (hasta 40 caracteres): Telefono (hasta 15 caracteres): Cliente dado de alta.
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: DNI (8 digitos): Nombre (hasta 30 caracteres): Direccion (hasta 40 caracteres): Telefono (hasta 15 caracteres): Cliente dado de alta.
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
+Moneda:        P - Pesos
+Dias:          30
+TNA:           40.00 %
+TNA anterior:  0.00 %
+Vigente desde: 15/10/2026
+Estado:        A - Activa
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
+Moneda:        P - Pesos
+Dias:          60
+TNA:           41.00 %
+TNA anterior:  0.00 %
+Vigente desde: 15/10/2026
+Estado:        A - Activa
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: Hasta luego.
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+           ALTA DE PLAZO FIJO
+  ======================================
+ 
+DNI (8 digitos): Moneda (P = pesos, D = dolares): Monto: Dias (30, 60, 90 o 120):  
+TNA:           40.00 %
+Interes:               32,876.71
+Total:              1,032,876.71
+Vencimiento:   14/11/2026
+ 
+Confirma el alta del plazo fijo? (S/N): Plazo fijo constituido. Comprobante:
+Numero:        000001
+DNI:           80000208
+Moneda:        P - Pesos
+Monto:              1,000,000.00
+Dias:          30
+TNA:           40.00 %
+Interes:               32,876.71
+Total:              1,032,876.71
+Fecha de alta: 15/10/2026
+Vencimiento:   14/11/2026
+Estado:        A - Activo
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+           ALTA DE PLAZO FIJO
+  ======================================
+ 
+DNI (8 digitos): Moneda (P = pesos, D = dolares): Monto: Dias (30, 60, 90 o 120):  
+TNA:           41.00 %
+Interes:              134,794.52
+Total:              2,134,794.52
+Vencimiento:   14/12/2026
+ 
+Confirma el alta del plazo fijo? (S/N): Plazo fijo constituido. Comprobante:
+Numero:        000002
+DNI:           80000208
+Moneda:        P - Pesos
+Monto:              2,000,000.00
+Dias:          60
+TNA:           41.00 %
+Interes:              134,794.52
+Total:              2,134,794.52
+Fecha de alta: 15/10/2026
+Vencimiento:   14/12/2026
+Estado:        A - Activo
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+           ALTA DE PLAZO FIJO
+  ======================================
+ 
+DNI (8 digitos): Moneda (P = pesos, D = dolares): Monto: Dias (30, 60, 90 o 120):  
+TNA:           40.00 %
+Interes:               49,315.07
+Total:              1,549,315.07
+Vencimiento:   14/11/2026
+ 
+Confirma el alta del plazo fijo? (S/N): Plazo fijo constituido. Comprobante:
+Numero:        000003
+DNI:           80000228
+Moneda:        P - Pesos
+Monto:              1,500,000.00
+Dias:          30
+TNA:           40.00 %
+Interes:               49,315.07
+Total:              1,549,315.07
+Fecha de alta: 15/10/2026
+Vencimiento:   14/11/2026
+Estado:        A - Activo
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: Hasta luego.
+ 
+=== BATCH DE CIERRE - CUENTA BANCARIA ===
+Fecha de proceso: 14/11/2026
+ 
+Cierre finalizado.
+Clientes procesados (Activos/Reactivados):          2
+Clientes inactivos excluidos:                        0
+Total de intereses acreditados:      $             0.00
+Plazos fijos vencidos acreditados:                  2
+Acreditado por vencimientos:         $     2,582,191.78
+Plazos fijos en dolares (pago por caja):            0
+A pagar por caja en dolares:       U$S             0.00
+Plazos fijos vencidos pendientes:                   0
+Saldo total de la cartera:           $     2,582,191.78
+Reporte generado: reporte_cierre.txt
+ 
+----- codigo de salida del batch: 0
+----- reporte_cierre.txt
+====================================================================================================
+PROCESO BATCH DE CIERRE - CUENTA BANCARIA
+Fecha del proceso: 14/11/2026
+====================================================================================================
+
+Detalle de clientes procesados (Activos / Reactivados):
+
+DNI         Nombre                         Saldo anterior         Interes         Saldo nuevo
+----------------------------------------------------------------------------------------------------
+80000208   Valeria Ocho                                0.00               0.00               0.00
+80000228   Valeria Veintiocho                          0.00               0.00               0.00
+
+Detalle de clientes Inactivos (sin movimiento):
+
+No hay clientes inactivos.
+
+Detalle de vencimientos de plazo fijo:
+
+Numero  DNI       Mon           Capital            Interes              Total  Vencimiento Resultado
+-------------------------------------------------------------------------------------------------------------------------
+000001  80000208  P        1,000,000.00          32,876.71       1,032,876.71  14/11/2026  Acreditado
+000003  80000228  P        1,500,000.00          49,315.07       1,549,315.07  14/11/2026  Acreditado
+
+====================================================================================================
+RESUMEN DEL CIERRE
+====================================================================================================
+Clientes procesados (Activos/Reactivados):          2
+Clientes inactivos excluidos:                        0
+Total de intereses acreditados:      $             0.00
+Plazos fijos vencidos acreditados:                  2
+Acreditado por vencimientos:         $     2,582,191.78
+Plazos fijos en dolares (pago por caja):            0
+A pagar por caja en dolares:       U$S             0.00
+Plazos fijos vencidos pendientes:                   0
+Saldo total de la cartera:           $     2,582,191.78
+====================================================================================================
+----- fin de reporte_cierre.txt
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: DNI (8 digitos): Nombre:    Valeria Ocho
+DNI:       80000208
+Direccion: Calle Vencimiento 208
+Telefono:  011 5000-0208
+Saldo:        1,032,876.71
+Estado:    A - Activo
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: DNI (8 digitos): Nombre:    Valeria Veintiocho
+DNI:       80000228
+Direccion: Calle Vencimiento 228
+Telefono:  011 5000-0228
+Saldo:        1,549,315.07
+Estado:    A - Activo
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 14/11/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+         CONSULTA DE PLAZO FIJO
+  ======================================
+ 
+Numero de plazo fijo: Numero:        000001
+DNI:           80000208
+Moneda:        P - Pesos
+Monto:              1,000,000.00
+Dias:          30
+TNA:           40.00 %
+Interes:               32,876.71
+Total:              1,032,876.71
+Fecha de alta: 15/10/2026
+Vencimiento:   14/11/2026
+Estado:        V - Vencido y acreditado
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 14/11/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+         CONSULTA DE PLAZO FIJO
+  ======================================
+ 
+Numero de plazo fijo: Numero:        000002
+DNI:           80000208
+Moneda:        P - Pesos
+Monto:              2,000,000.00
+Dias:          60
+TNA:           41.00 %
+Interes:              134,794.52
+Total:              2,134,794.52
+Fecha de alta: 15/10/2026
+Vencimiento:   14/12/2026
+Estado:        A - Activo
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 14/11/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+         CONSULTA DE PLAZO FIJO
+  ======================================
+ 
+Numero de plazo fijo: Numero:        000003
+DNI:           80000228
+Moneda:        P - Pesos
+Monto:              1,500,000.00
+Dias:          30
+TNA:           40.00 %
+Interes:               49,315.07
+Total:              1,549,315.07
+Fecha de alta: 15/10/2026
+Vencimiento:   14/11/2026
+Estado:        V - Vencido y acreditado
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 14/11/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: Hasta luego.

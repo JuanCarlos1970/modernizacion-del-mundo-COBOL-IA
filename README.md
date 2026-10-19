@@ -54,23 +54,24 @@ Además del programa interactivo, el proyecto incluye:
 | Archivo | Descripción |
 |---------|-------------|
 | `gestion-bancaria.cbl` | Programa interactivo (código fuente, formato fijo COBOL) — ver [Programa interactivo: gestion-bancaria.cbl](#programa-gestion-bancaria) |
-| `BATCH-CIERRE.cbl` | Proceso batch de cierre: acredita interés mensual — ver [Proceso batch de cierre](#proceso-batch-cierre) |
+| `BATCH-CIERRE.cbl` | Proceso batch de cierre: acredita interés mensual y procesa los vencimientos de plazo fijo — ver [Proceso batch de cierre](#proceso-batch-cierre) |
 | `LISTADO-CLIENTES.cbl` | Listado de consulta de **solo lectura**: no modifica datos — ver [Listado de clientes (solo lectura)](#listado-clientes) |
 | `CLIENTE.cpy` | Copybook con el layout del registro de cliente, compartido por los tres programas de arriba |
 | `INTERES.cpy` | Copybook con el layout del registro de tasas (`intereses.dat`), incluido por `gestion-bancaria.cbl` |
-| `PLAZOFIJO.cpy` | Copybook con el layout del registro de plazo fijo (`plazofijo.dat`), incluido por `gestion-bancaria.cbl` |
+| `PLAZOFIJO.cpy` | Copybook con el layout del registro de plazo fijo (`plazofijo.dat`), incluido por `gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` |
 | `correr_batch_cierre.bat` | Compila `BATCH-CIERRE.cbl` en `bin\` y lo ejecuta ahí |
 | `ver_listado_clientes.bat` | Compila `LISTADO-CLIENTES.cbl` en `bin\` y lo ejecuta ahí |
-| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados y, después, los casos de INTERESES y los de PLAZO FIJO — ver [Testing](#testing) |
+| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados y, después, los casos de INTERESES, los de PLAZO FIJO y los de VENCIMIENTOS (estos últimos también compilan y corren `BATCH-CIERRE.exe`) — ver [Testing](#testing) |
 | `correr_pruebas_intereses.sh` | Lo mismo que la segunda parte del `.bat`, pero para Linux (Docker y GitHub Actions) |
 | `correr_pruebas_plazofijo.sh` | Lo mismo que la tercera parte del `.bat` (casos de PLAZO FIJO), para Linux (Docker y GitHub Actions) |
+| `correr_pruebas_vencimientos.sh` | Lo mismo que la cuarta parte del `.bat` (casos de VENCIMIENTOS con el batch de cierre), para Linux (Docker y GitHub Actions) |
 | `.gitattributes` | Fuerza fin de línea LF en los `.sh` (con CRLF, bash no los puede ejecutar) |
 | `.dockerignore` | Deja `bin\` afuera de la imagen de Docker: los `.dat` creados en Windows no se pueden leer con el GnuCOBOL de Linux |
 | `batch_cierre.jcl` | JCL de **referencia/documentación**: cómo correría el mismo cierre en un mainframe z/OS real (no se ejecuta en este entorno) |
 | `README.md` | Esta documentación |
 | `CASOS_DE_PRUEBA.md` | Matriz de casos de prueba (QA) — ver [Testing](#testing) |
 | `LICENSE` | Licencia del proyecto — ver [Licencia](#licencia) |
-| `entrada_*.txt` | Entradas de los casos de prueba automatizados: los 5 de clientes (`alta_ok`, `alta_dni_invalido`, `deposito`, `extraccion`, `consulta`) y los de INTERESES y PLAZO FIJO (`entrada_menu01_1.txt`, `entrada_int01_1.txt`, `entrada_pf01_1.txt`, ..., uno por paso) |
+| `entrada_*.txt` | Entradas de los casos de prueba automatizados: los 5 de clientes (`alta_ok`, `alta_dni_invalido`, `deposito`, `extraccion`, `consulta`) y los de INTERESES, PLAZO FIJO y VENCIMIENTOS (`entrada_menu01_1.txt`, `entrada_int01_1.txt`, `entrada_pf01_1.txt`, `entrada_vto01_1.txt`, ..., uno por paso) |
 | `esperado_*.txt` | Salida de referencia, verificada a mano, de cada caso automatizado |
 | `salida_*.txt` | Salidas correspondientes a cada caso, generadas al correr las pruebas (no se suben al repositorio) |
 
@@ -135,7 +136,7 @@ En Windows, `correr_batch_cierre.bat` y `ver_listado_clientes.bat` hacen cada un
 Probado con GnuCOBOL 2.0.0 (el que trae OpenCobolIDE): los tres programas compilan con `-Wall` sin errores ni warnings.
 
 - **`gestion-bancaria.cbl`:** todas las opciones del menú, cada validación, el ciclo completo de estados (alta → baja → reactivación → baja), la restricción a clientes inactivos, el retorno al menú principal, la persistencia entre ejecuciones y el manejo de un archivo de datos corrupto.
-- **`BATCH-CIERRE.cbl`:** el cálculo de interés sobre clientes Activos y Reactivados, la exclusión de Inactivos, el archivo de clientes inexistente (cartera vacía), y que `gestion-bancaria.cbl` sigue leyendo y escribiendo `clientes_v3.dat` correctamente después de una corrida del batch.
+- **`BATCH-CIERRE.cbl`:** el cálculo de interés sobre clientes Activos y Reactivados, la exclusión de Inactivos, el archivo de clientes inexistente (cartera vacía), y que `gestion-bancaria.cbl` sigue leyendo y escribiendo `clientes_v3.dat` correctamente después de una corrida del batch. Desde la Etapa 3, además, los vencimientos de plazo fijo (casos VTO-01 a VTO-12, en GnuCOBOL 2.0.0 en Windows y 3.x en Docker), y que con los datos de CP-12 el reporte nuevo solo **agrega** la sección de vencimientos y las líneas nuevas del resumen respecto del reporte anterior.
 - **`LISTADO-CLIENTES.cbl`:** las tres secciones con una cartera mixta (Activos, Reactivados e Inactivos), el archivo inexistente (cartera vacía), que la pantalla y `listado_clientes.txt` muestran exactamente el mismo contenido, y —con un hash del archivo antes y después de correrlo— que `clientes_v3.dat` queda **byte a byte idéntico**.
 
 <a id="programa-gestion-bancaria"></a>
@@ -364,7 +365,7 @@ Flujo: DNI → búsqueda → **verificación de estado** → monto → operació
 <a id="plazo-fijo"></a>
 ### Plazo fijo (opción 7)
 
-Permite **constituir** un plazo fijo para un cliente existente, **cancelarlo en forma anticipada** y **consultarlo**. Los plazos fijos se guardan en `plazofijo.dat` (ver [Persistencia](#persistencia-plazofijo)) y la tasa sale de la tabla de [Intereses (opción 8)](#intereses). No hay "modificación": como en un banco real, se cancela y se constituye otro. Los **vencimientos** (acreditar capital + interés al llegar la fecha) quedan para la Etapa 3, en el batch de cierre.
+Permite **constituir** un plazo fijo para un cliente existente, **cancelarlo en forma anticipada** y **consultarlo**. Los plazos fijos se guardan en `plazofijo.dat` (ver [Persistencia](#persistencia-plazofijo)) y la tasa sale de la tabla de [Intereses (opción 8)](#intereses). No hay "modificación": como en un banco real, se cancela y se constituye otro. Los **vencimientos** (acreditar capital + interés al llegar la fecha) los procesa el batch de cierre (ver [Vencimientos de plazo fijo](#vencimientos-de-plazo-fijo-etapa-3)).
 
 ```
   ======================================
@@ -510,6 +511,8 @@ FECHA_PROCESO=20261016 ./gestion-bancaria.exe
 ```
 
 Si `FECHA_PROCESO` existe pero no es una fecha válida, el programa avisa (`FECHA_PROCESO invalida (use AAAAMMDD):` / `se usa la fecha del sistema.`) y usa la del sistema.
+
+El batch de cierre usa la misma variable, con una diferencia: si la fecha es inválida, **no se ejecuta** (ver [Proceso batch de cierre](#proceso-batch-cierre)).
 
 <a id="validaciones-cuenta"></a>
 ### Validaciones
@@ -993,7 +996,7 @@ Aplica tanto a `gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` 
 <a id="proceso-batch-cierre"></a>
 ## Proceso batch de cierre: BATCH-CIERRE.cbl
 
-`BATCH-CIERRE.cbl` es un programa COBOL **separado** de `gestion-bancaria.cbl` (no interactivo, sin menú) que recorre toda la cartera de clientes y acredita el interés mensual de las cuentas habilitadas para operar. Representa el tipo de proceso batch nocturno típico de un sistema bancario: correrlo es la forma de "cerrar el día" y actualizar los saldos con el interés devengado.
+`BATCH-CIERRE.cbl` es un programa COBOL **separado** de `gestion-bancaria.cbl` (no interactivo, sin menú) que recorre toda la cartera de clientes y acredita el interés mensual de las cuentas habilitadas para operar, y después procesa los **vencimientos de plazo fijo** (ver [más abajo](#vencimientos-de-plazo-fijo-etapa-3)). Representa el tipo de proceso batch nocturno típico de un sistema bancario: correrlo es la forma de "cerrar el día" y actualizar los saldos con el interés devengado.
 
 ### Regla de negocio
 
@@ -1015,6 +1018,38 @@ Si sumar el interés desbordara el campo del saldo (caso extremo, saldo ya cerca
 
 > **Nota técnica (para quien modifique `1200-ACREDITAR-INTERES`):** ese control de desborde usa un indicador propio (`WS-INTERES-OK`) y un `IF` después del `ADD`, en vez de poner la lógica directamente dentro de `ON SIZE ERROR` / `NOT ON SIZE ERROR`. Se probó así al principio y **GnuCOBOL 2.0 genera código incorrecto** cuando una sentencia aritmética (por ejemplo, otro `ADD`) queda dentro de la rama `ON SIZE ERROR` de un `ADD ... NOT ON SIZE ERROR`: la rama `NOT ON SIZE ERROR` (y todo lo que sigue en el párrafo) se salteaba en silencio incluso cuando no había ningún error. Se confirmó con un programa mínimo de 13 líneas que aísla el problema. `gestion-bancaria.cbl` no lo sufre porque su único `ON SIZE ERROR` (en el depósito) solo tiene un `DISPLAY`, sin aritmética adentro.
 
+<a id="vencimientos-de-plazo-fijo-etapa-3"></a>
+### Vencimientos de plazo fijo (Etapa 3)
+
+Después del interés mensual, el batch recorre `plazofijo.dat` (en orden de número) y procesa cada plazo fijo **Activo (`A`) cuyo vencimiento sea igual o anterior a la fecha de proceso**. "Igual o anterior" importa: si un día el cierre no corrió (por ejemplo, el plazo fijo venció un sábado), el siguiente cierre procesa lo que venció en el medio. Los plazos fijos Cancelados (`C`) y Vencidos (`V`) no se tocan; por eso correr el cierre dos veces **no** acredita dos veces el mismo plazo fijo.
+
+Primero se mira el cliente, y después la moneda:
+
+| Situación | Qué hace | Estado del plazo fijo |
+|-----------|----------|------------------------|
+| Cliente `A` o `R`, plazo fijo en **pesos** | Suma el total (capital + interés) al saldo del cliente | Pasa a `V` |
+| Cliente `A` o `R`, plazo fijo en **dólares** | No toca el saldo (las cuentas no tienen moneda): el reporte lo lista como "a pagar por caja" | Pasa a `V` |
+| Cliente **inactivo** (`I`), sea cual sea la moneda | No acredita nada: queda **pendiente** | Sigue en `A` |
+| DNI que **no existe** o cliente con estado desconocido | Igual que inactivo, con un aviso en pantalla | Sigue en `A` |
+| La suma **supera el saldo máximo** (999.999.999,99) | No acredita nada, con un aviso en pantalla | Sigue en `A` |
+
+Un plazo fijo pendiente se vuelve a evaluar en cada cierre. Por ejemplo, si el cliente estaba inactivo y se lo reactiva (opción 2 → `M`), el siguiente cierre lo acredita sin que haya que corregir nada a mano.
+
+**Por qué los vencimientos van después del interés mensual:** el plazo fijo ya cobró su propio interés (el que se calculó en el alta, con la TNA de ese momento). Si se acreditara antes, ese dinero ganaría además el 0,50 % mensual del cierre en el que entra. Ejemplo (caso VTO-10): saldo 10.000,00 → interés mensual 50,00; después se suma el plazo fijo (1.032.876,71); saldo final 1.042.926,71.
+
+**Orden de grabación:** primero se graba el saldo del cliente y después el estado `V` del plazo fijo. Los dos archivos no se graban "todo o nada" juntos: si el programa fallara justo entre las dos grabaciones, el batch se detiene con error y avisa qué número de plazo fijo hay que corregir a mano (si no, el próximo cierre lo acreditaría dos veces).
+
+**Fecha de proceso.** El batch usa la variable `FECHA_PROCESO` (`AAAAMMDD`) igual que `gestion-bancaria.cbl` (ver [Fecha de proceso y la variable `FECHA_PROCESO`](#intereses)); sin ella usa la fecha del sistema. Se muestra en pantalla y en el encabezado del reporte. **Diferencia:** si la variable existe pero no es una fecha válida, el batch **no se ejecuta**: muestra `FECHA_PROCESO invalida (use AAAAMMDD): ...` / `Cierre NO realizado: no se modifico ningun archivo.` y termina con código de salida `1`, antes de abrir cualquier archivo (ni siquiera borra el reporte anterior). El programa interactivo puede seguir con la fecha del sistema porque alguien lo está mirando; el batch corre solo, y un error de tipeo haría vencer (o no) plazos fijos que no corresponden.
+
+```bat
+REM Windows (cmd), desde bin\
+set FECHA_PROCESO=20261114
+BATCH-CIERRE.exe
+set FECHA_PROCESO=
+```
+
+**Acceso a los archivos.** Para buscar al cliente de cada plazo fijo por su DNI, el `SELECT` de `clientes_v3.dat` en el batch pasó de `ACCESS MODE IS SEQUENTIAL` a `ACCESS MODE IS DYNAMIC` (el layout y los datos no cambian). Las dos pasadas de siempre siguen leyendo en orden (`READ NEXT`), y la de vencimientos lee por clave (`READ ... KEY IS`); en una misma pasada no se mezclan las dos formas, porque GnuCOBOL 2.0 y 3.x se comportan distinto en ese caso. `plazofijo.dat` se abre con acceso secuencial (se recorre entero y se regraba con `REWRITE` el que vence). Si `plazofijo.dat` no existe, no es un error: no hay vencimientos.
+
 ### Cómo ejecutarlo localmente
 
 ```bat
@@ -1024,18 +1059,21 @@ correr_batch_cierre.bat
 El script:
 1. Busca `cobc` en el `PATH`; si no lo encuentra, usa la instalación de OpenCobolIDE detectada en esta máquina (`C:\Program Files (x86)\OpenCobolIDE\GnuCOBOL`) como respaldo. Si tampoco la encuentra ahí, informa el error y no continúa.
 2. Compila `BATCH-CIERRE.cbl` con `cobc -x -Wall` **dentro de `bin\`**.
-3. Ejecuta `BATCH-CIERRE.exe` desde `bin\`, que procesa todo `bin\clientes_v3.dat`, genera `bin\reporte_cierre.txt` y termina mostrando un resumen por pantalla.
+3. Ejecuta `BATCH-CIERRE.exe` desde `bin\`, que procesa todo `bin\clientes_v3.dat` y los vencimientos de `bin\plazofijo.dat`, genera `bin\reporte_cierre.txt` y termina mostrando un resumen por pantalla. Usa la fecha del sistema, salvo que la terminal tenga definida `FECHA_PROCESO`.
 
-Se puede correr las veces que se quiera; cada corrida vuelve a acreditar interés sobre los saldos **ya actualizados** de la corrida anterior (ver [Limitaciones y mejoras futuras](#limitaciones-y-mejoras)). Si `clientes_v3.dat` todavía no existe (cartera vacía), el batch no falla: procesa cero clientes y genera igual un `reporte_cierre.txt` con todos los totales en cero.
+Se puede correr las veces que se quiera; cada corrida vuelve a acreditar interés sobre los saldos **ya actualizados** de la corrida anterior (ver [Limitaciones y mejoras futuras](#limitaciones-y-mejoras)), pero un plazo fijo ya acreditado no se vuelve a acreditar. Si `clientes_v3.dat` o `plazofijo.dat` todavía no existen, el batch no falla: procesa cero clientes / cero vencimientos y genera igual un `reporte_cierre.txt` con todos los totales en cero.
+
+> **Ojo con los datos de prueba:** el batch usa la fecha **real**. Si en `bin\plazofijo.dat` hay plazos fijos cargados a mano con fechas inventadas (con `FECHA_PROCESO`), los que ya "vencieron" respecto de hoy se acreditan en el próximo cierre real.
 
 ### `reporte_cierre.txt`
 
 Archivo de texto (secuencial, se sobreescribe en cada corrida) con, en este orden:
 
-1. **Fecha del proceso**, tomada de `FUNCTION CURRENT-DATE`, en formato `DD/MM/AAAA`.
+1. **Fecha del proceso**, en formato `DD/MM/AAAA`: la de `FECHA_PROCESO` si está definida, o si no la del sistema (`FUNCTION CURRENT-DATE`).
 2. **Detalle de clientes procesados** (uno por línea, solo los `A`/`R`): DNI, nombre, saldo anterior, interés acreditado y saldo nuevo. Si no hay ninguno, dice explícitamente que no había clientes activos ni reactivados para procesar.
 3. **Detalle de clientes Inactivos** (sin movimiento): DNI, nombre y saldo de cada cliente con estado `I`, sin columnas de interés ni saldo nuevo, porque no se les calcula nada. Si no hay ninguno, dice explícitamente que no hay clientes inactivos.
-4. **Resumen final**: cantidad de clientes procesados (A/R), cantidad de inactivos excluidos, total de intereses acreditados y **saldo total de la cartera**, que suma los saldos de **todos** los clientes después del cierre —activos, reactivados e inactivos—, aunque a los inactivos no se les haya acreditado interés. (En la práctica, un cliente inactivo siempre tiene saldo 0, porque `gestion-bancaria.cbl` no permite dar de baja con saldo distinto de cero; pero el total se calcula sumando a todos igual, por las dudas.)
+4. **Detalle de vencimientos de plazo fijo** (Etapa 3): número, DNI, moneda, capital, interés, total, vencimiento y resultado (`Acreditado`, `Pagar por caja (U$S)`, `Pendiente: cliente inactivo`, `Pendiente: cliente inexistente`, `Pendiente: estado desconocido` o `Error: supera saldo maximo`) de cada plazo fijo vencido. Si no hay ninguno, dice `No hay plazos fijos vencidos.`. Esta tabla mide 121 columnas: por eso el renglón del reporte pasó de 100 a 132 posiciones (el ancho clásico de una impresora de listados). Las líneas de `=` y `-` de las otras secciones siguen teniendo 100, así que esas secciones no cambiaron.
+5. **Resumen final**: cantidad de clientes procesados (A/R), cantidad de inactivos excluidos, total de intereses acreditados; cantidad y total de plazos fijos acreditados en pesos, cantidad y total en dólares a pagar por caja, y cantidad de plazos fijos pendientes; y el **saldo total de la cartera**, que suma los saldos de **todos** los clientes después del cierre —activos, reactivados e inactivos, incluidos los plazos fijos acreditados—, aunque a los inactivos no se les haya acreditado interés. (En la práctica, un cliente inactivo siempre tiene saldo 0, porque `gestion-bancaria.cbl` no permite dar de baja con saldo distinto de cero; pero el total se calcula sumando a todos igual, por las dudas.)
 
 Ejemplo:
 
@@ -1058,17 +1096,30 @@ DNI         Nombre                         Saldo
 ----------------------------------------------------------------------------------------------------
 44444444   Cliente Cuatro                              0.00
 
+Detalle de vencimientos de plazo fijo:
+
+Numero  DNI       Mon           Capital            Interes              Total  Vencimiento Resultado
+-------------------------------------------------------------------------------------------------------------------------
+000001  11111111  P        1,000,000.00          32,876.71       1,032,876.71  14/11/2026  Acreditado
+000002  11111111  D              500.00               1.23             501.23  14/11/2026  Pagar por caja (U$S)
+000003  44444444  P        1,000,000.00          32,876.71       1,032,876.71  14/11/2026  Pendiente: cliente inactivo
+
 ====================================================================================================
 RESUMEN DEL CIERRE
 ====================================================================================================
 Clientes procesados (Activos/Reactivados):          2
 Clientes inactivos excluidos:                        1
 Total de intereses acreditados:      $            52.50
-Saldo total de la cartera:           $        10,553.05
+Plazos fijos vencidos acreditados:                  1
+Acreditado por vencimientos:         $     1,032,876.71
+Plazos fijos en dolares (pago por caja):            1
+A pagar por caja en dolares:       U$S           501.23
+Plazos fijos vencidos pendientes:                   1
+Saldo total de la cartera:           $     1,043,429.76
 ====================================================================================================
 ```
 
-El programa también muestra por pantalla un resumen breve equivalente, confirmando que se generó `reporte_cierre.txt`. Ese resumen de pantalla no cambia: sigue siendo solo los totales, sin el detalle línea por línea de ninguna de las dos tablas.
+El programa también muestra por pantalla un resumen breve equivalente (la fecha de proceso y las mismas líneas del resumen), confirmando que se generó `reporte_cierre.txt`, sin el detalle línea por línea de ninguna de las tablas.
 
 **Por qué el detalle de Activos y el de Inactivos van en dos bloques separados, no intercalados:** el batch recorre el archivo en orden de clave (DNI), y un cliente activo y uno inactivo pueden aparecer intercalados en ese orden. Como el reporte pide las dos tablas agrupadas, el programa hace **dos pasadas** sobre `clientes_v3.dat`: la primera actualiza los saldos y escribe la tabla de Activos/Reactivados; la segunda vuelve a abrir el archivo **solo para lectura** y arma la tabla de Inactivos. Ver `1000-LEER-Y-PROCESAR` (pasada 1) y `1500-LISTAR-INACTIVOS` (pasada 2) en `BATCH-CIERRE.cbl`.
 
@@ -1082,9 +1133,11 @@ El programa también muestra por pantalla un resumen breve equivalente, confirma
 
 En este entorno de desarrollo local, el equivalente funcional de ese JCL es `correr_batch_cierre.bat`.
 
+> **PENDIENTE:** `batch_cierre.jcl` todavía describe el cierre **anterior a la Etapa 3**: no tiene una sentencia `DD` para el archivo de plazos fijos (`plazofijo.dat`, que en z/OS sería otro VSAM KSDS) ni muestra cómo se pasa la fecha de proceso (`FECHA_PROCESO`). Se va a actualizar más adelante, aparte (es un archivo protegido del proyecto).
+
 ### ⚠ No correr `gestion-bancaria.exe` y el batch al mismo tiempo
 
-**`gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` no deben ejecutarse simultáneamente sobre el mismo `clientes_v3.dat`.** Ninguno de los dos programas implementa bloqueo de registros ni control de concurrencia (ver [Limitaciones y mejoras futuras](#limitaciones-y-mejoras)), así que correrlos al mismo tiempo puede producir:
+**`gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` no deben ejecutarse simultáneamente sobre el mismo `clientes_v3.dat`** (desde la Etapa 3, tampoco sobre el mismo `plazofijo.dat`). Ninguno de los dos programas implementa bloqueo de registros ni control de concurrencia (ver [Limitaciones y mejoras futuras](#limitaciones-y-mejoras)), así que correrlos al mismo tiempo puede producir:
 
 - un `FILE STATUS` de "archivo en uso" (`61`) al intentar abrir el segundo programa,
 - una condición de carrera si ambos leen y graban el mismo cliente casi a la vez, con el riesgo de que una de las dos escrituras se pierda.
@@ -1171,7 +1224,7 @@ Igual que `BATCH-CIERRE.cbl` con sus tablas de Activos/Reactivados e Inactivos, 
 <a id="testing"></a>
 ## Testing
 
-El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo). Desde la Evolución 1 / Etapa 1 suma 12 casos más (MENU-01 e INT-01 a INT-11) para el menú nuevo y las tasas de Intereses, y desde la Etapa 2 otros 17 (PF-01 a PF-17) para el Plazo fijo, todos automatizados (ver [Casos de INTERESES](#casos-de-intereses-evolución-1--etapa-1) y [Casos de PLAZO FIJO](#casos-de-plazo-fijo-evolución-1--etapa-2)). En total, **41 casos**: 34 automatizados y 7 manuales.
+El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo). Desde la Evolución 1 / Etapa 1 suma 12 casos más (MENU-01 e INT-01 a INT-11) para el menú nuevo y las tasas de Intereses, desde la Etapa 2 otros 17 (PF-01 a PF-17) para el Plazo fijo, y desde la Etapa 3 otros 12 (VTO-01 a VTO-12) para los vencimientos de plazo fijo en el batch de cierre, todos automatizados (ver [Casos de INTERESES](#casos-de-intereses-evolución-1--etapa-1), [Casos de PLAZO FIJO](#casos-de-plazo-fijo-evolución-1--etapa-2) y [Casos de VENCIMIENTOS](#casos-de-vencimientos-evolución-1--etapa-3)). En total, **53 casos**: 46 automatizados y 7 manuales.
 
 ### Casos automatizados
 
@@ -1259,6 +1312,22 @@ Usan la misma técnica que los de INTERESES (fecha fija, carpeta descartable y v
 - La carpeta es `bin\prueba_pf\`, y en ella arrancan vacíos los **tres** archivos (`clientes_v3.dat`, `intereses.dat` y `plazofijo.dat`). Por eso cada caso da de alta su propio cliente (DNIs `800001XX`) y su tasa: nunca se tocan los archivos de `bin\`.
 - En general, el **paso 1** (miércoles 14/10/2026) da de alta el cliente y la tasa, que rige desde el jueves, y el **paso 2** (jueves 15/10/2026) opera con el plazo fijo. Algunos casos tienen un paso 3: PF-14 (otra ejecución, para ver que el número sigue en `000003`) y PF-17 (el 14/11/2026, día del vencimiento).
 
+### Casos de VENCIMIENTOS (Evolución 1 / Etapa 3)
+
+Los casos **VTO-01 a VTO-12** de `CASOS_DE_PRUEBA.md` prueban los vencimientos de plazo fijo en el batch de cierre. Se corren en la cuarta parte de `correr_pruebas_automatizadas.bat` (resumen `Resumen vencimientos: 12 OK / 0 FALLO (de 12)`), que antes compila también `BATCH-CIERRE.cbl` en `bin\`, o en Linux/Docker/CI con `correr_pruebas_vencimientos.sh`:
+
+```bash
+docker build -t gestion-bancaria .
+docker run --rm gestion-bancaria bash correr_pruebas_vencimientos.sh
+```
+
+Usan la misma técnica que los de PLAZO FIJO, en la carpeta descartable `bin\prueba_vto\` (DNIs `800002XX`), con una novedad: **un caso mezcla corridas de los dos programas**. En la lista de pasos de cada caso:
+
+- `AAAAMMDD` corre `gestion-bancaria.exe` con esa fecha y la siguiente entrada del caso (`entrada_vto01_1.txt`, `entrada_vto01_2.txt`, ...).
+- `B:AAAAMMDD` corre `BATCH-CIERRE.exe` con esa fecha. Antes se borra el `reporte_cierre.txt` anterior, y después se agregan a la salida el código de salida del batch y el reporte que generó, entre líneas que empiezan con `-----`. Así el `esperado_vtoNN.txt` verifica también el reporte (y, en VTO-11, que el batch termina con código `1` sin generar ninguno).
+
+Por ejemplo, `vto07 20261014 20261015 B:20261114 20261116 B:20261116 20261116` es: alta de cliente y tasa, alta del plazo fijo y baja del cliente, primer cierre (queda pendiente), reactivación, segundo cierre (se acredita) y consulta final. Las líneas `-----` son las mismas en el `.bat` y en el `.sh`, así un mismo esperado sirve en Windows y en Linux.
+
 ### Gestión de casos y ejecución en Jira/Xray
 
 Los 12 casos de prueba de `CASOS_DE_PRUEBA.md` (los 5 automatizados y los 7 manuales) están además cargados como Tests en Jira, usando Xray como plugin de gestión de pruebas, cada uno con su Resumen, Descripción, pasos estructurados (Acción / Datos / Resultado Esperado) y — en los automatizados — la referencia a los archivos `entrada_*.txt` / `esperado_*.txt` correspondientes.
@@ -1312,7 +1381,8 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 - Intereses: no hay historial de tasas; solo se guardan la TNA actual y la anterior.
 - Intereses: la baja no pide confirmación (rige de inmediato); se puede revertir con un alta (reactivación).
 - `BATCH-CIERRE.cbl` todavía no usa la tabla de tasas de `intereses.dat`, y su reporte sigue titulado `CUENTA BANCARIA`.
-- Plazo fijo: los **vencimientos todavía no se procesan** (Etapa 3). Un plazo fijo vencido sigue en estado `A` hasta que el batch lo acredite, y no se puede cancelar.
+- Plazo fijo: un plazo fijo vencido sigue en estado `A` hasta que **corra el batch de cierre** (que lo acredita), y mientras tanto no se puede cancelar.
+- Plazo fijo: la consulta muestra `V - Vencido y acreditado` también para los de dólares, aunque esos no se suman al saldo sino que se pagan por caja (el detalle está en el reporte del cierre).
 - Plazo fijo: la consulta es solo **por número**; no hay listado de los plazos fijos de un DNI.
 - Plazo fijo: no mueve el saldo del cliente ni deja registro del dinero que entra o sale (no hay historial de movimientos).
 - Plazo fijo: el vencimiento puede caer en sábado, domingo o feriado (es alta + días, sin correrlo a un día hábil).
@@ -1324,15 +1394,19 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 - **Tasa fija en el código.** Cambiarla requiere editar `WS-TASA-INTERES` y recompilar; no se lee de un archivo de parámetros ni se puede pasar por línea de comandos.
 - **Reporte no acumulativo.** `reporte_cierre.txt` se sobreescribe en cada corrida; no queda un historial local de cierres anteriores (a diferencia del JCL de referencia, que documenta un dataset generacional (GDG) para eso).
 - **Sin control de concurrencia con `gestion-bancaria.cbl`.** Ver «No correr `gestion-bancaria.exe` y el batch al mismo tiempo», en [Proceso batch de cierre](#proceso-batch-cierre).
-- **No hay historial de movimientos.** El interés acreditado queda en el reporte de esa corrida, pero no se guarda en el archivo de clientes como un movimiento separado; solo se ve reflejado en el saldo.
+- **No hay historial de movimientos.** El interés acreditado queda en el reporte de esa corrida, pero no se guarda en el archivo de clientes como un movimiento separado; solo se ve reflejado en el saldo. Lo mismo vale para los plazos fijos acreditados.
+- **Vencimientos sin "todo o nada".** El saldo del cliente y el estado `V` del plazo fijo se graban por separado. Si el programa se cortara justo entre las dos grabaciones, hay que corregir ese plazo fijo a mano (el batch avisa cuál) para que no se acredite dos veces.
+- **Dólares sin cuenta.** Los plazos fijos en dólares vencidos se informan "a pagar por caja", pero no queda registro de que se hayan pagado.
+- **Pendientes sin límite.** Un plazo fijo de un cliente inactivo queda pendiente hasta que se lo reactive; no hay aviso aparte de la línea del reporte en cada cierre.
 
 ### Posibles mejoras futuras
 
 Cada limitación de arriba sugiere una mejora natural. Algunas, en orden aproximado de impacto/esfuerzo:
 
 - **PENDIENTE (próximo paso después de la Etapa 1): protección contra el bucle infinito al terminarse la entrada.** Hoy, si la entrada se acaba (archivo redirigido incompleto, o Ctrl+Z / Ctrl+D en el teclado), los datos de Intereses que se vuelven a pedir (moneda, días, TNA) y el menú principal repiten el aviso para siempre, porque GnuCOBOL entrega el fin de entrada como una línea vacía. Propuesta: un **límite de intentos**. Cada dato cuenta los valores inválidos seguidos y, al llegar a 5, cancela la operación (`Demasiados intentos: operacion cancelada.`) sin grabar nada. Los menús cuentan las opciones inválidas seguidas y, al llegar a 10, cierran los archivos y terminan el programa en orden. Alternativa más completa (y más invasiva): leer el teclado como un archivo (`ASSIGN TO KEYBOARD`) y detectar el fin con `AT END`.
-- **PENDIENTE: título del reporte de `BATCH-CIERRE.cbl`.** Sigue diciendo `CUENTA BANCARIA` (no se tocó en las Etapas 1 y 2).
-- **PENDIENTE (Etapa 3): vencimientos de plazo fijo en el batch de cierre.** Recorrer los plazos fijos activos con vencimiento menor o igual a la fecha de proceso, pasarlos a estado `V` y acreditar capital + interés.
+- **PENDIENTE: título del reporte de `BATCH-CIERRE.cbl`.** Sigue diciendo `CUENTA BANCARIA` (no se tocó en las Etapas 1, 2 ni 3).
+- **PENDIENTE: actualizar `batch_cierre.jcl` a la Etapa 3.** Agregar la sentencia `DD` del archivo de plazos fijos y mostrar cómo se pasa la fecha de proceso (ver [El JCL de referencia](#proceso-batch-cierre)). Requiere permiso aparte, porque es un archivo protegido.
+- **PENDIENTE: que los 5 casos de clientes no dependan de `bin\clientes_v3.dat`.** Hoy dan de alta sus clientes `800000XX` en el archivo real de `bin\`, así que **la segunda corrida seguida** de `correr_pruebas_automatizadas.bat` falla con `Ya existe un cliente con ese DNI.` hasta que se borre o se mueva ese archivo. Se podrían correr en una carpeta descartable, como los de INTERESES, PLAZO FIJO y VENCIMIENTOS.
 - **Plazo fijo: listado por DNI** (opcional en la especificación): en la consulta, listar todos los plazos fijos de un cliente.
 - **Historial de movimientos.** Un archivo de transacciones (depósitos, extracciones, modificaciones, intereses) separado del maestro de clientes, para auditoría y para poder reconstruir cómo se llegó a un saldo.
 - **Control de corridas del batch.** Un archivo o registro de "último cierre corrido" que rechace o avise ante una segunda corrida del mismo período.
