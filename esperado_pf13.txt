@@ -1,0 +1,274 @@
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: DNI (8 digitos): Nombre (hasta 30 caracteres): Direccion (hasta 40 caracteres): Telefono (hasta 15 caracteres): Cliente dado de alta.
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
+Moneda:        P - Pesos
+Dias:          30
+TNA:           40.00 %
+TNA anterior:  0.00 %
+Vigente desde: 15/10/2026
+Estado:        A - Activa
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: Hasta luego.
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): Tasa actual:
+Moneda:        P - Pesos
+Dias:          30
+TNA:           40.00 %
+TNA anterior:  0.00 %
+Vigente desde: 15/10/2026
+Estado:        A - Activa
+TNA en % (mayor que 0, hasta 999.99): Tasa modificada.
+Moneda:        P - Pesos
+Dias:          30
+TNA:           45.00 %
+TNA anterior:  40.00 %
+Vigente desde: 16/10/2026
+Estado:        A - Activa
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
+Moneda:        P - Pesos
+Dias:          60
+TNA:           41.00 %
+TNA anterior:  0.00 %
+Vigente desde: 16/10/2026
+Estado:        A - Activa
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+           ALTA DE PLAZO FIJO
+  ======================================
+ 
+DNI (8 digitos): Moneda (P = pesos, D = dolares): Monto: Dias (30, 60, 90 o 120):  
+TNA:           40.00 %
+Interes:               32,876.71
+Total:              1,032,876.71
+Vencimiento:   14/11/2026
+ 
+Confirma el alta del plazo fijo? (S/N): Plazo fijo constituido. Comprobante:
+Numero:        000001
+DNI:           80000113
+Moneda:        P - Pesos
+Monto:              1,000,000.00
+Dias:          30
+TNA:           40.00 %
+Interes:               32,876.71
+Total:              1,032,876.71
+Fecha de alta: 15/10/2026
+Vencimiento:   14/11/2026
+Estado:        A - Activo
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+           ALTA DE PLAZO FIJO
+  ======================================
+ 
+DNI (8 digitos): Moneda (P = pesos, D = dolares): Monto: Dias (30, 60, 90 o 120): No hay una tasa vigente para esa moneda
+y plazo: la tasa rige desde 16/10/2026.
+No se constituyo el plazo fijo.
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: Hasta luego.

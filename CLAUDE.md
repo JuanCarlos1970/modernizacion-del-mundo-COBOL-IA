@@ -6,6 +6,9 @@ Proyecto COBOL (GnuCOBOL) de gestión de cuentas bancarias:
 - `LISTADO-CLIENTES.cbl`: listado de solo lectura.
 - `CLIENTE.cpy`: layout del registro del archivo indexado `clientes_v3.dat`
   (lo incluyen los tres programas con `COPY CLIENTE.`).
+- `INTERES.cpy` y `PLAZOFIJO.cpy`: layouts de `intereses.dat` (tasas) y
+  `plazofijo.dat` (plazos fijos); por ahora solo los incluye
+  `gestion-bancaria.cbl`.
 - `batch_cierre.jcl`: JCL de referencia para z/OS.
 
 El usuario está aprendiendo: explicar todo con lenguaje simple, sin jerga
@@ -56,7 +59,7 @@ No correr `gestion-bancaria.exe` y el batch al mismo tiempo sobre el mismo
 
 ## Regla 1 — Después de cualquier cambio en `gestion-bancaria.cbl`
 
-Recompilar y correr los 24 casos de `CASOS_DE_PRUEBA.md`:
+Recompilar y correr los 41 casos de `CASOS_DE_PRUEBA.md`:
 
 - 5 automáticos (CP-01, CP-02, CP-03, CP-04, CP-06):
   `cmd /c correr_pruebas_automatizadas.bat`. Tiene que decir
@@ -70,8 +73,17 @@ Recompilar y correr los 24 casos de `CASOS_DE_PRUEBA.md`:
   la segunda parte de `cmd /c correr_pruebas_automatizadas.bat`, que
   tiene que decir `Resumen intereses: 12 OK / 0 FALLO (de 12)`. En
   Docker: `docker run --rm gestion-bancaria bash correr_pruebas_intereses.sh`.
-- Usar los DNIs indicados en la matriz (800000XX para los automáticos,
-  900000XX para los manuales).
+- 17 automáticos de PLAZO FIJO (PF-01 a PF-17): los corre la tercera
+  parte de `cmd /c correr_pruebas_automatizadas.bat`, que tiene que
+  decir `Resumen plazo fijo: 17 OK / 0 FALLO (de 17)`. En Docker:
+  `docker run --rm gestion-bancaria bash correr_pruebas_plazofijo.sh`.
+  Corren en la carpeta descartable `bin\prueba_pf` (no tocan los `.dat`
+  de `bin\`).
+- Usar los DNIs indicados en la matriz (800000XX para los automáticos
+  de clientes, 800001XX para los de plazo fijo, 900000XX para los
+  manuales).
+- Si `cmd /c correr_pruebas_automatizadas.bat` responde "no se reconoce
+  como un comando", pasar la ruta completa del `.bat`.
 - En cada caso manual, mostrarle al usuario qué se hizo: qué datos se
   ingresaron, qué mostró el programa y si coincide con el "Resultado
   esperado" de la matriz.

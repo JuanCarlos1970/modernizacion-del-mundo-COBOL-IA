@@ -1,8 +1,9 @@
 name: Pruebas automatizadas
 
 # Corre los 5 casos de prueba automatizados (CP-01 a CP-04 y CP-06 de
-# CASOS_DE_PRUEBA.md), y despues los de INTERESES (MENU-01 e INT-01 a
-# INT-11), en cada push o pull request a main, compilando
+# CASOS_DE_PRUEBA.md), despues los de INTERESES (MENU-01 e INT-01 a
+# INT-11) y los de PLAZO FIJO (PF-01 a PF-17), en cada push o pull
+# request a main, compilando
 # gestion-bancaria.cbl con GnuCOBOL en un runner Linux y comparando cada salida
 # contra su esperado_*.txt de referencia.
 #
@@ -67,3 +68,9 @@ jobs:
       # (variable FECHA_PROCESO). Ver correr_pruebas_intereses.sh.
       - name: Correr los casos de INTERESES y comparar contra lo esperado
         run: bash correr_pruebas_intereses.sh
+
+      # Casos de PLAZO FIJO (PF-01 a PF-17): cada uno corre con
+      # clientes_v3.dat, intereses.dat y plazofijo.dat vacios y con
+      # fecha de proceso fija. Ver correr_pruebas_plazofijo.sh.
+      - name: Correr los casos de PLAZO FIJO y comparar contra lo esperado
+        run: bash correr_pruebas_plazofijo.sh

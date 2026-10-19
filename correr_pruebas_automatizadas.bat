@@ -18,6 +18,8 @@ rem
 rem  Despues corre, en una segunda parte con su propio resumen, los
 rem  casos de INTERESES (MENU-01 e INT-01 a INT-11), cada uno con un
 rem  intereses.dat vacio y con fecha de proceso fija (ver mas abajo).
+rem  Y por ultimo, en una tercera parte, los casos de PLAZO FIJO
+rem  (PF-01 a PF-17), con la misma tecnica.
 rem
 rem  El resumen se muestra en pantalla Y ADEMAS se guarda en
 rem  resultado_pruebas.txt (en esta misma carpeta), igual que
@@ -190,7 +192,55 @@ echo ========================================== >> "%LOGFILE%"
 echo  Resumen intereses: !OK_INT! OK / !FALLO_INT! FALLO (de !TOTAL_INT!) >> "%LOGFILE%"
 echo ========================================== >> "%LOGFILE%"
 
+rem -----------------------------------------------------------------
+rem  Tercera parte: casos de la Evolucion 1 / Etapa 2 (PF-01 a PF-17
+rem  de CASOS_DE_PRUEBA.md). Misma logica que la segunda parte y que
+rem  correr_pruebas_plazofijo.sh (Linux / Docker / CI), pero en la
+rem  carpeta descartable bin\prueba_pf\: cada caso arranca con
+rem  clientes_v3.dat, intereses.dat y plazofijo.dat vacios. En
+rem  general el paso 1 (miercoles 14/10) da de alta el cliente y la
+rem  tasa, y el paso 2 (jueves 15/10, cuando la tasa ya rige) opera
+rem  con el plazo fijo. 14/11/2026 = vencimiento de un plazo fijo a
+rem  30 dias constituido el 15/10/2026.
+rem -----------------------------------------------------------------
+echo.
+echo [pruebas] Corriendo y verificando los casos de PLAZO FIJO ...
+echo.
+
+set /a OK_PF=0
+set /a FALLO_PF=0
+set /a TOTAL_PF=0
+
+call :caso_pf pf01 20261014 20261015
+call :caso_pf pf02 20261014 20261015
+call :caso_pf pf03 20261015
+call :caso_pf pf04 20261014 20261015
+call :caso_pf pf05 20261014 20261015
+call :caso_pf pf06 20261014 20261015
+call :caso_pf pf07 20261014 20261015
+call :caso_pf pf08 20261014 20261015
+call :caso_pf pf09 20261015
+call :caso_pf pf10 20261014 20261015
+call :caso_pf pf11 20261014 20261015
+call :caso_pf pf12 20261014 20261015
+call :caso_pf pf13 20261014 20261015
+call :caso_pf pf14 20261014 20261015 20261016
+call :caso_pf pf15 20261014 20261015
+call :caso_pf pf16 20261014 20261015
+call :caso_pf pf17 20261014 20261015 20261114
+
+echo.
+echo [pruebas] ==========================================
+echo [pruebas]  Resumen plazo fijo: !OK_PF! OK / !FALLO_PF! FALLO ^(de !TOTAL_PF!^)
+echo [pruebas] ==========================================
+
+echo. >> "%LOGFILE%"
+echo ========================================== >> "%LOGFILE%"
+echo  Resumen plazo fijo: !OK_PF! OK / !FALLO_PF! FALLO (de !TOTAL_PF!) >> "%LOGFILE%"
+echo ========================================== >> "%LOGFILE%"
+
 set /a FALLO+=FALLO_INT
+set /a FALLO+=FALLO_PF
 
 if !FALLO! GTR 0 (
     echo.
@@ -263,5 +313,49 @@ if errorlevel 1 (
     echo [pruebas]   OK     - %CASO%
     echo   OK     - %CASO% >> "%LOGFILE%"
     set /a OK_INT+=1
+)
+goto :eof
+
+rem =================================================================
+rem  :caso_pf <caso> <fecha paso 1> [<fecha paso 2> ...]
+rem  Corre un caso de PLAZO FIJO (ver la tercera parte, arriba).
+rem  Es igual a :caso_int, pero en bin\prueba_pf\ y con sus propios
+rem  contadores.
+rem =================================================================
+:caso_pf
+set "CASO=%~1"
+shift
+if exist "bin\prueba_pf" rmdir /s /q "bin\prueba_pf"
+mkdir "bin\prueba_pf"
+type nul > "salida_%CASO%.txt"
+set /a PASO=1
+:caso_pf_paso
+if "%~1"=="" goto caso_pf_comparar
+if not exist "entrada_%CASO%_!PASO!.txt" (
+    echo [pruebas] ERROR: no se encuentra entrada_%CASO%_!PASO!.txt
+    echo ERROR: no se encuentra entrada_%CASO%_!PASO!.txt >> "%LOGFILE%"
+    goto caso_pf_comparar
+)
+set "FECHA_PROCESO=%~1"
+pushd "bin\prueba_pf"
+"..\gestion-bancaria.exe" < "..\..\entrada_%CASO%_!PASO!.txt" >> "..\..\salida_%CASO%.txt"
+popd
+set "FECHA_PROCESO="
+set /a PASO+=1
+shift
+goto caso_pf_paso
+:caso_pf_comparar
+rmdir /s /q "bin\prueba_pf"
+set /a TOTAL_PF+=1
+fc "esperado_%CASO%.txt" "salida_%CASO%.txt" >nul
+if errorlevel 1 (
+    echo [pruebas]   FALLO  - %CASO%
+    echo   FALLO  - %CASO% >> "%LOGFILE%"
+    set /a FALLO_PF+=1
+    set "CASOS_FALLIDOS=!CASOS_FALLIDOS! %CASO%"
+) else (
+    echo [pruebas]   OK     - %CASO%
+    echo   OK     - %CASO% >> "%LOGFILE%"
+    set /a OK_PF+=1
 )
 goto :eof

@@ -35,8 +35,20 @@
  
      0 - Salir
  
-  Opcion: Opcion en desarrollo.
+  Opcion:  
+  ======================================
+               PLAZO FIJO
+  ======================================
  
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
   ======================================
              GESTION BANCARIA
   ======================================

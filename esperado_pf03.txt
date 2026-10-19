@@ -1,0 +1,69 @@
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+           ALTA DE PLAZO FIJO
+  ======================================
+ 
+DNI (8 digitos): Cliente no encontrado.
+ 
+  ======================================
+               PLAZO FIJO
+  ======================================
+ 
+  Fecha de proceso: 15/10/2026
+ 
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: Hasta luego.

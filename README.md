@@ -16,7 +16,7 @@ El código, la arquitectura y cada decisión de diseño fueron guiados y revisad
 
 Funciones del programa interactivo: **alta**, **modificación**, **baja lógica** y **reactivación** de clientes; **depósito**, **extracción** y **consulta de saldo**. Cada cliente tiene DNI, nombre, dirección, teléfono, saldo y **estado** (Activo / Inactivo / Reactivado). Los datos se guardan en un **archivo indexado** (`clientes_v3.dat`, clave = DNI) y sobreviven al cerrar y reabrir el programa.
 
-Desde la **Evolución 1 / Etapa 1** el menú incluye además la opción **Intereses**, que administra la tabla de tasas (TNA) por moneda y plazo que va a usar el Plazo Fijo, guardada en otro archivo indexado (`intereses.dat`). Las otras opciones nuevas (Cuenta corriente / Caja de ahorro, Plazo fijo, Historial de movimientos y Pago de servicios) por ahora solo muestran `Opcion en desarrollo.`.
+Desde la **Evolución 1 / Etapa 1** el menú incluye además la opción **Intereses**, que administra la tabla de tasas (TNA) por moneda y plazo, guardada en otro archivo indexado (`intereses.dat`). Desde la **Etapa 2** la opción **Plazo fijo** permite constituir plazos fijos (con confirmación), cancelarlos en forma anticipada y consultarlos; se guardan en un tercer archivo indexado (`plazofijo.dat`) y usan las tasas de Intereses. Las otras opciones nuevas (Cuenta corriente / Caja de ahorro, Historial de movimientos y Pago de servicios) por ahora solo muestran `Opcion en desarrollo.`.
 
 Además del programa interactivo, el proyecto incluye:
 
@@ -58,17 +58,19 @@ Además del programa interactivo, el proyecto incluye:
 | `LISTADO-CLIENTES.cbl` | Listado de consulta de **solo lectura**: no modifica datos — ver [Listado de clientes (solo lectura)](#listado-clientes) |
 | `CLIENTE.cpy` | Copybook con el layout del registro de cliente, compartido por los tres programas de arriba |
 | `INTERES.cpy` | Copybook con el layout del registro de tasas (`intereses.dat`), incluido por `gestion-bancaria.cbl` |
+| `PLAZOFIJO.cpy` | Copybook con el layout del registro de plazo fijo (`plazofijo.dat`), incluido por `gestion-bancaria.cbl` |
 | `correr_batch_cierre.bat` | Compila `BATCH-CIERRE.cbl` en `bin\` y lo ejecuta ahí |
 | `ver_listado_clientes.bat` | Compila `LISTADO-CLIENTES.cbl` en `bin\` y lo ejecuta ahí |
-| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados y, después, los casos de INTERESES — ver [Testing](#testing) |
+| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados y, después, los casos de INTERESES y los de PLAZO FIJO — ver [Testing](#testing) |
 | `correr_pruebas_intereses.sh` | Lo mismo que la segunda parte del `.bat`, pero para Linux (Docker y GitHub Actions) |
+| `correr_pruebas_plazofijo.sh` | Lo mismo que la tercera parte del `.bat` (casos de PLAZO FIJO), para Linux (Docker y GitHub Actions) |
 | `.gitattributes` | Fuerza fin de línea LF en los `.sh` (con CRLF, bash no los puede ejecutar) |
 | `.dockerignore` | Deja `bin\` afuera de la imagen de Docker: los `.dat` creados en Windows no se pueden leer con el GnuCOBOL de Linux |
 | `batch_cierre.jcl` | JCL de **referencia/documentación**: cómo correría el mismo cierre en un mainframe z/OS real (no se ejecuta en este entorno) |
 | `README.md` | Esta documentación |
 | `CASOS_DE_PRUEBA.md` | Matriz de casos de prueba (QA) — ver [Testing](#testing) |
 | `LICENSE` | Licencia del proyecto — ver [Licencia](#licencia) |
-| `entrada_*.txt` | Entradas de los casos de prueba automatizados: los 5 de clientes (`alta_ok`, `alta_dni_invalido`, `deposito`, `extraccion`, `consulta`) y los de INTERESES (`entrada_menu01_1.txt`, `entrada_int01_1.txt`, ..., uno por paso) |
+| `entrada_*.txt` | Entradas de los casos de prueba automatizados: los 5 de clientes (`alta_ok`, `alta_dni_invalido`, `deposito`, `extraccion`, `consulta`) y los de INTERESES y PLAZO FIJO (`entrada_menu01_1.txt`, `entrada_int01_1.txt`, `entrada_pf01_1.txt`, ..., uno por paso) |
 | `esperado_*.txt` | Salida de referencia, verificada a mano, de cada caso automatizado |
 | `salida_*.txt` | Salidas correspondientes a cada caso, generadas al correr las pruebas (no se suben al repositorio) |
 
@@ -81,6 +83,7 @@ Además del programa interactivo, el proyecto incluye:
 | `LISTADO-CLIENTES.exe` | Ejecutable de `LISTADO-CLIENTES.cbl` |
 | `clientes_v3.dat` | Archivo de datos indexado, compartido por los tres programas. **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl` |
 | `intereses.dat` | Archivo indexado de tasas (opción 8 - Intereses). **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl`, junto a `clientes_v3.dat` |
+| `plazofijo.dat` | Archivo indexado de plazos fijos (opción 7 - Plazo fijo). **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl`, junto a los otros dos |
 | `reporte_cierre.txt` | Reporte del cierre, generado por `BATCH-CIERRE.cbl` en cada corrida |
 | `listado_clientes.txt` | Listado de clientes, generado por `LISTADO-CLIENTES.cbl` en cada corrida |
 
@@ -168,7 +171,8 @@ Probado con GnuCOBOL 2.0.0 (el que trae OpenCobolIDE): los tres programas compil
 | 3 | Suma un monto al saldo. Bloqueado si el cliente está **inactivo** |
 | 4 | Resta un monto del saldo (sin descubierto). Bloqueado si el cliente está **inactivo** |
 | 5 | Muestra todos los datos del cliente, incluido el estado |
-| 6, 7, 9, 10 | En desarrollo: muestran `Opcion en desarrollo.` y vuelven al menú |
+| 6, 9, 10 | En desarrollo: muestran `Opcion en desarrollo.` y vuelven al menú |
+| 7 | Submenú de **plazo fijo** (alta, cancelación anticipada y consulta) — ver [Plazo fijo (opción 7)](#plazo-fijo) |
 | 8 | Submenú de **tasas de interés** (alta, modificación y baja) — ver [Intereses (opción 8)](#intereses) |
 | 0 | Cierra los archivos y sale |
 
@@ -357,10 +361,87 @@ Flujo: DNI → búsqueda → **verificación de estado** → monto → operació
 - Extracción: el monto no puede superar el saldo (`Saldo insuficiente.`).
 - Si todo es válido, se graba y se muestra `Saldo actual: ...`.
 
+<a id="plazo-fijo"></a>
+### Plazo fijo (opción 7)
+
+Permite **constituir** un plazo fijo para un cliente existente, **cancelarlo en forma anticipada** y **consultarlo**. Los plazos fijos se guardan en `plazofijo.dat` (ver [Persistencia](#persistencia-plazofijo)) y la tasa sale de la tabla de [Intereses (opción 8)](#intereses). No hay "modificación": como en un banco real, se cancela y se constituye otro. Los **vencimientos** (acreditar capital + interés al llegar la fecha) quedan para la Etapa 3, en el batch de cierre.
+
+```
+  ======================================
+               PLAZO FIJO
+  ======================================
+
+  Fecha de proceso: 15/10/2026
+
+     1 - Alta
+     2 - Cancelacion anticipada
+     3 - Consulta
+
+     4 - Volver
+
+  Opcion:
+```
+
+**1 - Alta.**
+
+1. Pide el **DNI**. Si no existe: `Cliente no encontrado.`; si está inactivo (`I`): `Cliente inactivo: no se puede operar.` (igual que depósito y extracción). En los dos casos vuelve al submenú.
+2. Pide la **moneda** (`P` o `D`), el **monto** y los **días** (30, 60, 90 o 120). Cada dato inválido se informa y **se vuelve a pedir**. El monto mínimo es **1.000.000 en pesos** y **500 en dólares**; el monto igual al mínimo se acepta.
+3. Busca la **tasa** de esa moneda y plazo en `intereses.dat` y decide cuál aplicar:
+
+   | Situación de la tasa | Qué hace |
+   |----------------------|----------|
+   | No existe o está dada de baja (`B`) | `No hay una tasa activa para esa moneda y plazo. No se constituyo el plazo fijo.` |
+   | Fecha de proceso igual o posterior a `Vigente desde` | Usa la `TNA` |
+   | Antes de `Vigente desde`, con `TNA anterior` mayor que 0 | Usa la `TNA anterior` (la que regía antes del último cambio) |
+   | Antes de `Vigente desde`, con `TNA anterior` en 0 (tasa recién dada de alta o reactivada) | `No hay una tasa vigente para esa moneda y plazo: la tasa rige desde DD/MM/AAAA.` y no constituye |
+
+4. Calcula y muestra TNA, interés, total y vencimiento, y pregunta `Confirma el alta del plazo fijo? (S/N):`.
+5. Con `S`: asigna el número, graba y muestra el comprobante. Con cualquier otra respuesta: `Alta cancelada: no se grabo nada.` y vuelve al submenú. **No se limpia la pantalla** (la especificación lo pedía): hacerlo en GnuCOBOL requiere códigos de escape de la terminal, que quedarían como caracteres invisibles en los `esperado_*.txt` de las pruebas.
+
+```
+TNA:           40.00 %
+Interes:               32,876.71
+Total:              1,032,876.71
+Vencimiento:   14/11/2026
+
+Confirma el alta del plazo fijo? (S/N): S
+Plazo fijo constituido. Comprobante:
+Numero:        000001
+DNI:           12345678
+Moneda:        P - Pesos
+Monto:              1,000,000.00
+Dias:          30
+TNA:           40.00 %
+Interes:               32,876.71
+Total:              1,032,876.71
+Fecha de alta: 15/10/2026
+Vencimiento:   14/11/2026
+Estado:        A - Activo
+```
+
+**Cálculo.** `INTERES = MONTO x TNA / 100 x DIAS / 365` (TNA proporcional a los días), redondeado al centavo con `ROUNDED` (medio centavo hacia arriba). En el programa las dos divisiones se hacen juntas al final (`MONTO * TNA * DIAS / 36500`) para no perder decimales en un paso intermedio. `TOTAL = MONTO + INTERES`. `Vencimiento = fecha de alta + días` (con `INTEGER-OF-DATE` / `DATE-OF-INTEGER`; no se corre a un día hábil). La fecha de alta es la fecha de proceso (no se tipea).
+
+Ejemplo: 1.000.000 al 40% por 30 días → 1.000.000 × 40 × 30 / 36500 = 32.876,712 → **32,876.71**; total **1,032,876.71**.
+
+**Número de plazo fijo.** Es correlativo y automático: el último grabado + 1 (el primero es `000001`). Se calcula **después** de la confirmación, recorriendo `plazofijo.dat` en orden (`START` + `READ NEXT`): como el archivo está ordenado por número, el último que se lee es el mayor. No se usa un registro de control (que todo programa que lea el archivo tendría que saltear) ni `START ... LAST` / `READ PREVIOUS` (no hay garantía de que funcionen igual en GnuCOBOL 2.0 y 3.x).
+
+**El saldo del cliente no cambia.** Ni el alta ni la cancelación tocan `CLI-SALDO`: el dinero entra y sale por caja. Además, las cuentas no tienen moneda y hay plazos fijos en dólares.
+
+**2 - Cancelación anticipada.** Pide el número y muestra el plazo fijo. Solo se puede cancelar uno en estado `A` **que todavía no venció**:
+
+- `C`: `El plazo fijo ya esta cancelado.`
+- `V`: `El plazo fijo ya vencio y fue acreditado.`
+- Fecha de proceso igual o posterior al vencimiento: `El plazo fijo ya vencio: no se puede cancelar. Se acredita en el proceso de cierre.` (ya no sería "anticipada").
+- Si no: pide `Confirma la cancelacion anticipada? (S/N):`. Con `S` pasa a estado `C` y muestra `Capital a devolver: ... (sin intereses)`: en la cancelación anticipada se devuelve **solo el capital**. Con otra respuesta: `Cancelacion no realizada.`.
+
+**3 - Consulta.** Pide el número y muestra todos los datos del plazo fijo, incluido el estado (`A - Activo`, `C - Cancelado`, `V - Vencido y acreditado`). Por ahora es solo por número (el listado por DNI quedó como mejora futura).
+
+**Número de plazo fijo (cancelación y consulta).** De 1 a 6 dígitos y mayor que 0: se acepta `1` o `000001`. Si no es válido: `Numero invalido: de 1 a 6 digitos, mayor que 0.` y vuelve al submenú (como un DNI inválido). Si no existe: `No existe un plazo fijo con ese numero.`.
+
 <a id="intereses"></a>
 ### Intereses (opción 8)
 
-Administra la **tabla de tasas** que va a usar el Plazo Fijo: una TNA (tasa nominal anual, en porcentaje) para cada combinación de **moneda** (`P` = pesos, `D` = dólares) y **plazo** (30, 60, 90 o 120 días). Las tasas se guardan en `intereses.dat` (ver [Persistencia](#persistencia-intereses)).
+Administra la **tabla de tasas** que usa el Plazo Fijo: una TNA (tasa nominal anual, en porcentaje) para cada combinación de **moneda** (`P` = pesos, `D` = dólares) y **plazo** (30, 60, 90 o 120 días). Las tasas se guardan en `intereses.dat` (ver [Persistencia](#persistencia-intereses)).
 
 ```
   ======================================
@@ -436,9 +517,12 @@ Si `FECHA_PROCESO` existe pero no es una fecha válida, el programa avisa (`FECH
 | Dato | Reglas |
 |------|--------|
 | **Opción del menú principal** | `1`–`10` o `0`; cualquier otro valor: `Opcion invalida.` |
-| **Opción del submenú Intereses** | `1`–`4`; cualquier otro valor: `Opcion invalida.` |
-| **Moneda** (Intereses) | `P` o `D`, en mayúscula o minúscula; si no: `Moneda invalida: ingrese P o D.` y la vuelve a pedir |
-| **Días** (Intereses) | `30`, `60`, `90` o `120`; si no: `Dias invalidos: ingrese 30, 60, 90 o 120.` y los vuelve a pedir |
+| **Opción del submenú Intereses / Plazo fijo** | `1`–`4`; cualquier otro valor: `Opcion invalida.` |
+| **Moneda** (Intereses y Plazo fijo) | `P` o `D`, en mayúscula o minúscula; si no: `Moneda invalida: ingrese P o D.` y la vuelve a pedir |
+| **Días** (Intereses y Plazo fijo) | `30`, `60`, `90` o `120`; si no: `Dias invalidos: ingrese 30, 60, 90 o 120.` y los vuelve a pedir |
+| **Monto** (Plazo fijo) | No vacío, numérico, mayor que 0, hasta 2 decimales (más decimales **se rechazan**) y no menor que el mínimo (`1,000,000.00` en pesos, `500.00` en dólares; el mínimo se acepta). Si no, avisa el motivo y lo vuelve a pedir |
+| **Número de plazo fijo** | De 1 a 6 dígitos, mayor que 0; si no: `Numero invalido: de 1 a 6 digitos, mayor que 0.` y vuelve al submenú |
+| **Respuesta S/N** (alta y cancelación de plazo fijo) | `S` o `s` = sí; cualquier otra = no |
 | **TNA** (Intereses) | No vacía, numérica, mayor que 0, hasta `999.99` y con hasta 2 decimales (más decimales **se rechazan**, no se truncan); el punto decimal es `.`. Si no, avisa el motivo y la vuelve a pedir |
 | **Respuesta Modificar / Baja** | `M`, `m`, `B` o `b`; cualquier otra: `Opcion invalida: use M o B.` |
 | **Opción del submenú de modificación** | `1`–`4`; cualquier otro valor: `Opcion invalida.` |
@@ -634,7 +718,38 @@ Registro `REG-INTERES` (23 bytes). La clave `INT-CLAVE` es un grupo formado por 
 | `INT-VIGENTE-DESDE` | `9(8)` | 8 | `AAAAMMDD`: fecha desde la cual rige `INT-TNA` |
 | `INT-ESTADO` | `X` | 1 | `A` = activa, `B` = baja lógica. Niveles 88 `TASA-ACTIVA`, `TASA-BAJA` |
 
-Los errores de archivo pasan por el mismo `9000-ERROR-ARCHIVO`, que ahora informa **cuál** de los dos archivos falló (`WS-ARCHIVO`). Para empezar la tabla de tasas de cero, borrar `bin\intereses.dat` (no afecta a los clientes).
+Los errores de archivo pasan por el mismo `9000-ERROR-ARCHIVO`, que informa **cuál** de los archivos falló (`WS-ARCHIVO`). Para empezar la tabla de tasas de cero, borrar `bin\intereses.dat` (no afecta a los clientes).
+
+<a id="persistencia-plazofijo"></a>
+#### Archivo de plazos fijos: `plazofijo.dat`
+
+Mismo patrón que los otros dos: archivo indexado en `bin\`, que se crea vacío al arrancar si no existe (`0170-ABRIR-PLAZOFIJO`). El layout está en el copybook `PLAZOFIJO.cpy`, para que en la Etapa 3 el batch de cierre lo lea con exactamente el mismo formato. La diferencia es el **acceso dinámico** (`ACCESS MODE IS DYNAMIC`): además de leer un plazo fijo por su número (`READ ... KEY IS PF-NRO`), para asignar el número de uno nuevo se recorre el archivo en orden (`START` + `READ NEXT`), y eso no se puede hacer con `ACCESS MODE IS RANDOM`. El fin de esa lectura en orden es el `FILE STATUS` `10` (88 `FS-FIN-ARCHIVO`).
+
+```cobol
+SELECT ARCH-PLAZOFIJO ASSIGN TO "plazofijo.dat"
+    ORGANIZATION IS INDEXED
+    ACCESS MODE IS DYNAMIC
+    RECORD KEY IS PF-NRO
+    FILE STATUS IS WS-FS.
+```
+
+Registro `REG-PLAZOFIJO` (79 bytes):
+
+| Campo | PIC | Bytes | Nota |
+|-------|-----|-------|------|
+| `PF-NRO` | `9(6)` | 6 | **Clave**. Número correlativo: último + 1 |
+| `PF-DNI` | `9(8)` | 8 | Cliente titular (existe en `clientes_v3.dat`) |
+| `PF-MONEDA` | `X` | 1 | `P` / `D`. Niveles 88 `PF-MONEDA-PESOS`, `PF-MONEDA-DOLARES` |
+| `PF-MONTO` | `9(11)V99` | 13 | Capital constituido |
+| `PF-DIAS` | `9(3)` | 3 | 30, 60, 90 o 120 |
+| `PF-TNA-APLICADA` | `9(3)V99` | 5 | Copia de la TNA usada al alta: un cambio posterior en `intereses.dat` no altera el plazo fijo |
+| `PF-INTERES` | `9(11)V99` | 13 | Calculado al alta |
+| `PF-TOTAL` | `9(11)V99` | 13 | Monto + interés |
+| `PF-FECHA-ALTA` | `9(8)` | 8 | `AAAAMMDD`: fecha de proceso del alta |
+| `PF-FECHA-VENC` | `9(8)` | 8 | `AAAAMMDD`: alta + días |
+| `PF-ESTADO` | `X` | 1 | `A` = activo, `C` = cancelado, `V` = vencido y acreditado (Etapa 3). Niveles 88 `PF-ACTIVO`, `PF-CANCELADO`, `PF-VENCIDO` |
+
+Los plazos fijos no se borran nunca: la cancelación es un `REWRITE` con estado `C`. Para empezar de cero, borrar `bin\plazofijo.dat` (no afecta a clientes ni tasas).
 
 ### Estructura del programa
 
@@ -643,7 +758,7 @@ Los errores de archivo pasan por el mismo `9000-ERROR-ARCHIVO`, que ahora inform
 - **IDENTIFICATION DIVISION**: nombre del programa (`GESTION-BANCARIA`). Es lo único obligatorio. `AUTHOR` y `DATE-WRITTEN` están obsoletas (GnuCOBOL emite warning), por eso autor y fecha figuran en el comentario de cabecera.
 - **ENVIRONMENT DIVISION**:
   - `SPECIAL-NAMES`: define la clase `CLASE-TELEFONO` (dígitos, `+`, `-`, `(`, `)` y espacio), usada para validar el teléfono con `IS NOT CLASE-TELEFONO`.
-  - `INPUT-OUTPUT SECTION` / `FILE-CONTROL`: asocia `ARCH-CLIENTES` con `clientes_v3.dat` (indexado, clave `CLI-DNI`) y `ARCH-INTERESES` con `intereses.dat` (indexado, clave `INT-CLAVE` = moneda + días).
+  - `INPUT-OUTPUT SECTION` / `FILE-CONTROL`: asocia `ARCH-CLIENTES` con `clientes_v3.dat` (indexado, clave `CLI-DNI`), `ARCH-INTERESES` con `intereses.dat` (indexado, clave `INT-CLAVE` = moneda + días) y `ARCH-PLAZOFIJO` con `plazofijo.dat` (indexado, acceso dinámico, clave `PF-NRO`).
 - **DATA DIVISION**:
   - `FILE SECTION`: el registro `REG-CLIENTE`, incluido con `COPY CLIENTE.` desde `CLIENTE.cpy` (con el campo `CLI-ESTADO` y sus niveles 88) en vez de declararse ahí mismo, para compartir exactamente el mismo layout con `BATCH-CIERRE.cbl` (ver [Proceso batch de cierre](#proceso-batch-cierre)).
   - `WORKING-STORAGE SECTION`: el resto de las variables.
@@ -659,7 +774,7 @@ Los errores de archivo pasan por el mismo `9000-ERROR-ARCHIVO`, que ahora inform
 | | `OPC-EXTRACCION` | `4` | Extracción |
 | | `OPC-CONSULTA` | `5` | Consulta de saldo |
 | | `OPC-CTA-CTE-CAJA` | `6` | Cuenta corriente / Caja de ahorro (en desarrollo) |
-| | `OPC-PLAZO-FIJO` | `7` | Plazo fijo (en desarrollo) |
+| | `OPC-PLAZO-FIJO` | `7` | Plazo fijo |
 | | `OPC-INTERESES` | `8` | Intereses |
 | | `OPC-HISTORIAL` | `9` | Historial de movimientos (en desarrollo) |
 | | `OPC-PAGO-SERVICIOS` | `10` | Pago de servicios (en desarrollo) |
@@ -671,9 +786,17 @@ Los errores de archivo pasan por el mismo `9000-ERROR-ARCHIVO`, que ahora inform
 | `INT-MONEDA` (registro) | `MONEDA-PESOS` / `MONEDA-DOLARES` | `P` / `D` | Moneda de la tasa |
 | `INT-ESTADO` (registro) | `TASA-ACTIVA` / `TASA-BAJA` | `A` / `B` | Estado de la tasa |
 | `WS-TASA-ENC` | `TASA-ENCONTRADA` / `TASA-NO-ENC` | `S` / `N` | Resultado de buscar una tasa |
+| `WS-OPC-PF` | `OPP-ALTA` | `1` | Alta de plazo fijo |
+| | `OPP-CANCELACION` | `2` | Cancelación anticipada |
+| | `OPP-CONSULTA` | `3` | Consulta de plazo fijo |
+| | `OPP-VOLVER` | `4` | Volver al menú principal |
+| `PF-MONEDA` (registro) | `PF-MONEDA-PESOS` / `PF-MONEDA-DOLARES` | `P` / `D` | Moneda del plazo fijo |
+| `PF-ESTADO` (registro) | `PF-ACTIVO` / `PF-CANCELADO` / `PF-VENCIDO` | `A` / `C` / `V` | Estado del plazo fijo |
+| `WS-TASA-VIG` | `TASA-VIGENTE` / `TASA-NO-VIGENTE` | `S` / `N` | Hay una tasa que se puede aplicar hoy a un plazo fijo |
+| `WS-PF-ENC` | `PF-ENCONTRADO` / `PF-NO-ENC` | `S` / `N` | Resultado de buscar un plazo fijo |
 | `WS-OPC-MB` | `MB-MODIFICAR` | `M`, `m` | Modificar (o reactivar) |
 | | `MB-BAJA` | `B`, `b` | Baja |
-| `WS-CONFIRMA` | `CONFIRMA-SI` | `S`, `s` | Confirma la baja |
+| `WS-CONFIRMA` | `CONFIRMA-SI` | `S`, `s` | Confirma la baja de cliente, o el alta o la cancelación de un plazo fijo |
 | `WS-OPC-MOD` | `MOD-DIRECCION` | `1` | Modificar dirección |
 | | `MOD-TELEFONO` | `2` | Modificar teléfono |
 | | `MOD-SALDO` | `3` | Modificar saldo |
@@ -690,7 +813,14 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 |----------|-----|-----|
 | `WS-OPCION` | `X(2)` | Opción del menú principal (2 caracteres por la opción `10`) |
 | `WS-OPC-INT` | `X` | Opción del submenú Intereses |
-| `WS-ARCHIVO` | `X(16)` | Archivo de la operación en curso (`clientes_v3.dat` o `intereses.dat`), solo para informar errores |
+| `WS-OPC-PF` | `X` | Opción del submenú Plazo fijo |
+| `WS-ARCHIVO` | `X(16)` | Archivo de la operación en curso (`clientes_v3.dat`, `intereses.dat` o `plazofijo.dat`), solo para informar errores |
+| `WS-PF-MONTO` / `WS-PF-MONTO-CALC` | `9(11)V99` / `S9(11)V9(6)` | Monto del plazo fijo ya validado / tipeado con decimales de sobra, para detectar si tiene más de 2 (`WS-MONTO`, el de depósito y extracción, tiene solo 9 enteros) |
+| `WS-PF-MINIMO` | `9(11)V99` | Monto mínimo según la moneda |
+| `WS-TNA-USADA` | `9(3)V99` | TNA que se aplica al plazo fijo (`INT-TNA` o `INT-TNA-ANTERIOR`) |
+| `WS-PF-INTERES`, `WS-PF-TOTAL`, `WS-PF-VENC` | `9(11)V99`, `9(11)V99`, `9(8)` | Interés, total y vencimiento calculados |
+| `WS-PF-NRO-TXT`, `WS-PF-NRO`, `WS-PF-ULTIMO` | `X(10)`, `9(6)`, `9(6)` | Número de plazo fijo tipeado / ya validado / último grabado |
+| `WS-IMPORTE-EDIT` | `ZZ,ZZZ,ZZZ,ZZ9.99` | Campo editado para mostrar importes de hasta 11 enteros (monto, interés, total) |
 | `WS-MONEDA`, `WS-DIAS`, `WS-TNA` | `X`, `9(3)`, `9(3)V99` | Moneda, días y TNA ya validados |
 | `WS-TNA-CALC` | `S9(5)V9(6)` | TNA tipeada con decimales de sobra, para detectar si tiene más de 2 |
 | `WS-DIAS-EDIT`, `WS-TNA-EDIT` | `ZZ9`, `ZZ9.99` | Campos editados para mostrar días y TNA |
@@ -700,10 +830,10 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 | `WS-FECHA-ENV`, `WS-FECHA-HORA` | `X(20)`, `X(21)` | Valor de `FECHA_PROCESO` y resultado de `FUNCTION CURRENT-DATE` |
 | `WS-FECHA-AUX` / `WS-FECHA-EDIT` | `9(8)` / `X(10)` | Fecha a mostrar (`AAAAMMDD`, con `REDEFINES` en año/mes/día) y su versión `DD/MM/AAAA` |
 | `WS-OPC-MB` | `X` | Respuesta a "Modificar o Baja" |
-| `WS-CONFIRMA` | `X` | Respuesta S/N: confirmación de baja |
+| `WS-CONFIRMA` | `X` | Respuesta S/N: confirmación de baja de cliente y de alta o cancelación de plazo fijo |
 | `WS-OPC-MOD` | `X` | Opción del submenú de campos a modificar |
 | `WS-CAMBIOS` | `9` | Cantidad de campos grabados en la sesión de modificación actual (decide el mensaje final) |
-| `WS-FS` | `XX` | `FILE STATUS`; 88 `FS-OK` (`00`), `FS-CLAVE-DUPLICADA` (`22`), `FS-CLAVE-NO-ENC` (`23`), `FS-NO-EXISTE` (`35`) |
+| `WS-FS` | `XX` | `FILE STATUS`; 88 `FS-OK` (`00`), `FS-FIN-ARCHIVO` (`10`), `FS-CLAVE-DUPLICADA` (`22`), `FS-CLAVE-NO-ENC` (`23`), `FS-NO-EXISTE` (`35`) |
 | `WS-OPERACION` | `X(10)` | Operación de archivo en curso, solo para informar errores |
 | `WS-DNI-TXT`, `WS-MONTO-TXT` | `X(8)`, `X(15)` | Entrada cruda de DNI y de monto / saldo, antes de validar |
 | `WS-TEXTO` | `X(80)` | Entrada cruda de nombre, dirección y teléfono (permite detectar excesos de largo) |
@@ -719,9 +849,10 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 
 | Párrafo | Responsabilidad |
 |---------|-----------------|
-| `0000-PRINCIPAL` | Abre los dos archivos, repite el menú hasta elegir salir, los cierra y ejecuta `STOP RUN` |
+| `0000-PRINCIPAL` | Abre los tres archivos, repite el menú hasta elegir salir, los cierra y ejecuta `STOP RUN` |
 | `0100-ABRIR-ARCHIVO` / `0200-CERRAR-ARCHIVO` | Apertura (creándolo si no existe) y cierre de `clientes_v3.dat` |
 | `0150-ABRIR-INTERESES` / `0250-CERRAR-INTERESES` | Lo mismo para `intereses.dat` |
+| `0170-ABRIR-PLAZOFIJO` / `0270-CERRAR-PLAZOFIJO` | Lo mismo para `plazofijo.dat` |
 | `1000-PROCESAR-MENU` | Lee la opción y despacha con `EVALUATE TRUE`. Al terminar cada operación se vuelve aquí y se muestra de nuevo el menú principal |
 | `1100-MOSTRAR-MENU` | Imprime el menú principal |
 | `2000-ALTA-CLIENTE` | Pide y valida el DNI; verifica que no exista |
@@ -732,6 +863,21 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 | `3000-DEPOSITO` / `3100-PROCESAR-DEPOSITO` | Búsqueda + verificación de estado / pedido de monto y suma |
 | `4000-EXTRACCION` / `4100-PROCESAR-EXTRACCION` | Búsqueda + verificación de estado / pedido de monto y resta |
 | `5000-CONSULTA-SALDO` | Consulta: muestra todos los datos del cliente |
+| `5100-PLAZO-FIJO` / `5110-MENU-PLAZO-FIJO` | **Opción 7.** Fija la fecha de proceso y repite el submenú Plazo fijo hasta elegir `4 - Volver` |
+| `5200-ALTA-PF` | Pide el DNI, busca al cliente y verifica que esté activo (`8900`) |
+| `5210-DATOS-PF` | Pide moneda, monto y días, busca la tasa, calcula y pide confirmación |
+| `5220-PEDIR-MONTO-PF` / `5225-VALIDAR-MONTO-PF` | Pide el monto hasta que sea válido (numérico, mayor que 0, hasta 2 decimales, no menor que el mínimo) |
+| `5230-BUSCAR-TASA-VIGENTE` | Busca la tasa y decide si se aplica `TNA`, `TNA anterior` o ninguna |
+| `5240-CALCULAR-PF` | Interés (`ROUNDED`), total y vencimiento; si no entran en los campos, no constituye |
+| `5250-MOSTRAR-CALCULO` | Muestra TNA, interés, total y vencimiento antes de confirmar |
+| `5260-CONFIRMAR-ALTA-PF` | Pregunta S/N; con `S` llama a `5270`, con otra respuesta no graba |
+| `5270-GRABAR-PF` | Asigna el número (último + 1), arma el registro (estado `A`), hace `WRITE` y muestra el comprobante |
+| `5280-BUSCAR-ULTIMO-NRO` | `START` + `READ NEXT` hasta el fin del archivo; deja el número más alto en `WS-PF-ULTIMO` |
+| `5300-CANCELAR-PF` / `5310-CONFIRMAR-CANCELACION` | Busca y muestra el plazo fijo, verifica estado y vencimiento / pide S/N, pone estado `C` (`REWRITE`) e informa el capital a devolver |
+| `5400-CONSULTAR-PF` | Consulta por número |
+| `5410-PEDIR-NRO-PF` | Lee y valida el número de plazo fijo (1 a 6 dígitos, mayor que 0) |
+| `5420-BUSCAR-PF` | `READ` por clave (`PF-NRO`); marca encontrado / no encontrado |
+| `5490-MOSTRAR-PF` | Muestra todos los datos del plazo fijo (comprobante, cancelación y consulta) |
 | `5500-INTERESES` / `5510-MENU-INTERESES` | **Opción 8.** Fija la fecha de proceso y repite el submenú Intereses hasta elegir `4 - Volver` |
 | `5600-ALTA-TASA` | Alta (o reactivación de una tasa en `B`); avisa si ya existe activa |
 | `5700-MODIFICAR-TASA` | Cambia la TNA; decide si la actual pasa a `TNA anterior` según si ya estaba vigente |
@@ -760,7 +906,7 @@ El submenú de campos usa `WS-OPC-MOD` con una diferencia respecto de una versi�
 | `8710-VALIDAR-TELEFONO` | Verifica caracteres permitidos y mínimo de 6 dígitos |
 | `8800-MOSTRAR-CLIENTE` | Muestra nombre, DNI, dirección, teléfono, saldo y estado (`A - Activo`, `I - Inactivo`, `R - Reactivado`) |
 | `8900-VERIFICAR-ACTIVO` | Marca al cliente operable si su estado es `A` o `R`; si no, muestra `Cliente inactivo: no se puede operar.` |
-| `9000-ERROR-ARCHIVO` | Informa operación, archivo, `FILE STATUS` y significado, cierra los dos archivos y termina |
+| `9000-ERROR-ARCHIVO` | Informa operación, archivo, `FILE STATUS` y significado, cierra los tres archivos y termina |
 
 Numeración de párrafos: 0xxx apertura/cierre, 1xxx menú, 2xxx–7xxx procesos de negocio, 8xxx rutinas compartidas, 9xxx manejo de errores. Los prefijos de los procesos no siguen el número de opción del menú: el alta es `2000` (opción 1); `3000`, `4000` y `5000` coinciden por casualidad con las opciones 3, 4 y 5; modificación (`6000`) y baja (`7000`) cuelgan ambas de la opción 2.
 
@@ -784,7 +930,13 @@ Numeración de párrafos: 0xxx apertura/cierre, 1xxx menú, 2xxx–7xxx procesos
      ├─ 3 → 3000-DEPOSITO    → buscar → 8900-VERIFICAR-ACTIVO → 3100-PROCESAR-DEPOSITO
      ├─ 4 → 4000-EXTRACCION  → buscar → 8900-VERIFICAR-ACTIVO → 4100-PROCESAR-EXTRACCION
      ├─ 5 → 5000-CONSULTA-SALDO
-     ├─ 6, 7, 9, 10 → "Opcion en desarrollo."
+     ├─ 6, 9, 10 → "Opcion en desarrollo."
+     ├─ 7 → 5100-PLAZO-FIJO → 5110-MENU-PLAZO-FIJO  (repite hasta 4 - Volver)
+     │        ├─ 1 → 5200-ALTA-PF → 5210-DATOS-PF
+     │        │        (moneda, monto, dias → 5230 tasa → 5240 calculo
+     │        │         → 5260 S/N → 5270 numero + WRITE + comprobante)
+     │        ├─ 2 → 5300-CANCELAR-PF → 5310-CONFIRMAR-CANCELACION  (estado C)
+     │        └─ 3 → 5400-CONSULTAR-PF
      ├─ 8 → 5500-INTERESES → 5510-MENU-INTERESES  (repite hasta 4 - Volver)
      │        ├─ 1 → 5600-ALTA-TASA        (alta, o reactivacion si estaba en B)
      │        ├─ 2 → 5700-MODIFICAR-TASA   (TNA nueva desde el proximo dia habil)
@@ -829,7 +981,14 @@ Aplica tanto a `gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` como a `CLIENTE.cpy` 
 - **Intereses: se muestra la tasa completa después de cada operación** (incluidos `TNA anterior` y `Vigente desde`), para que el usuario vea cuándo entra en vigencia el cambio y para que las pruebas lo puedan verificar.
 - **Intereses: la TNA con más de 2 decimales se rechaza** (en el monto y el saldo se truncan): para una tasa, perder decimales sin avisar cambiaría el valor cargado.
 - **`FECHA_PROCESO`.** Fijar la fecha con una variable de entorno permite probar cualquier día de la semana sin tocar el reloj de la máquina ni el código.
-- **El `CR` de Windows se descarta en las opciones y los datos de Intereses** (`INSPECT ... REPLACING ALL X"0D" BY SPACE`). Si una entrada con fin de línea CRLF llega al programa compilado en Linux, el `CR` quedaría como parte de lo tipeado (por ejemplo, `0` + `CR` no sería la opción Salir y el menú no terminaría nunca).
+- **Plazo fijo: el saldo del cliente no se toca.** El alta y la cancelación solo registran el plazo fijo; el dinero entra y sale por caja. Las cuentas no tienen moneda y hay plazos fijos en dólares, así que debitar el saldo no tendría sentido para esos casos.
+- **Plazo fijo: número correlativo leyendo el archivo hasta el final.** Sin registro de control (que todos los programas que lean el archivo tendrían que saltear, incluido el batch de la Etapa 3) y sin `START ... LAST` / `READ PREVIOUS` (comportamiento distinto entre GnuCOBOL 2.0 y 3.x). Cuesta leer todo el archivo en cada alta, que para este proyecto no es un problema.
+- **Plazo fijo: cliente inactivo bloqueado**, igual que en depósito y extracción (la especificación solo pedía que el cliente existiera).
+- **Plazo fijo: no se cancela en la fecha de vencimiento ni después.** Ya no sería "anticipada": el vencimiento lo acredita el batch de cierre (Etapa 3).
+- **Plazo fijo: el monto con más de 2 decimales se rechaza**, como la TNA (en depósito, extracción y saldo se truncan).
+- **Plazo fijo: importes con el formato del programa** (`1,032,876.71`, punto decimal), igual que el saldo y que el monto que se tipea, y no `1.032.876,71` como el dibujo de la especificación. Las fechas, `DD/MM/AAAA`.
+- **Plazo fijo: al no confirmar el alta no se limpia la pantalla** (ver [Plazo fijo (opción 7)](#plazo-fijo)).
+- **El `CR` de Windows se descarta en las opciones y los datos de Intereses y de Plazo fijo** (`INSPECT ... REPLACING ALL X"0D" BY SPACE`). Si una entrada con fin de línea CRLF llega al programa compilado en Linux, el `CR` quedaría como parte de lo tipeado (por ejemplo, `0` + `CR` no sería la opción Salir y el menú no terminaría nunca).
 
 <a id="proceso-batch-cierre"></a>
 ## Proceso batch de cierre: BATCH-CIERRE.cbl
@@ -1012,7 +1171,7 @@ Igual que `BATCH-CIERRE.cbl` con sus tablas de Activos/Reactivados e Inactivos, 
 <a id="testing"></a>
 ## Testing
 
-El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo). Desde la Evolución 1 / Etapa 1 suma 12 casos más (MENU-01 e INT-01 a INT-11) para el menú nuevo y las tasas de Intereses, todos automatizados (ver [Casos de INTERESES](#casos-de-intereses-evolución-1--etapa-1)).
+El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo). Desde la Evolución 1 / Etapa 1 suma 12 casos más (MENU-01 e INT-01 a INT-11) para el menú nuevo y las tasas de Intereses, y desde la Etapa 2 otros 17 (PF-01 a PF-17) para el Plazo fijo, todos automatizados (ver [Casos de INTERESES](#casos-de-intereses-evolución-1--etapa-1) y [Casos de PLAZO FIJO](#casos-de-plazo-fijo-evolución-1--etapa-2)). En total, **41 casos**: 34 automatizados y 7 manuales.
 
 ### Casos automatizados
 
@@ -1086,6 +1245,20 @@ Se diferencian de los 5 casos de clientes en tres cosas:
 
 En Linux el script quita al vuelo los `\r` de los `.txt` (`tr -d '\r'`), compara ignorándolos (`diff --strip-trailing-cr`) y corta cada ejecución a los 10 segundos (`timeout 10`) por si una entrada quedara incompleta.
 
+### Casos de PLAZO FIJO (Evolución 1 / Etapa 2)
+
+Los casos **PF-01 a PF-17** de `CASOS_DE_PRUEBA.md` también están automatizados. Se corren en la tercera parte de `correr_pruebas_automatizadas.bat` (resumen `Resumen plazo fijo: 17 OK / 0 FALLO (de 17)`), o en Linux/Docker/CI con `correr_pruebas_plazofijo.sh`:
+
+```bash
+docker build -t gestion-bancaria .
+docker run --rm gestion-bancaria bash correr_pruebas_plazofijo.sh
+```
+
+Usan la misma técnica que los de INTERESES (fecha fija, carpeta descartable y varios pasos), con dos diferencias:
+
+- La carpeta es `bin\prueba_pf\`, y en ella arrancan vacíos los **tres** archivos (`clientes_v3.dat`, `intereses.dat` y `plazofijo.dat`). Por eso cada caso da de alta su propio cliente (DNIs `800001XX`) y su tasa: nunca se tocan los archivos de `bin\`.
+- En general, el **paso 1** (miércoles 14/10/2026) da de alta el cliente y la tasa, que rige desde el jueves, y el **paso 2** (jueves 15/10/2026) opera con el plazo fijo. Algunos casos tienen un paso 3: PF-14 (otra ejecución, para ver que el número sigue en `000003`) y PF-17 (el 14/11/2026, día del vencimiento).
+
 ### Gestión de casos y ejecución en Jira/Xray
 
 Los 12 casos de prueba de `CASOS_DE_PRUEBA.md` (los 5 automatizados y los 7 manuales) están además cargados como Tests en Jira, usando Xray como plugin de gestión de pruebas, cada uno con su Resumen, Descripción, pasos estructurados (Acción / Datos / Resultado Esperado) y — en los automatizados — la referencia a los archivos `entrada_*.txt` / `esperado_*.txt` correspondientes.
@@ -1139,6 +1312,11 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 - Intereses: no hay historial de tasas; solo se guardan la TNA actual y la anterior.
 - Intereses: la baja no pide confirmación (rige de inmediato); se puede revertir con un alta (reactivación).
 - `BATCH-CIERRE.cbl` todavía no usa la tabla de tasas de `intereses.dat`, y su reporte sigue titulado `CUENTA BANCARIA`.
+- Plazo fijo: los **vencimientos todavía no se procesan** (Etapa 3). Un plazo fijo vencido sigue en estado `A` hasta que el batch lo acredite, y no se puede cancelar.
+- Plazo fijo: la consulta es solo **por número**; no hay listado de los plazos fijos de un DNI.
+- Plazo fijo: no mueve el saldo del cliente ni deja registro del dinero que entra o sale (no hay historial de movimientos).
+- Plazo fijo: el vencimiento puede caer en sábado, domingo o feriado (es alta + días, sin correrlo a un día hábil).
+- Plazo fijo: el monto se vuelve a pedir hasta que sea válido, con el mismo riesgo de bucle que los datos de Intereses si la entrada se termina.
 
 ### Limitaciones de `BATCH-CIERRE.cbl`
 
@@ -1153,7 +1331,9 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 Cada limitación de arriba sugiere una mejora natural. Algunas, en orden aproximado de impacto/esfuerzo:
 
 - **PENDIENTE (próximo paso después de la Etapa 1): protección contra el bucle infinito al terminarse la entrada.** Hoy, si la entrada se acaba (archivo redirigido incompleto, o Ctrl+Z / Ctrl+D en el teclado), los datos de Intereses que se vuelven a pedir (moneda, días, TNA) y el menú principal repiten el aviso para siempre, porque GnuCOBOL entrega el fin de entrada como una línea vacía. Propuesta: un **límite de intentos**. Cada dato cuenta los valores inválidos seguidos y, al llegar a 5, cancela la operación (`Demasiados intentos: operacion cancelada.`) sin grabar nada. Los menús cuentan las opciones inválidas seguidas y, al llegar a 10, cierran los archivos y terminan el programa en orden. Alternativa más completa (y más invasiva): leer el teclado como un archivo (`ASSIGN TO KEYBOARD`) y detectar el fin con `AT END`.
-- **PENDIENTE: título del reporte de `BATCH-CIERRE.cbl`.** Sigue diciendo `CUENTA BANCARIA` (no se tocó en la Etapa 1).
+- **PENDIENTE: título del reporte de `BATCH-CIERRE.cbl`.** Sigue diciendo `CUENTA BANCARIA` (no se tocó en las Etapas 1 y 2).
+- **PENDIENTE (Etapa 3): vencimientos de plazo fijo en el batch de cierre.** Recorrer los plazos fijos activos con vencimiento menor o igual a la fecha de proceso, pasarlos a estado `V` y acreditar capital + interés.
+- **Plazo fijo: listado por DNI** (opcional en la especificación): en la consulta, listar todos los plazos fijos de un cliente.
 - **Historial de movimientos.** Un archivo de transacciones (depósitos, extracciones, modificaciones, intereses) separado del maestro de clientes, para auditoría y para poder reconstruir cómo se llegó a un saldo.
 - **Control de corridas del batch.** Un archivo o registro de "último cierre corrido" que rechace o avise ante una segunda corrida del mismo período.
 - **Parametrizar la tasa de interés.** Leerla de un archivo o de un parámetro de ejecución en vez de tenerla fija en `WORKING-STORAGE`, para no depender de recompilar.
