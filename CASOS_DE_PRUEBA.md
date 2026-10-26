@@ -1,6 +1,6 @@
 # Casos de prueba — Gestión de Cuentas Bancarias
 
-Matriz de casos de prueba (QA) para `gestion-bancaria.cbl` (programa interactivo) y `BATCH-CIERRE.cbl` (proceso batch de cierre). Complementa a `README.md`; no repite ahí la documentación técnica, solo la referencia cuando hace falta.
+Matriz de casos de prueba (QA) para `gestion-bancaria.cbl` (programa interactivo), `BATCH-CIERRE.cbl` (proceso batch de cierre) y `CARGA-MASIVA.cbl` (carga masiva, Etapa 4). Complementa a `README.md`; no repite ahí la documentación técnica, solo la referencia cuando hace falta.
 
 ## Alcance
 
@@ -33,6 +33,8 @@ Cada caso usa un **DNI dedicado**, para poder ejecutarlos en cualquier orden sob
 | CP-12 | `90000020` (Activo) y `90000021` (Inactivo) | cartera dedicada para el batch |
 
 Si se prefiere partir de una cartera limpia para una pasada completa de regresión, basta con borrar `clientes_v3.dat` antes de empezar (se vuelve a crear solo).
+
+Los casos automatizados de las Etapas 1 a 4 usan sus propios rangos y corren en carpetas descartables: `800001XX` (PLAZO FIJO, `bin\prueba_pf\`), `800002XX` (VENCIMIENTOS, `bin\prueba_vto\`) y `800003XX` (CARGA MASIVA, `bin\prueba_carga\`). Los de INTERESES no usan DNIs (`bin\prueba_int\`).
 
 ## Cómo usar esta matriz
 
@@ -149,8 +151,74 @@ Preparación común, salvo que se indique otra cosa: paso 1 (miércoles 14/10/20
 | VTO-11 | Batch / Fecha de proceso | `FECHA_PROCESO` inválida | Preparación común (DNI `80000211`). Batch con `FECHA_PROCESO=2026111` (7 dígitos). Consulta el 14/11/2026. | `FECHA_PROCESO invalida (use AAAAMMDD): 2026111` / `Cierre NO realizado...`, código de salida `1` y **no se genera** `reporte_cierre.txt`. El plazo fijo sigue `A` y el saldo en `0.00`. |  | Automatizado: `entrada_vto11_*.txt` / `esperado_vto11.txt`. |
 | VTO-12 | Batch / Vencimientos | El total supera el saldo máximo | Preparación común (DNI `80000212`) con monto `990000000`. Batch el 14/11/2026. Consulta. | Interés `32,547,945.21`, total `1,022,547,945.21` (más que 999,999,999.99): `Error: supera saldo maximo` y aviso en pantalla. `Plazos fijos vencidos pendientes: 1`; sigue `A` y el saldo en `0.00`. |  | Automatizado: `entrada_vto12_*.txt` / `esperado_vto12.txt`. |
 
+## Casos de la Evolución 1 / Etapa 4: CARGA MASIVA
+
+Estos casos cubren `CARGA-MASIVA.cbl`: carga de clientes (`C`), tasas (`I`) y plazos fijos (`P`) desde un archivo de texto de 100 posiciones por línea, con las mismas reglas que la carga manual (ver README.md, sección "Carga masiva"). **Todos están automatizados** y se corren con:
+
+- Windows: `correr_pruebas_automatizadas.bat` (quinta parte, con su propio resumen `Resumen carga masiva: N OK / N FALLO`).
+- Docker / CI: `bash correr_pruebas_carga.sh` (en Docker: `docker run --rm gestion-bancaria bash correr_pruebas_carga.sh`).
+
+Funcionan igual que los de VENCIMIENTOS, en la carpeta descartable `bin\prueba_carga\` (DNIs `800003XX`), pero cada paso dice también qué archivo usa: `G:AAAAMMDD:entrada` corre `gestion-bancaria.exe` con esas teclas, y `C:AAAAMMDD:carga[:nombre]` copia ese archivo de carga (como `carga.txt` o como `<nombre>`, que se avisa con `ARCHIVO_CARGA`) y corre `CARGA-MASIVA.exe`; con `-` no copia nada. Después de cada carga, la salida agrega el código de retorno, los dos reportes (`carga_ok.txt` y `carga_rechazos.txt`), si el archivo de carga sigue ahí y los `.procesado.*` que haya, con la hora reemplazada por `HHMMSS` (cambia en cada corrida).
+
+**Preparación** (`entrada_cm01_1.txt`, miércoles 14/10/2026, la usan CM-01 a CM-03): cliente `80000301` activo (`Pedro Previo`); cliente `80000302` dado de alta y de baja (inactivo); tasa `P` / `30` / `40` (rige desde el 15/10) y tasa `D` / `30` / `3` dada de alta y de baja. La carga corre el jueves **15/10/2026**.
+
+**Archivo de carga de CM-01** (`carga_cm01_1.txt`, 68 líneas; se regenera con `bash generar_carga_cm01.sh`). Todas las líneas miden 100 caracteres salvo las marcadas. Tasas que rigen el 15/10: P/030 40%, P/060 45%, P/090 50%, D/060 3,5%, D/090 4%.
+
+| Línea | Contenido | Resultado esperado |
+|-------|-----------|--------------------|
+| 1–9 | Clientes `80000303` a `80000311`. La 3 con teléfono `+54(11)4300-055`; la 4 con 3 espacios antes de la dirección; la 5 recortada a 92; la 6 recortada a 85 con teléfono `011430` | Cliente dado de alta (la dirección de la 4 se graba sin los espacios) |
+| 10 | C `80000301` (ya existía) | ✗ DNI duplicado |
+| 11 | C `80000303` (repetido de la línea 1) | ✗ DNI duplicado |
+| 12 | C `80000312`, nombre en blanco | ✗ Nombre en blanco |
+| 13 | C `80000313`, nombre `  Carlos Corrido` (2 espacios adelante) | Cliente dado de alta, como `Carlos Corrido` (igual que el alta manual) |
+| 14 | C `80000314`, dirección en blanco | ✗ Direccion en blanco |
+| 15 | C `80000315`, teléfono en blanco | ✗ Telefono en blanco |
+| 16 | C `80000316`, teléfono `011-4300-ABCD` | ✗ Telefono invalido |
+| 17 | Línea vacía | ✗ Linea en blanco (sin tipo) |
+| 18–22 | Tasas `P` 060 45,00 (01/10), `P` 090 50,00 (15/10), `P` 120 55,00 (20/10, futura), `d` 060 3,50 (01/10, minúscula), `D` 090 4,00 (14/10, recortada a 18) | Tasa dada de alta, rige desde la fecha de cada una |
+| 23 | I `P` 030 (activa) | ✗ Tasa ya existe |
+| 24 | I `D` 030 (de baja) | ✗ Tasa ya existe |
+| 25 | I `X` 060 | ✗ Moneda invalida |
+| 26 | I `P` 045 | ✗ Dias no permitidos |
+| 27 | I `D` 120, TNA `00000` | ✗ TNA invalida |
+| 28 | I `D` 120, vigencia `20261131` | ✗ Fecha de vigencia invalida |
+| 29 | `X` + espacios | ✗ Tipo de registro desconocido (sin tipo) |
+| 30–50 | 21 plazos fijos de los clientes cargados y de `80000301`, en pesos y dólares, a 30, 60 y 90 días. La 30 y la 33 con el mínimo exacto (1.000.000 / 500); la 35 con moneda `p`; la 41 recortada a 26 | Plazo fijo `000001` a `000021` constituido |
+| 51 | P DNI `8000031X` | ✗ DNI no numerico |
+| 52 | P `80000399` (no existe) | ✗ Cliente inexistente |
+| 53 | P `80000302` (inactivo) | ✗ Cliente inactivo |
+| 54 | P `80000303`, moneda `X` | ✗ Moneda invalida |
+| 55 | P `80000303`, monto `00001000000AB` | ✗ Campo numerico invalido |
+| 56 | P `80000303` P 999.999,99 | ✗ Monto menor al minimo |
+| 57 | P `80000303` P 1.000.000, 045 días | ✗ Dias no permitidos |
+| 58 | P `80000303` P 1.000.000, 120 días (P/120 rige desde el 20/10, sin TNA anterior) | ✗ Sin tasa vigente |
+| 59 | P `80000303` P 99.999.999.000,00, 90 días | ✗ Total excede el maximo permitido |
+| 60 | P `80000304` P 1.000.000, 030, **larga** (105) | ✗ Largo incorrecto |
+| 61 | C DNI `8000031A` | ✗ DNI no numerico |
+| 62 | C `80000317`, teléfono `12-345` (5 dígitos) | ✗ Telefono invalido |
+| 63 | C `80000318`, línea **corta** (54) | ✗ Largo incorrecto |
+| 64 | I `D` 120, TNA `0A300` | ✗ Campo numerico invalido |
+| 65 | I `P` 060 (repetida de la línea 18) | ✗ Tasa ya existe |
+| 66 | P `80000303` D 499,99 | ✗ Monto menor al minimo |
+| 67 | P `80000303` D 1.000, 030 días (D/030 de baja) | ✗ Sin tasa vigente |
+| 68 | P `80000303` D 1.000, 120 días (D/120 no existe) | ✗ Sin tasa vigente |
+
+**Totales de CM-01:** clientes 10 cargados / 9 rechazados, tasas 5 / 8, plazos fijos 21 / 13, sin tipo 0 / 2. **TOTAL GENERAL CARGADO 36, TOTAL GENERAL RECHAZADO 32, TOTAL LEIDOS 68.**
+
+| ID | Módulo | Escenario | Pasos a seguir (fecha de proceso) | Resultado esperado | Resultado obtenido | Observaciones |
+|----|--------|-----------|-----------------------------------|---------------------|---------------------|----------------|
+| CM-01 | Carga masiva | Carga completa | `G:20261014:entrada_cm01_1.txt` (preparación), `C:20261015:carga_cm01_1.txt`. | Código de retorno `0`. Totales 36 cargados / 32 rechazados / 68 leídos (ver la tabla de arriba). Cada línea del 1 al 68 aparece una sola vez entre los dos reportes. `carga.txt` queda renombrado a `carga.txt.procesado.20261015.HHMMSS`. |  | Automatizado: `esperado_cm01.txt`. |
+| CM-02 | Carga masiva | Lo cargado quedó grabado | Igual que CM-01 y después `G:20261015:entrada_cm02_1.txt`: opción `5` para `80000303`, `80000306`, `80000308` y `80000313`; `7`/`3` de los números 1, 4, 6 y 21; `8`/`1` de `P`/`60`, `D`/`60` y `P`/`120` (como ya existen, solo se muestran). | Clientes con saldo `0.00` y `A - Activo`; dirección de `80000306` sin espacios adelante; teléfono de `80000308` `011430`; nombre de `80000313` `Carlos Corrido`. Plazo fijo 1: TNA 40, interés `32,876.71`, vence `14/11/2026`; 4: `D - Dolares`, 500 a 60 días al 3,5%, interés `2.88`; 6: `P - Pesos` (venía `p`), interés `39,452.05`; 21: 4.000.000 a 90 días al 50%, interés `493,150.68`, vence `13/01/2027`. Tasas con `TNA anterior: 0.00 %` y `Estado: A - Activa`; `D`/`60` grabada en mayúscula. |  | Automatizado: `entrada_cm02_1.txt` / `esperado_cm02.txt`. |
+| CM-03 | Carga masiva | Lo rechazado no se grabó | Igual que CM-01 y después `G:20261015:entrada_cm03_1.txt`: opción `5` para `80000312`, `80000316`, `80000302` y `80000301`; `7`/`3` del número 22; `8`/`2` de `D`/`120` y de `D`/`30`. | `80000312` y `80000316`: `Cliente no encontrado.`. `80000302` sigue `I - Inactivo`. `80000301` sigue `Pedro Previo` (no lo pisó la línea 10). Plazo fijo 22: `No existe un plazo fijo con ese numero.`. `D`/`120`: `No existe una tasa para esa moneda y plazo.`. `D`/`30`: `La tasa esta dada de baja.` (no se reactivó). |  | Automatizado: `entrada_cm03_1.txt` / `esperado_cm03.txt`. |
+| CM-04 | Carga masiva | Archivo inexistente | `C:20261015:-` (no se copia ningún archivo). | `No existe el archivo de carga: carga.txt`, `No se proceso nada.`, código de retorno `8`. No se generan reportes ni archivos `.procesado`. |  | Automatizado: `esperado_cm04.txt`. |
+| CM-05 | Carga masiva | Archivo vacío | `C:20261015:carga_cm05_1.txt` (0 bytes). | `Archivo vacio: sin datos para procesar` en pantalla y en los dos reportes, todos los totales en `0`, código de retorno `0`, y el archivo se renombra. |  | Automatizado: `carga_cm05_1.txt` / `esperado_cm05.txt`. |
+| CM-06 | Carga masiva | Fecha de proceso inválida | `C:20261015:carga_cm06_1.txt` (1 cliente, `80000351`); después se copia otra vez el mismo archivo y `C:20261315:carga_cm06_1.txt`. | Primera corrida: cliente cargado, código `0`, renombrado. Segunda: `FECHA_PROCESO invalida (use AAAAMMDD): 20261315`, código `8`, **los reportes de la primera corrida quedan intactos** y `carga.txt` sigue ahí, sin renombrar. |  | Automatizado: `carga_cm06_1.txt` / `esperado_cm06.txt`. |
+| CM-07 | Carga masiva | Plazo fijo antes de su cliente (y `ARCHIVO_CARGA`) | `C:20261015:carga_cm07_1.txt:otra_carga.txt`: tasa `P`/`30`, plazo fijo de `80000331`, cliente `80000331`, otro plazo fijo de `80000331`. | Línea 2: `Cliente inexistente` (se procesa en orden, sin reordenar). Líneas 1, 3 y 4 cargadas (`Plazo fijo 000001 constituido`). Lee `otra_carga.txt` y renombra ese archivo. |  | Automatizado: `carga_cm07_1.txt` / `esperado_cm07.txt`. |
+| CM-08 | Carga masiva | Re-ejecución sin archivo nuevo | `C:20261015:carga_cm08_1.txt` (1 cliente, `80000341`) y después `C:20261015:-`. | Primera corrida: código `0` y renombra. Segunda: `No existe el archivo de carga: carga.txt` (ya fue renombrado), código `8`; los reportes de la primera quedan. |  | Automatizado: `carga_cm08_1.txt` / `esperado_cm08.txt`. |
+
 ## Notas
 
+- **Carga masiva, reproceso después de un código 8:** la carga no es "todo o nada". Si termina con código `8` a mitad del archivo, lo cargado hasta ahí queda grabado y el archivo no se renombra; si se vuelve a correr, los clientes y las tasas se rechazan como duplicados, pero **los plazos fijos se cargan dos veces** (no tienen clave natural). Antes de reprocesar hay que sacar del archivo las líneas ya cargadas (ver `carga_ok.txt`). No hay caso de prueba para esto: es una limitación documentada (ver README.md, "Limitaciones de `CARGA-MASIVA.cbl`").
 - Los siete casos "manuales" (CP-05, CP-07 a CP-12) tienen ramificaciones (confirmaciones S/N, submenús, estados previos que hay que preparar) que no se prestan a un script de una sola pasada; se dejaron fuera de la automatización a propósito, como se acordó.
 - Si un caso falla, además de completar "Resultado obtenido", conviene anotar el `FILE STATUS` o el mensaje exacto que mostró el programa (ver README.md, sección "Solución de problemas", para los códigos de error de archivo).
 - Antes de reportar un caso como fallido por "el programa no responde", revisar primero la nota del README sobre `WITH NO ADVANCING` y prompts sin salto de línea: en algunas consolas el prompt puede no verse aunque el programa esté esperando la entrada correctamente.

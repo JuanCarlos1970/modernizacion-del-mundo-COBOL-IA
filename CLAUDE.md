@@ -5,12 +5,15 @@ Proyecto COBOL (GnuCOBOL) de gestión de cuentas bancarias:
 - `BATCH-CIERRE.cbl`: proceso batch nocturno de cierre (acredita intereses
   y procesa los vencimientos de plazo fijo).
 - `LISTADO-CLIENTES.cbl`: listado de solo lectura.
+- `CARGA-MASIVA.cbl`: proceso batch de carga masiva (Etapa 4): lee
+  `carga.txt` (o `ARCHIVO_CARGA`) y carga clientes, tasas y plazos fijos
+  con las mismas reglas que la carga manual. Código de retorno 0 u 8.
 - `CLIENTE.cpy`: layout del registro del archivo indexado `clientes_v3.dat`
-  (lo incluyen los tres programas con `COPY CLIENTE.`).
+  (lo incluyen los cuatro programas con `COPY CLIENTE.`).
 - `INTERES.cpy` y `PLAZOFIJO.cpy`: layouts de `intereses.dat` (tasas) y
-  `plazofijo.dat` (plazos fijos). `INTERES.cpy` lo incluye solo
-  `gestion-bancaria.cbl`; `PLAZOFIJO.cpy`, `gestion-bancaria.cbl` y
-  `BATCH-CIERRE.cbl`.
+  `plazofijo.dat` (plazos fijos). `INTERES.cpy` lo incluyen
+  `gestion-bancaria.cbl` y `CARGA-MASIVA.cbl`; `PLAZOFIJO.cpy`,
+  `gestion-bancaria.cbl`, `BATCH-CIERRE.cbl` y `CARGA-MASIVA.cbl`.
 - `batch_cierre.jcl`: JCL de referencia para z/OS.
 
 El usuario está aprendiendo: explicar todo con lenguaje simple, sin jerga
@@ -34,6 +37,11 @@ ejecuta el programa. Si se corre desde otro lado, se crea otro
   `cmd /c correr_batch_cierre.bat` → genera `bin\reporte_cierre.txt`.
 - Listado (solo lectura): `cmd /c ver_listado_clientes.bat`
   → genera `bin\listado_clientes.txt`.
+- Carga masiva (compila + corre en `bin\`, sobre los `.dat` de `bin\`):
+  `cmd /c correr_carga_masiva.bat` → lee `bin\carga.txt`, genera
+  `bin\carga_ok.txt` y `bin\carga_rechazos.txt` y, con código 0, renombra
+  `carga.txt` a `carga.txt.procesado.AAAAMMDD.HHMMSS`.
+  Compilar a mano: `cobc -x -Wall -o bin\CARGA-MASIVA.exe CARGA-MASIVA.cbl`.
 - En CI (GitHub Actions, `.github/workflows/pruebas.yml`) y en el
   `Dockerfile` se usa Ubuntu con el paquete `gnucobol3` (no `gnucobol4`,
   que trae los archivos indexados deshabilitados). En CI se compara con
@@ -56,12 +64,12 @@ ejecuta el programa. Si se corre desde otro lado, se crea otro
 
 Si una salida queda en 0 bytes, no es un bug de `gestion-bancaria.cbl`: falta el
 runtime de GnuCOBOL en el PATH (ver README, "Solución de problemas").
-No correr `gestion-bancaria.exe` y el batch al mismo tiempo sobre el mismo
-`clientes_v3.dat`.
+No correr `gestion-bancaria.exe`, el batch de cierre ni la carga masiva al
+mismo tiempo sobre los mismos `.dat`.
 
-## Regla 1 — Después de cualquier cambio en `gestion-bancaria.cbl` o en `BATCH-CIERRE.cbl`
+## Regla 1 — Después de cualquier cambio en `gestion-bancaria.cbl`, `BATCH-CIERRE.cbl` o `CARGA-MASIVA.cbl`
 
-Recompilar y correr los 53 casos de `CASOS_DE_PRUEBA.md`:
+Recompilar y correr los 61 casos de `CASOS_DE_PRUEBA.md`:
 
 - 5 automáticos (CP-01, CP-02, CP-03, CP-04, CP-06):
   `cmd /c correr_pruebas_automatizadas.bat`. Tiene que decir
@@ -88,9 +96,20 @@ Recompilar y correr los 53 casos de `CASOS_DE_PRUEBA.md`:
   `docker run --rm gestion-bancaria bash correr_pruebas_vencimientos.sh`.
   Corren en la carpeta descartable `bin\prueba_vto` y comparan también
   el `reporte_cierre.txt` de cada corrida del batch.
+- 8 automáticos de CARGA MASIVA (CM-01 a CM-08): los corre la quinta
+  parte de `cmd /c correr_pruebas_automatizadas.bat` (que también
+  compila `CARGA-MASIVA.cbl` en `bin\`), que tiene que decir
+  `Resumen carga masiva: 8 OK / 0 FALLO (de 8)`. En Docker:
+  `docker run --rm gestion-bancaria bash correr_pruebas_carga.sh`.
+  Corren en la carpeta descartable `bin\prueba_carga` y comparan también
+  `carga_ok.txt` y `carga_rechazos.txt` (la hora del renombrado se
+  reemplaza por `HHMMSS`). `carga_cm01_1.txt` tiene espacios finales a
+  propósito: no guardarlo con un editor que los recorte (si pasa, se
+  regenera con `bash generar_carga_cm01.sh`).
 - Usar los DNIs indicados en la matriz (800000XX para los automáticos
   de clientes, 800001XX para los de plazo fijo, 800002XX para los de
-  vencimientos, 900000XX para los manuales).
+  vencimientos, 800003XX para los de carga masiva, 900000XX para los
+  manuales).
 - Si `cmd /c correr_pruebas_automatizadas.bat` responde "no se reconoce
   como un comando", pasar la ruta completa del `.bat`.
 - En cada caso manual, mostrarle al usuario qué se hizo: qué datos se
@@ -128,4 +147,6 @@ autorice. Nunca hacer `git push`: el push lo hace siempre el usuario.
 
 `salida_*.txt` y `resultado_pruebas.txt` son resultados de las pruebas y
 están en `.gitignore` (igual que `bin/`): no se agregan al repositorio.
+Los reportes de la carga masiva y los `carga.txt.procesado.*` quedan
+dentro de `bin\` (también ignorado).
 No usar `git add -f` con ellos.

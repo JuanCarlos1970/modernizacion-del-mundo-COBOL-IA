@@ -1,0 +1,82 @@
+----- CARGA-MASIVA: FECHA_PROCESO=20261015, archivo carga.txt
+CARGA MASIVA
+Fecha de proceso: 15/10/2026
+Archivo de carga: carga.txt
+Cargados:
+  Clientes cargados:              1
+  Tasas cargadas:                 0
+  Plazos fijos cargados:          0
+  TOTAL GENERAL CARGADO:          1
+  TOTAL LEIDOS:                   1
+Rechazados:
+  Clientes rechazados:            0
+  Tasas rechazadas:               0
+  Plazos fijos rechazados:        0
+  Sin tipo:                       0
+  TOTAL GENERAL RECHAZADO:        0
+  TOTAL LEIDOS:                   1
+Archivo renombrado a: carga.txt.procesado.20261015.HHMMSS
+Carga terminada (codigo 0).
+----- codigo de salida de la carga: 0
+----- carga_ok.txt
+CARGA MASIVA - REGISTROS CARGADOS
+Fecha de proceso: 15/10/2026   Archivo: carga.txt
+LINEA  TIPO  CLAVE                          RESULTADO
+00001  C     80000341                       Cliente dado de alta
+----------------------------------------------------------------------------------------------------
+Clientes cargados:              1
+Tasas cargadas:                 0
+Plazos fijos cargados:          0
+TOTAL GENERAL CARGADO:          1
+TOTAL LEIDOS:                   1
+----- fin de carga_ok.txt
+----- carga_rechazos.txt
+CARGA MASIVA - REGISTROS RECHAZADOS
+Fecha de proceso: 15/10/2026   Archivo: carga.txt
+LINEA  TIPO  CLAVE                          MOTIVO
+----------------------------------------------------------------------------------------------------
+Clientes rechazados:            0
+Tasas rechazadas:               0
+Plazos fijos rechazados:        0
+Sin tipo:                       0
+TOTAL GENERAL RECHAZADO:        0
+TOTAL LEIDOS:                   1
+----- fin de carga_rechazos.txt
+----- carga.txt: no esta
+----- archivos procesados:
+carga.txt.procesado.20261015.HHMMSS
+----- CARGA-MASIVA: FECHA_PROCESO=20261015, archivo carga.txt
+CARGA MASIVA
+Fecha de proceso: 15/10/2026
+Archivo de carga: carga.txt
+No existe el archivo de carga: carga.txt
+No se proceso nada.
+Carga terminada con error (codigo 8).
+----- codigo de salida de la carga: 8
+----- carga_ok.txt
+CARGA MASIVA - REGISTROS CARGADOS
+Fecha de proceso: 15/10/2026   Archivo: carga.txt
+LINEA  TIPO  CLAVE                          RESULTADO
+00001  C     80000341                       Cliente dado de alta
+----------------------------------------------------------------------------------------------------
+Clientes cargados:              1
+Tasas cargadas:                 0
+Plazos fijos cargados:          0
+TOTAL GENERAL CARGADO:          1
+TOTAL LEIDOS:                   1
+----- fin de carga_ok.txt
+----- carga_rechazos.txt
+CARGA MASIVA - REGISTROS RECHAZADOS
+Fecha de proceso: 15/10/2026   Archivo: carga.txt
+LINEA  TIPO  CLAVE                          MOTIVO
+----------------------------------------------------------------------------------------------------
+Clientes rechazados:            0
+Tasas rechazadas:               0
+Plazos fijos rechazados:        0
+Sin tipo:                       0
+TOTAL GENERAL RECHAZADO:        0
+TOTAL LEIDOS:                   1
+----- fin de carga_rechazos.txt
+----- carga.txt: no esta
+----- archivos procesados:
+carga.txt.procesado.20261015.HHMMSS

@@ -1,0 +1,28 @@
+1
+80000301
+Pedro Previo
+Calle Previa 301
+011 4300-0301
+1
+80000302
+Rosa Inactiva
+Calle Previa 302
+011 4300-0302
+2
+80000302
+B
+S
+8
+1
+P
+30
+40
+1
+D
+30
+3
+3
+D
+30
+4
+0

@@ -22,6 +22,7 @@ Además del programa interactivo, el proyecto incluye:
 
 - Un **proceso batch de cierre** (`BATCH-CIERRE.cbl`) que acredita interés mensual a las cuentas activas, con un JCL de referencia que documenta cómo correría el mismo proceso en un mainframe z/OS real.
 - Un **listado de consulta de solo lectura** (`LISTADO-CLIENTES.cbl`) que muestra la cartera agrupada por estado, sin modificar ningún dato.
+- Un **proceso batch de carga masiva** (`CARGA-MASIVA.cbl`) que carga clientes, tasas y plazos fijos desde un archivo de texto, con las mismas reglas que la carga manual.
 - Una **matriz de casos de prueba** y un **juego de pruebas semi-automatizadas** para los escenarios más simples.
 
 ## Tabla de contenidos
@@ -34,6 +35,7 @@ Además del programa interactivo, el proyecto incluye:
 - [Programa interactivo: gestion-bancaria.cbl](#programa-gestion-bancaria)
 - [Proceso batch de cierre: BATCH-CIERRE.cbl](#proceso-batch-cierre)
 - [Listado de clientes (solo lectura): LISTADO-CLIENTES.cbl](#listado-clientes)
+- [Carga masiva: CARGA-MASIVA.cbl](#carga-masiva)
 - [Testing](#testing)
 - [Solución de problemas](#solucion-de-problemas)
 - [Limitaciones y mejoras futuras](#limitaciones-y-mejoras)
@@ -56,22 +58,27 @@ Además del programa interactivo, el proyecto incluye:
 | `gestion-bancaria.cbl` | Programa interactivo (código fuente, formato fijo COBOL) — ver [Programa interactivo: gestion-bancaria.cbl](#programa-gestion-bancaria) |
 | `BATCH-CIERRE.cbl` | Proceso batch de cierre: acredita interés mensual y procesa los vencimientos de plazo fijo — ver [Proceso batch de cierre](#proceso-batch-cierre) |
 | `LISTADO-CLIENTES.cbl` | Listado de consulta de **solo lectura**: no modifica datos — ver [Listado de clientes (solo lectura)](#listado-clientes) |
-| `CLIENTE.cpy` | Copybook con el layout del registro de cliente, compartido por los tres programas de arriba |
-| `INTERES.cpy` | Copybook con el layout del registro de tasas (`intereses.dat`), incluido por `gestion-bancaria.cbl` |
-| `PLAZOFIJO.cpy` | Copybook con el layout del registro de plazo fijo (`plazofijo.dat`), incluido por `gestion-bancaria.cbl` y `BATCH-CIERRE.cbl` |
+| `CARGA-MASIVA.cbl` | Proceso batch de carga masiva de clientes, tasas y plazos fijos desde un archivo de texto — ver [Carga masiva](#carga-masiva) |
+| `CLIENTE.cpy` | Copybook con el layout del registro de cliente, compartido por los cuatro programas de arriba |
+| `INTERES.cpy` | Copybook con el layout del registro de tasas (`intereses.dat`), incluido por `gestion-bancaria.cbl` y `CARGA-MASIVA.cbl` |
+| `PLAZOFIJO.cpy` | Copybook con el layout del registro de plazo fijo (`plazofijo.dat`), incluido por `gestion-bancaria.cbl`, `BATCH-CIERRE.cbl` y `CARGA-MASIVA.cbl` |
 | `correr_batch_cierre.bat` | Compila `BATCH-CIERRE.cbl` en `bin\` y lo ejecuta ahí |
 | `ver_listado_clientes.bat` | Compila `LISTADO-CLIENTES.cbl` en `bin\` y lo ejecuta ahí |
-| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados y, después, los casos de INTERESES, los de PLAZO FIJO y los de VENCIMIENTOS (estos últimos también compilan y corren `BATCH-CIERRE.exe`) — ver [Testing](#testing) |
+| `correr_carga_masiva.bat` | Compila `CARGA-MASIVA.cbl` en `bin\` y lo ejecuta ahí (lee `bin\carga.txt`) |
+| `correr_pruebas_automatizadas.bat` | Compila `gestion-bancaria.exe` en `bin\` y corre los 5 casos de prueba semi-automatizados y, después, los casos de INTERESES, los de PLAZO FIJO, los de VENCIMIENTOS (que también compilan y corren `BATCH-CIERRE.exe`) y los de CARGA MASIVA (que compilan y corren `CARGA-MASIVA.exe`) — ver [Testing](#testing) |
 | `correr_pruebas_intereses.sh` | Lo mismo que la segunda parte del `.bat`, pero para Linux (Docker y GitHub Actions) |
 | `correr_pruebas_plazofijo.sh` | Lo mismo que la tercera parte del `.bat` (casos de PLAZO FIJO), para Linux (Docker y GitHub Actions) |
 | `correr_pruebas_vencimientos.sh` | Lo mismo que la cuarta parte del `.bat` (casos de VENCIMIENTOS con el batch de cierre), para Linux (Docker y GitHub Actions) |
+| `correr_pruebas_carga.sh` | Lo mismo que la quinta parte del `.bat` (casos de CARGA MASIVA), para Linux (Docker y GitHub Actions) |
+| `carga_cm*.txt` | Archivos de carga de los casos de CARGA MASIVA (`carga_cm01_1.txt` tiene 68 líneas; `carga_cm05_1.txt` está vacío a propósito) |
+| `generar_carga_cm01.sh` | Vuelve a generar `carga_cm01_1.txt` con los largos exactos, por si un editor le recorta los espacios finales |
 | `.gitattributes` | Fuerza fin de línea LF en los `.sh` (con CRLF, bash no los puede ejecutar) |
 | `.dockerignore` | Deja `bin\` afuera de la imagen de Docker: los `.dat` creados en Windows no se pueden leer con el GnuCOBOL de Linux |
 | `batch_cierre.jcl` | JCL de **referencia/documentación**: cómo correría el mismo cierre en un mainframe z/OS real (no se ejecuta en este entorno) |
 | `README.md` | Esta documentación |
 | `CASOS_DE_PRUEBA.md` | Matriz de casos de prueba (QA) — ver [Testing](#testing) |
 | `LICENSE` | Licencia del proyecto — ver [Licencia](#licencia) |
-| `entrada_*.txt` | Entradas de los casos de prueba automatizados: los 5 de clientes (`alta_ok`, `alta_dni_invalido`, `deposito`, `extraccion`, `consulta`) y los de INTERESES, PLAZO FIJO y VENCIMIENTOS (`entrada_menu01_1.txt`, `entrada_int01_1.txt`, `entrada_pf01_1.txt`, `entrada_vto01_1.txt`, ..., uno por paso) |
+| `entrada_*.txt` | Entradas de los casos de prueba automatizados: los 5 de clientes (`alta_ok`, `alta_dni_invalido`, `deposito`, `extraccion`, `consulta`) y los de INTERESES, PLAZO FIJO, VENCIMIENTOS y CARGA MASIVA (`entrada_menu01_1.txt`, `entrada_int01_1.txt`, `entrada_pf01_1.txt`, `entrada_vto01_1.txt`, `entrada_cm01_1.txt`, ..., uno por paso) |
 | `esperado_*.txt` | Salida de referencia, verificada a mano, de cada caso automatizado |
 | `salida_*.txt` | Salidas correspondientes a cada caso, generadas al correr las pruebas (no se suben al repositorio) |
 
@@ -82,11 +89,14 @@ Además del programa interactivo, el proyecto incluye:
 | `gestion-bancaria.exe` | Ejecutable de `gestion-bancaria.cbl` |
 | `BATCH-CIERRE.exe` | Ejecutable de `BATCH-CIERRE.cbl` |
 | `LISTADO-CLIENTES.exe` | Ejecutable de `LISTADO-CLIENTES.cbl` |
+| `CARGA-MASIVA.exe` | Ejecutable de `CARGA-MASIVA.cbl` |
 | `clientes_v3.dat` | Archivo de datos indexado, compartido por los tres programas. **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl` |
 | `intereses.dat` | Archivo indexado de tasas (opción 8 - Intereses). **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl`, junto a `clientes_v3.dat` |
 | `plazofijo.dat` | Archivo indexado de plazos fijos (opción 7 - Plazo fijo). **Se crea solo** en la primera ejecución de `gestion-bancaria.cbl`, junto a los otros dos |
 | `reporte_cierre.txt` | Reporte del cierre, generado por `BATCH-CIERRE.cbl` en cada corrida |
 | `listado_clientes.txt` | Listado de clientes, generado por `LISTADO-CLIENTES.cbl` en cada corrida |
+| `carga.txt` | Archivo de entrada de la carga masiva (lo prepara el usuario). Al procesarse se renombra a `carga.txt.procesado.AAAAMMDD.HHMMSS` |
+| `carga_ok.txt` / `carga_rechazos.txt` | Reportes de la carga masiva (lo cargado y lo rechazado), generados por `CARGA-MASIVA.cbl` en cada corrida |
 
 <a id="compilacion-y-ejecucion"></a>
 ## Compilación y ejecución
@@ -137,6 +147,7 @@ Probado con GnuCOBOL 2.0.0 (el que trae OpenCobolIDE): los tres programas compil
 
 - **`gestion-bancaria.cbl`:** todas las opciones del menú, cada validación, el ciclo completo de estados (alta → baja → reactivación → baja), la restricción a clientes inactivos, el retorno al menú principal, la persistencia entre ejecuciones y el manejo de un archivo de datos corrupto.
 - **`BATCH-CIERRE.cbl`:** el cálculo de interés sobre clientes Activos y Reactivados, la exclusión de Inactivos, el archivo de clientes inexistente (cartera vacía), y que `gestion-bancaria.cbl` sigue leyendo y escribiendo `clientes_v3.dat` correctamente después de una corrida del batch. Desde la Etapa 3, además, los vencimientos de plazo fijo (casos VTO-01 a VTO-12, en GnuCOBOL 2.0.0 en Windows y 3.x en Docker), y que con los datos de CP-12 el reporte nuevo solo **agrega** la sección de vencimientos y las líneas nuevas del resumen respecto del reporte anterior.
+- **`CARGA-MASIVA.cbl`** (Etapa 4): los casos CM-01 a CM-08, en GnuCOBOL 2.0.0 en Windows y 3.x en Docker. Incluyen una carga de 68 líneas con todos los motivos de rechazo, la consulta posterior de lo cargado y de lo rechazado con `gestion-bancaria.exe`, el archivo inexistente, el archivo vacío, la fecha inválida, el orden de las líneas y la re-ejecución.
 - **`LISTADO-CLIENTES.cbl`:** las tres secciones con una cartera mixta (Activos, Reactivados e Inactivos), el archivo inexistente (cartera vacía), que la pantalla y `listado_clientes.txt` muestran exactamente el mismo contenido, y —con un hash del archivo antes y después de correrlo— que `clientes_v3.dat` queda **byte a byte idéntico**.
 
 <a id="programa-gestion-bancaria"></a>
@@ -1221,10 +1232,60 @@ Mismo mecanismo que `correr_batch_cierre.bat`: busca `cobc` en el `PATH` y, si n
 
 Igual que `BATCH-CIERRE.cbl` con sus tablas de Activos/Reactivados e Inactivos, un cliente Activo y uno Inactivo pueden aparecer intercalados en el archivo (que está ordenado por DNI, no por estado). Como el listado pide las tres secciones agrupadas, el programa abre y recorre `clientes_v3.dat` **tres veces** (una por sección), siempre en modo `INPUT`. La primera pasada (Activos) además totaliza la cantidad y el saldo de **todos** los clientes del archivo, para no necesitar una cuarta pasada solo para el resumen.
 
+<a id="carga-masiva"></a>
+## Carga masiva: CARGA-MASIVA.cbl
+
+`CARGA-MASIVA.cbl` (Etapa 4) es un proceso batch que lee **un archivo de texto** y carga en un solo paso muchos clientes, tasas y plazos fijos en `clientes_v3.dat`, `intereses.dat` y `plazofijo.dat`, con **las mismas reglas que la carga manual** de `gestion-bancaria.cbl`. Sirve, por ejemplo, para dar de alta la cartera inicial sin tipear cliente por cliente.
+
+### El archivo de entrada
+
+- Se llama `carga.txt` (en la carpeta de ejecución, `bin\`), salvo que exista la variable de entorno `ARCHIVO_CARGA` con otro nombre.
+- Cada línea es un registro de **100 posiciones**. La posición 1 dice el tipo: `C` (cliente), `I` (tasa) o `P` (plazo fijo).
+- Los importes y tasas van **sin punto decimal** (los 2 últimos dígitos son los decimales) y con ceros a la izquierda: `0000100000000` = 1.000.000,00 y `04500` = 45,00%.
+- Las líneas se procesan **en el orden del archivo**, sin reordenar. Lo lógico es poner primero los clientes, después las tasas y al final los plazos fijos: un plazo fijo de un cliente que aparece más abajo se rechaza ("Cliente inexistente").
+
+| Tipo | Posiciones |
+|------|------------|
+| `C` cliente | 1 tipo · 2-9 DNI · 10-39 nombre · 40-79 dirección · 80-94 teléfono · 95-100 relleno |
+| `I` tasa | 1 tipo · 2 moneda (`P`/`D`) · 3-5 días (`030`/`060`/`090`/`120`) · 6-10 TNA (`9(3)V99`) · 11-18 vigente desde (`AAAAMMDD`) · 19-100 relleno |
+| `P` plazo fijo | 1 tipo · 2-9 DNI · 10 moneda · 11-23 monto (`9(11)V99`) · 24-26 días · 27-100 relleno |
+
+**Largo de la línea.** Muchos editores borran los espacios del final al guardar, así que una línea **más corta que 100 se acepta** si llega hasta el final de su último campo obligatorio: un cliente hasta la posición 85 (6 posiciones de teléfono), una tasa hasta la 18 y un plazo fijo hasta la 26. Lo que falta se toma como espacios. Una línea más corta que eso, o **más larga que 100**, se rechaza con "Largo incorrecto". GnuCOBOL informa cuántos caracteres trajo cada línea (registro `RECORD VARYING ... DEPENDING ON`) y saca solo el fin de línea de Windows; se probó igual en GnuCOBOL 2.0 (Windows) y 3.1 (Docker).
+
+### Qué hace con cada tipo
+
+- **Cliente (`C`)**: igual que el alta manual (opción 1). Se graba activo (`A`) y con saldo 0. Al nombre, la dirección y el teléfono se les sacan los espacios de adelante. Nombre, dirección y teléfono son obligatorios; el teléfono admite solo dígitos, `+ - ( )` y espacios, con al menos 6 dígitos. Un DNI que ya existe (en el archivo de datos o más arriba en el mismo archivo de carga) se rechaza.
+- **Tasa (`I`)**: **solo alta**. Si la moneda + días ya existe, activa o de baja, se rechaza ("Tasa ya existe"): la carga no modifica, no da de baja ni reactiva. La fecha de vigencia es la del archivo (no se calcula el próximo día hábil), la TNA anterior queda en 0 y el estado en `A`.
+- **Plazo fijo (`P`)**: igual que el alta manual sin la confirmación. El cliente tiene que existir y estar activo (`A` o `R`), con los mismos mínimos (1.000.000 en pesos, 500 en dólares) y la misma regla de tasa vigente (incluida la TNA anterior). El número es el último + 1, la fecha de alta es la fecha de proceso y el interés y el vencimiento se calculan igual. **No toca el saldo del cliente.**
+- La moneda se acepta también en minúscula (`p`/`d`), como en el menú.
+
+### Rechazos
+
+Una línea inválida **no frena la carga**: se rechaza, se informa en `carga_rechazos.txt` y se sigue con la siguiente (no es "todo o nada"). Cada línea tiene un solo motivo, el primer error que se encuentra, en el mismo orden en que el alta manual pide los datos:
+
+`DNI duplicado`, `DNI no numerico`, `Nombre en blanco`, `Direccion en blanco`, `Telefono en blanco`, `Telefono invalido`, `Moneda invalida`, `Dias no permitidos`, `TNA invalida`, `Fecha de vigencia invalida`, `Tasa ya existe`, `Cliente inexistente`, `Cliente inactivo`, `Monto menor al minimo`, `Campo numerico invalido` (letras en días, TNA o monto), `Sin tasa vigente`, `Total excede el maximo permitido` (el interés o el total no entran en 99.999.999.999,99), `Tipo de registro desconocido`, `Linea en blanco` y `Largo incorrecto`.
+
+### Reportes, código de retorno y renombrado
+
+- **`carga_ok.txt`**: una línea por registro cargado (número de línea, tipo, clave y resultado; para una tasa, `Tasa dada de alta, rige desde DD/MM/AAAA`) y los totales por tipo, `TOTAL GENERAL CARGADO` y `TOTAL LEIDOS`.
+- **`carga_rechazos.txt`**: lo mismo para los rechazados, con el motivo, más los "sin tipo" (línea en blanco o tipo desconocido) y `TOTAL GENERAL RECHAZADO`. Siempre se cumple: leídos = cargados + rechazados.
+- Los dos se **reescriben en cada corrida**, y los totales también salen por pantalla. Un archivo vacío no es un error: dice `Archivo vacio: sin datos para procesar` y los totales quedan en cero.
+- **Fecha de proceso**: la de la variable `FECHA_PROCESO` (`AAAAMMDD`) si existe, si no la del sistema.
+- **Código de retorno 0**: se procesó todo el archivo, con o sin rechazos. Al terminar, el archivo se **renombra** a `carga.txt.procesado.AAAAMMDD.HHMMSS` (fecha de proceso + hora del sistema, con la rutina `CBL_RENAME_FILE` de GnuCOBOL), así no se vuelve a cargar por error.
+- **Código de retorno 8**: no pudo correr (fecha de proceso inválida, archivo de carga inexistente, error al abrir o grabar un archivo, o falla del renombrado). En ese caso **no se renombra**. La fecha y el archivo se validan **antes** de abrir los reportes, así un error de arranque no borra los reportes anteriores.
+
+### Cómo ejecutarlo localmente
+
+```bat
+correr_carga_masiva.bat
+```
+
+Mismo mecanismo que `correr_batch_cierre.bat`: compila `CARGA-MASIVA.cbl` **dentro de `bin\`** y lo ejecuta desde ahí, sobre los `.dat` de `bin\`. Hay que dejar antes el archivo en `bin\carga.txt` (o definir `ARCHIVO_CARGA`). Al final muestra el código de retorno. Igual que el cierre, **no correrlo al mismo tiempo que `gestion-bancaria.exe` ni que el batch de cierre**.
+
 <a id="testing"></a>
 ## Testing
 
-El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo). Desde la Evolución 1 / Etapa 1 suma 12 casos más (MENU-01 e INT-01 a INT-11) para el menú nuevo y las tasas de Intereses, desde la Etapa 2 otros 17 (PF-01 a PF-17) para el Plazo fijo, y desde la Etapa 3 otros 12 (VTO-01 a VTO-12) para los vencimientos de plazo fijo en el batch de cierre, todos automatizados (ver [Casos de INTERESES](#casos-de-intereses-evolución-1--etapa-1), [Casos de PLAZO FIJO](#casos-de-plazo-fijo-evolución-1--etapa-2) y [Casos de VENCIMIENTOS](#casos-de-vencimientos-evolución-1--etapa-3)). En total, **53 casos**: 46 automatizados y 7 manuales.
+El documento **[`CASOS_DE_PRUEBA.md`](CASOS_DE_PRUEBA.md)** tiene la matriz de casos de prueba (QA) del proyecto: 12 casos con columnas ID, Módulo, Escenario, Pasos a seguir, Resultado esperado, Resultado obtenido (para completar a mano en cada corrida) y Observaciones. Cubre alta, depósito, extracción, consulta, modificación, baja, reactivación y el batch de cierre, incluyendo casos negativos (DNI inválido, fondos insuficientes, cliente inexistente, operar sobre un cliente inactivo). Desde la Evolución 1 / Etapa 1 suma 12 casos más (MENU-01 e INT-01 a INT-11) para el menú nuevo y las tasas de Intereses, desde la Etapa 2 otros 17 (PF-01 a PF-17) para el Plazo fijo, desde la Etapa 3 otros 12 (VTO-01 a VTO-12) para los vencimientos de plazo fijo en el batch de cierre, y desde la Etapa 4 otros 8 (CM-01 a CM-08) para la carga masiva, todos automatizados (ver [Casos de INTERESES](#casos-de-intereses-evolución-1--etapa-1), [Casos de PLAZO FIJO](#casos-de-plazo-fijo-evolución-1--etapa-2), [Casos de VENCIMIENTOS](#casos-de-vencimientos-evolución-1--etapa-3) y [Casos de CARGA MASIVA](#casos-de-carga-masiva-evolución-1--etapa-4)). En total, **61 casos**: 54 automatizados y 7 manuales.
 
 ### Casos automatizados
 
@@ -1328,6 +1389,22 @@ Usan la misma técnica que los de PLAZO FIJO, en la carpeta descartable `bin\pru
 
 Por ejemplo, `vto07 20261014 20261015 B:20261114 20261116 B:20261116 20261116` es: alta de cliente y tasa, alta del plazo fijo y baja del cliente, primer cierre (queda pendiente), reactivación, segundo cierre (se acredita) y consulta final. Las líneas `-----` son las mismas en el `.bat` y en el `.sh`, así un mismo esperado sirve en Windows y en Linux.
 
+### Casos de CARGA MASIVA (Evolución 1 / Etapa 4)
+
+Los casos **CM-01 a CM-08** de `CASOS_DE_PRUEBA.md` prueban `CARGA-MASIVA.cbl`. Se corren en la quinta parte de `correr_pruebas_automatizadas.bat` (resumen `Resumen carga masiva: 8 OK / 0 FALLO (de 8)`), que antes compila también `CARGA-MASIVA.cbl` en `bin\`, o en Linux/Docker/CI con `correr_pruebas_carga.sh`:
+
+```bash
+docker build -t gestion-bancaria .
+docker run --rm gestion-bancaria bash correr_pruebas_carga.sh
+```
+
+Corren en la carpeta descartable `bin\prueba_carga\` (DNIs `800003XX`). Como CM-02 y CM-03 reusan la misma carga de 68 líneas que CM-01, cada paso dice también qué archivo usa:
+
+- `G:AAAAMMDD:entrada` corre `gestion-bancaria.exe` con esa fecha y esas teclas (por ejemplo, la preparación `entrada_cm01_1.txt`: un cliente activo, uno inactivo, una tasa activa y una de baja).
+- `C:AAAAMMDD:carga[:nombre]` copia el archivo de carga a la carpeta (como `carga.txt`, o como `<nombre>`, que se avisa con `ARCHIVO_CARGA`) y corre `CARGA-MASIVA.exe`. Con `-` en vez de archivo no copia nada (así se prueba el archivo inexistente). Después se agregan a la salida el código de retorno, los dos reportes, si el archivo de carga sigue ahí y los `.procesado.*` que haya.
+
+La hora del renombrado cambia en cada corrida, así que en la salida se reemplaza por `HHMMSS`. `carga_cm01_1.txt` tiene líneas con espacios al final a propósito: si un editor se los recorta, se vuelve a generar con `bash generar_carga_cm01.sh`.
+
 ### Gestión de casos y ejecución en Jira/Xray
 
 Los 12 casos de prueba de `CASOS_DE_PRUEBA.md` (los 5 automatizados y los 7 manuales) están además cargados como Tests en Jira, usando Xray como plugin de gestión de pruebas, cada uno con su Resumen, Descripción, pasos estructurados (Acción / Datos / Resultado Esperado) y — en los automatizados — la referencia a los archivos `entrada_*.txt` / `esperado_*.txt` correspondientes.
@@ -1398,6 +1475,13 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 - **Vencimientos sin "todo o nada".** El saldo del cliente y el estado `V` del plazo fijo se graban por separado. Si el programa se cortara justo entre las dos grabaciones, hay que corregir ese plazo fijo a mano (el batch avisa cuál) para que no se acredite dos veces.
 - **Dólares sin cuenta.** Los plazos fijos en dólares vencidos se informan "a pagar por caja", pero no queda registro de que se hayan pagado.
 - **Pendientes sin límite.** Un plazo fijo de un cliente inactivo queda pendiente hasta que se lo reactive; no hay aviso aparte de la línea del reporte en cada cierre.
+
+### Limitaciones de `CARGA-MASIVA.cbl`
+
+- **Reproceso después de un código 8 (riesgo de plazos fijos duplicados).** La carga no es "todo o nada": si termina con código 8 a mitad del archivo (por ejemplo, un error al grabar en la línea 40), lo cargado hasta ahí **queda grabado** y el archivo **no se renombra**. Si se vuelve a correr con el mismo archivo, los clientes y las tasas ya cargados se rechazan como duplicados (bien), pero **los plazos fijos se cargan dos veces**, porque no tienen una clave natural (el número es automático). Antes de reprocesar hay que sacar del archivo las líneas que ya se cargaron (ver `carga_ok.txt`). En un banco real esto se resuelve con un esquema de *checkpoint/restart*.
+- **Reglas copiadas.** Las reglas del alta manual (teléfono, tasa vigente, cálculo del plazo fijo, fecha de proceso) están **copiadas** en `CARGA-MASIVA.cbl`, porque no se puede hacer `COPY` de párrafos de `gestion-bancaria.cbl` sin modificarlo. Si una regla cambia, hay que cambiarla en los dos programas (cada párrafo copiado lo dice en su comentario).
+- **Solo altas.** No modifica ni da de baja clientes, tasas ni plazos fijos.
+- **Sin control de concurrencia**, igual que el batch de cierre: no correrlo al mismo tiempo que `gestion-bancaria.exe` ni que `BATCH-CIERRE.exe`.
 
 ### Posibles mejoras futuras
 

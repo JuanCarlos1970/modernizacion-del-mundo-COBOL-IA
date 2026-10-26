@@ -18,14 +18,16 @@ WORKDIR /app
 # Copia todo el proyecto (codigo COBOL, casos de prueba, etc.) a /app.
 COPY . .
 
-# Compila gestion-bancaria.cbl (programa interactivo) y BATCH-CIERRE.cbl (proceso
-# batch nocturno) al construir la imagen, para que ambos queden listos
+# Compila gestion-bancaria.cbl (programa interactivo), BATCH-CIERRE.cbl
+# (proceso batch nocturno) y CARGA-MASIVA.cbl (carga masiva desde un
+# archivo de texto) al construir la imagen, para que queden listos
 # apenas se levanta un contenedor (y para detectar de una vez si algo
 # no compila). BATCH-CIERRE.exe es el que usa Kubernetes como CronJob
 # (ver kubernetes/batch-cierre-cronjob.yaml).
 RUN mkdir -p bin && \
     cobc -x -Wall -o bin/gestion-bancaria.exe gestion-bancaria.cbl && \
-    cobc -x -Wall -o bin/BATCH-CIERRE.exe BATCH-CIERRE.cbl
+    cobc -x -Wall -o bin/BATCH-CIERRE.exe BATCH-CIERRE.cbl && \
+    cobc -x -Wall -o bin/CARGA-MASIVA.exe CARGA-MASIVA.cbl
 
 # Al correr el contenedor, arranca el programa interactivo de cuentas.
 CMD ["./bin/gestion-bancaria.exe"]
