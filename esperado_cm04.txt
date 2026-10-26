@@ -1,0 +1,12 @@
+----- CARGA-MASIVA: FECHA_PROCESO=20261015, archivo carga.txt
+CARGA MASIVA
+Fecha de proceso: 15/10/2026
+Archivo de carga: carga.txt
+No existe el archivo de carga: carga.txt
+No se proceso nada.
+Carga terminada con error (codigo 8).
+----- codigo de salida de la carga: 8
+----- no se genero carga_ok.txt
+----- no se genero carga_rechazos.txt
+----- carga.txt: no esta
+----- archivos procesados:

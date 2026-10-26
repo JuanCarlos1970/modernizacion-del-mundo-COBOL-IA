@@ -1,0 +1,50 @@
+----- CARGA-MASIVA: FECHA_PROCESO=20261015, archivo otra_carga.txt
+CARGA MASIVA
+Fecha de proceso: 15/10/2026
+Archivo de carga: otra_carga.txt
+Cargados:
+  Clientes cargados:              1
+  Tasas cargadas:                 1
+  Plazos fijos cargados:          1
+  TOTAL GENERAL CARGADO:          3
+  TOTAL LEIDOS:                   4
+Rechazados:
+  Clientes rechazados:            0
+  Tasas rechazadas:               0
+  Plazos fijos rechazados:        1
+  Sin tipo:                       0
+  TOTAL GENERAL RECHAZADO:        1
+  TOTAL LEIDOS:                   4
+Archivo renombrado a: otra_carga.txt.procesado.20261015.HHMMSS
+Carga terminada (codigo 0).
+----- codigo de salida de la carga: 0
+----- carga_ok.txt
+CARGA MASIVA - REGISTROS CARGADOS
+Fecha de proceso: 15/10/2026   Archivo: otra_carga.txt
+LINEA  TIPO  CLAVE                          RESULTADO
+00001  I     P 030                          Tasa dada de alta, rige desde 01/10/2026
+00003  C     80000331                       Cliente dado de alta
+00004  P     80000331 P 2,000,000.00        Plazo fijo 000001 constituido
+----------------------------------------------------------------------------------------------------
+Clientes cargados:              1
+Tasas cargadas:                 1
+Plazos fijos cargados:          1
+TOTAL GENERAL CARGADO:          3
+TOTAL LEIDOS:                   4
+----- fin de carga_ok.txt
+----- carga_rechazos.txt
+CARGA MASIVA - REGISTROS RECHAZADOS
+Fecha de proceso: 15/10/2026   Archivo: otra_carga.txt
+LINEA  TIPO  CLAVE                          MOTIVO
+00002  P     80000331 P 1,000,000.00        Cliente inexistente
+----------------------------------------------------------------------------------------------------
+Clientes rechazados:            0
+Tasas rechazadas:               0
+Plazos fijos rechazados:        1
+Sin tipo:                       0
+TOTAL GENERAL RECHAZADO:        1
+TOTAL LEIDOS:                   4
+----- fin de carga_rechazos.txt
+----- otra_carga.txt: no esta
+----- archivos procesados:
+otra_carga.txt.procesado.20261015.HHMMSS

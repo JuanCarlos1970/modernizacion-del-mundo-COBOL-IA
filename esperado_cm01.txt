@@ -1,0 +1,295 @@
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: DNI (8 digitos): Nombre (hasta 30 caracteres): Direccion (hasta 40 caracteres): Telefono (hasta 15 caracteres): Cliente dado de alta.
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: DNI (8 digitos): Nombre (hasta 30 caracteres): Direccion (hasta 40 caracteres): Telefono (hasta 15 caracteres): Cliente dado de alta.
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: DNI (8 digitos): Nombre:    Rosa Inactiva
+DNI:       80000302
+Direccion: Calle Previa 302
+Telefono:  011 4300-0302
+Saldo:                0.00
+Estado:    A - Activo
+Desea (M)odificar o (B)aja el cliente? Confirma la baja? (S/N): Cliente dado de baja (estado Inactivo).
+ 
+Datos actualizados del cliente:
+Nombre:    Rosa Inactiva
+DNI:       80000302
+Direccion: Calle Previa 302
+Telefono:  011 4300-0302
+Saldo:                0.00
+Estado:    I - Inactivo
+ 
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion:  
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
+Moneda:        P - Pesos
+Dias:          30
+TNA:           40.00 %
+TNA anterior:  0.00 %
+Vigente desde: 15/10/2026
+Estado:        A - Activa
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): TNA en % (mayor que 0, hasta 999.99): Tasa dada de alta.
+Moneda:        D - Dolares
+Dias:          30
+TNA:           3.00 %
+TNA anterior:  0.00 %
+Vigente desde: 15/10/2026
+Estado:        A - Activa
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion: Moneda (P = pesos, D = dolares): Dias (30, 60, 90 o 120): Tasa dada de baja.
+Moneda:        D - Dolares
+Dias:          30
+TNA:           3.00 %
+TNA anterior:  0.00 %
+Vigente desde: 15/10/2026
+Estado:        B - Baja
+ 
+  ======================================
+                INTERESES
+  ======================================
+ 
+  Fecha de proceso: 14/10/2026
+ 
+     1 - Alta
+     2 - Modificacion
+     3 - Baja
+ 
+     4 - Volver
+ 
+  Opcion:  
+  ======================================
+             GESTION BANCARIA
+  ======================================
+ 
+     1 - Alta de cliente
+     2 - Modificar / Baja de cliente
+     3 - Deposito
+     4 - Extraccion
+     5 - Consulta de saldo
+     6 - Cuenta corriente / Caja de ahorro
+     7 - Plazo fijo
+     8 - Intereses
+     9 - Historial de movimientos
+    10 - Pago de servicios
+ 
+     0 - Salir
+ 
+  Opcion: Hasta luego.
+----- CARGA-MASIVA: FECHA_PROCESO=20261015, archivo carga.txt
+CARGA MASIVA
+Fecha de proceso: 15/10/2026
+Archivo de carga: carga.txt
+Cargados:
+  Clientes cargados:             10
+  Tasas cargadas:                 5
+  Plazos fijos cargados:         21
+  TOTAL GENERAL CARGADO:         36
+  TOTAL LEIDOS:                  68
+Rechazados:
+  Clientes rechazados:            9
+  Tasas rechazadas:               8
+  Plazos fijos rechazados:       13
+  Sin tipo:                       2
+  TOTAL GENERAL RECHAZADO:       32
+  TOTAL LEIDOS:                  68
+Archivo renombrado a: carga.txt.procesado.20261015.HHMMSS
+Carga terminada (codigo 0).
+----- codigo de salida de la carga: 0
+----- carga_ok.txt
+CARGA MASIVA - REGISTROS CARGADOS
+Fecha de proceso: 15/10/2026   Archivo: carga.txt
+LINEA  TIPO  CLAVE                          RESULTADO
+00001  C     80000303                       Cliente dado de alta
+00002  C     80000304                       Cliente dado de alta
+00003  C     80000305                       Cliente dado de alta
+00004  C     80000306                       Cliente dado de alta
+00005  C     80000307                       Cliente dado de alta
+00006  C     80000308                       Cliente dado de alta
+00007  C     80000309                       Cliente dado de alta
+00008  C     80000310                       Cliente dado de alta
+00009  C     80000311                       Cliente dado de alta
+00013  C     80000313                       Cliente dado de alta
+00018  I     P 060                          Tasa dada de alta, rige desde 01/10/2026
+00019  I     P 090                          Tasa dada de alta, rige desde 15/10/2026
+00020  I     P 120                          Tasa dada de alta, rige desde 20/10/2026
+00021  I     d 060                          Tasa dada de alta, rige desde 01/10/2026
+00022  I     D 090                          Tasa dada de alta, rige desde 14/10/2026
+00030  P     80000303 P 1,000,000.00        Plazo fijo 000001 constituido
+00031  P     80000303 P 2,500,000.00        Plazo fijo 000002 constituido
+00032  P     80000304 P 1,500,000.00        Plazo fijo 000003 constituido
+00033  P     80000304 D 500.00              Plazo fijo 000004 constituido
+00034  P     80000305 D 1,000.00            Plazo fijo 000005 constituido
+00035  P     80000305 p 1,200,000.00        Plazo fijo 000006 constituido
+00036  P     80000306 P 3,000,000.00        Plazo fijo 000007 constituido
+00037  P     80000306 D 750.50              Plazo fijo 000008 constituido
+00038  P     80000307 P 1,000,000.01        Plazo fijo 000009 constituido
+00039  P     80000307 D 2,000.00            Plazo fijo 000010 constituido
+00040  P     80000308 P 5,000,000.00        Plazo fijo 000011 constituido
+00041  P     80000308 P 1,000,000.00        Plazo fijo 000012 constituido
+00042  P     80000309 P 10,000,000.00       Plazo fijo 000013 constituido
+00043  P     80000309 D 10,000.00           Plazo fijo 000014 constituido
+00044  P     80000310 P 1,750,000.00        Plazo fijo 000015 constituido
+00045  P     80000310 D 600.00              Plazo fijo 000016 constituido
+00046  P     80000311 P 2,000,000.00        Plazo fijo 000017 constituido
+00047  P     80000311 D 800.00              Plazo fijo 000018 constituido
+00048  P     80000301 P 1,000,000.00        Plazo fijo 000019 constituido
+00049  P     80000303 D 5,000.00            Plazo fijo 000020 constituido
+00050  P     80000304 P 4,000,000.00        Plazo fijo 000021 constituido
+----------------------------------------------------------------------------------------------------
+Clientes cargados:             10
+Tasas cargadas:                 5
+Plazos fijos cargados:         21
+TOTAL GENERAL CARGADO:         36
+TOTAL LEIDOS:                  68
+----- fin de carga_ok.txt
+----- carga_rechazos.txt
+CARGA MASIVA - REGISTROS RECHAZADOS
+Fecha de proceso: 15/10/2026   Archivo: carga.txt
+LINEA  TIPO  CLAVE                          MOTIVO
+00010  C     80000301                       DNI duplicado
+00011  C     80000303                       DNI duplicado
+00012  C     80000312                       Nombre en blanco
+00014  C     80000314                       Direccion en blanco
+00015  C     80000315                       Telefono en blanco
+00016  C     80000316                       Telefono invalido
+00017  -                                    Linea en blanco
+00023  I     P 030                          Tasa ya existe
+00024  I     D 030                          Tasa ya existe
+00025  I     X 060                          Moneda invalida
+00026  I     P 045                          Dias no permitidos
+00027  I     D 120                          TNA invalida
+00028  I     D 120                          Fecha de vigencia invalida
+00029  X                                    Tipo de registro desconocido
+00051  P     8000031X P 1,000,000.00        DNI no numerico
+00052  P     80000399 P 1,000,000.00        Cliente inexistente
+00053  P     80000302 P 1,000,000.00        Cliente inactivo
+00054  P     80000303 X 1,000,000.00        Moneda invalida
+00055  P     80000303 P 00001000000AB       Campo numerico invalido
+00056  P     80000303 P 999,999.99          Monto menor al minimo
+00057  P     80000303 P 1,000,000.00        Dias no permitidos
+00058  P     80000303 P 1,000,000.00        Sin tasa vigente
+00059  P     80000303 P 99,999,999,000.00   Total excede el maximo permitido
+00060  P     80000304 P 1,000,000.00        Largo incorrecto
+00061  C     8000031A                       DNI no numerico
+00062  C     80000317                       Telefono invalido
+00063  C     80000318                       Largo incorrecto
+00064  I     D 120                          Campo numerico invalido
+00065  I     P 060                          Tasa ya existe
+00066  P     80000303 D 499.99              Monto menor al minimo
+00067  P     80000303 D 1,000.00            Sin tasa vigente
+00068  P     80000303 D 1,000.00            Sin tasa vigente
+----------------------------------------------------------------------------------------------------
+Clientes rechazados:            9
+Tasas rechazadas:               8
+Plazos fijos rechazados:       13
+Sin tipo:                       2
+TOTAL GENERAL RECHAZADO:       32
+TOTAL LEIDOS:                  68
+----- fin de carga_rechazos.txt
+----- carga.txt: no esta
+----- archivos procesados:
+carga.txt.procesado.20261015.HHMMSS

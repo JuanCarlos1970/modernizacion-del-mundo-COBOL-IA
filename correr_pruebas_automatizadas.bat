@@ -19,9 +19,10 @@ rem  Despues corre, en una segunda parte con su propio resumen, los
 rem  casos de INTERESES (MENU-01 e INT-01 a INT-11), cada uno con un
 rem  intereses.dat vacio y con fecha de proceso fija (ver mas abajo).
 rem  En una tercera parte, los casos de PLAZO FIJO (PF-01 a PF-17),
-rem  con la misma tecnica. Y por ultimo, en una cuarta parte, los
-rem  casos de VENCIMIENTOS (VTO-01 a VTO-12), que ademas corren el
-rem  batch de cierre (BATCH-CIERRE.exe).
+rem  con la misma tecnica. En una cuarta parte, los casos de
+rem  VENCIMIENTOS (VTO-01 a VTO-12), que ademas corren el batch de
+rem  cierre (BATCH-CIERRE.exe). Y por ultimo, en una quinta parte,
+rem  los casos de CARGA MASIVA (CM-01 a CM-08), con CARGA-MASIVA.exe.
 rem
 rem  El resumen se muestra en pantalla Y ADEMAS se guarda en
 rem  resultado_pruebas.txt (en esta misma carpeta), igual que
@@ -295,9 +296,60 @@ echo ========================================== >> "%LOGFILE%"
 echo  Resumen vencimientos: !OK_VTO! OK / !FALLO_VTO! FALLO (de !TOTAL_VTO!) >> "%LOGFILE%"
 echo ========================================== >> "%LOGFILE%"
 
+rem -----------------------------------------------------------------
+rem  Quinta parte: casos de la Evolucion 1 / Etapa 4 (CM-01 a CM-08
+rem  de CASOS_DE_PRUEBA.md: carga masiva). Misma logica que
+rem  correr_pruebas_carga.sh (Linux / Docker / CI), en la carpeta
+rem  descartable bin\prueba_carga\. Cada paso dice tambien que archivo
+rem  usa (asi CM-02 y CM-03 reusan la carga de 68 lineas de CM-01):
+rem    G:AAAAMMDD:entrada   corre gestion-bancaria.exe con esa fecha y
+rem                         esas teclas.
+rem    C:AAAAMMDD:carga[:nombre]
+rem                         copia el archivo de carga (como carga.txt,
+rem                         o como <nombre>, que se avisa con
+rem                         ARCHIVO_CARGA) y corre CARGA-MASIVA.exe.
+rem                         Con "-" en vez de archivo no copia nada.
+rem  14/10 = miercoles (preparacion), 15/10 = jueves (carga),
+rem  20261315 = fecha invalida.
+rem -----------------------------------------------------------------
+echo.
+echo [pruebas] Compilando CARGA-MASIVA.cbl en bin\ ...
+cobc -x -Wall -o "bin\CARGA-MASIVA.exe" CARGA-MASIVA.cbl
+if errorlevel 1 (
+    echo [pruebas] ERROR: fallo la compilacion de CARGA-MASIVA.cbl.
+    echo ERROR: fallo la compilacion de CARGA-MASIVA.cbl. >> "%LOGFILE%"
+    exit /b 1
+)
+echo [pruebas] Corriendo y verificando los casos de CARGA MASIVA ...
+echo.
+
+set /a OK_CM=0
+set /a FALLO_CM=0
+set /a TOTAL_CM=0
+
+call :caso_cm cm01 G:20261014:entrada_cm01_1.txt C:20261015:carga_cm01_1.txt
+call :caso_cm cm02 G:20261014:entrada_cm01_1.txt C:20261015:carga_cm01_1.txt G:20261015:entrada_cm02_1.txt
+call :caso_cm cm03 G:20261014:entrada_cm01_1.txt C:20261015:carga_cm01_1.txt G:20261015:entrada_cm03_1.txt
+call :caso_cm cm04 C:20261015:-
+call :caso_cm cm05 C:20261015:carga_cm05_1.txt
+call :caso_cm cm06 C:20261015:carga_cm06_1.txt C:20261315:carga_cm06_1.txt
+call :caso_cm cm07 C:20261015:carga_cm07_1.txt:otra_carga.txt
+call :caso_cm cm08 C:20261015:carga_cm08_1.txt C:20261015:-
+
+echo.
+echo [pruebas] ==========================================
+echo [pruebas]  Resumen carga masiva: !OK_CM! OK / !FALLO_CM! FALLO ^(de !TOTAL_CM!^)
+echo [pruebas] ==========================================
+
+echo. >> "%LOGFILE%"
+echo ========================================== >> "%LOGFILE%"
+echo  Resumen carga masiva: !OK_CM! OK / !FALLO_CM! FALLO (de !TOTAL_CM!) >> "%LOGFILE%"
+echo ========================================== >> "%LOGFILE%"
+
 set /a FALLO+=FALLO_INT
 set /a FALLO+=FALLO_PF
 set /a FALLO+=FALLO_VTO
+set /a FALLO+=FALLO_CM
 
 if !FALLO! GTR 0 (
     echo.
@@ -481,5 +533,101 @@ if errorlevel 1 (
     echo [pruebas]   OK     - %CASO%
     echo   OK     - %CASO% >> "%LOGFILE%"
     set /a OK_VTO+=1
+)
+goto :eof
+
+rem =================================================================
+rem  :caso_cm <caso> <paso 1> [<paso 2> ...]
+rem  Corre un caso de CARGA MASIVA (ver la quinta parte, arriba). Las
+rem  lineas "-----" que se agregan a la salida son las mismas que
+rem  escribe correr_pruebas_carga.sh, asi un mismo esperado_*.txt
+rem  sirve en Windows y en Linux. La hora del renombrado (HHMMSS)
+rem  cambia en cada corrida: se reemplaza por "HHMMSS".
+rem =================================================================
+:caso_cm
+set "CASO=%~1"
+shift
+if exist "bin\prueba_carga" rmdir /s /q "bin\prueba_carga"
+mkdir "bin\prueba_carga"
+type nul > "salida_%CASO%.txt"
+:caso_cm_paso
+if "%~1"=="" goto caso_cm_comparar
+set "T="
+set "F="
+set "A="
+set "N="
+for /f "tokens=1-4 delims=:" %%a in ("%~1") do (
+    set "T=%%a"
+    set "F=%%b"
+    set "A=%%c"
+    set "N=%%d"
+)
+if /i "!T!"=="G" goto caso_cm_gestion
+call :carga_cm
+shift
+goto caso_cm_paso
+:caso_cm_gestion
+set "FECHA_PROCESO=!F!"
+pushd "bin\prueba_carga"
+"..\gestion-bancaria.exe" < "..\..\!A!" >> "..\..\salida_%CASO%.txt"
+popd
+set "FECHA_PROCESO="
+shift
+goto caso_cm_paso
+:caso_cm_comparar
+rmdir /s /q "bin\prueba_carga"
+set /a TOTAL_CM+=1
+fc "esperado_%CASO%.txt" "salida_%CASO%.txt" >nul
+if errorlevel 1 (
+    echo [pruebas]   FALLO  - %CASO%
+    echo   FALLO  - %CASO% >> "%LOGFILE%"
+    set /a FALLO_CM+=1
+    set "CASOS_FALLIDOS=!CASOS_FALLIDOS! %CASO%"
+) else (
+    echo [pruebas]   OK     - %CASO%
+    echo   OK     - %CASO% >> "%LOGFILE%"
+    set /a OK_CM+=1
+)
+goto :eof
+
+rem  Un paso C: de :caso_cm (usa T, F, A, N y CASO).
+:carga_cm
+set "NOMBRE=!N!"
+if "!NOMBRE!"=="" set "NOMBRE=carga.txt"
+if not "!A!"=="-" copy /y "!A!" "bin\prueba_carga\!NOMBRE!" >nul
+>>"salida_%CASO%.txt" echo ----- CARGA-MASIVA: FECHA_PROCESO=!F!, archivo !NOMBRE!
+set "FECHA_PROCESO=!F!"
+if not "!N!"=="" set "ARCHIVO_CARGA=!N!"
+pushd "bin\prueba_carga"
+"..\CARGA-MASIVA.exe" < nul > "..\pantalla_carga.tmp"
+set "RC=!ERRORLEVEL!"
+popd
+set "FECHA_PROCESO="
+set "ARCHIVO_CARGA="
+for /f "usebackq delims=" %%L in ("bin\pantalla_carga.tmp") do (
+    set "LIN=%%L"
+    if "!LIN:~0,22!"=="Archivo renombrado a: " (
+        >>"salida_%CASO%.txt" echo !LIN:~0,-6!HHMMSS
+    ) else (
+        >>"salida_%CASO%.txt" echo(!LIN!
+    )
+)
+del /q "bin\pantalla_carga.tmp"
+>>"salida_%CASO%.txt" echo ----- codigo de salida de la carga: !RC!
+for %%R in (carga_ok.txt carga_rechazos.txt) do (
+    if exist "bin\prueba_carga\%%R" (
+        >>"salida_%CASO%.txt" echo ----- %%R
+        type "bin\prueba_carga\%%R" >> "salida_%CASO%.txt"
+        >>"salida_%CASO%.txt" echo ----- fin de %%R
+    ) else (
+        >>"salida_%CASO%.txt" echo ----- no se genero %%R
+    )
+)
+if exist "bin\prueba_carga\!NOMBRE!" >>"salida_%CASO%.txt" echo ----- !NOMBRE!: sigue ahi ^(no se renombro^)
+if not exist "bin\prueba_carga\!NOMBRE!" >>"salida_%CASO%.txt" echo ----- !NOMBRE!: no esta
+>>"salida_%CASO%.txt" echo ----- archivos procesados:
+for /f "delims=" %%P in ('dir /b /on "bin\prueba_carga\*.procesado.*" 2^>nul') do (
+    set "PRO=%%P"
+    >>"salida_%CASO%.txt" echo !PRO:~0,-6!HHMMSS
 )
 goto :eof
