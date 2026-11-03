@@ -1309,7 +1309,7 @@ La forma más simple y confiable:
 correr_pruebas_automatizadas.bat
 ```
 
-Compila `gestion-bancaria.exe` **en `bin\`**, corre ahí los 5 pares entrada/salida (leyendo cada `entrada_*.txt` y escribiendo cada `salida_*.txt` en la raíz del proyecto) con el runtime de GnuCOBOL correctamente puesto en el `PATH` para esa sesión (mismo mecanismo de respaldo que `correr_batch_cierre.bat` y `ver_listado_clientes.bat`), y **compara cada `salida_*.txt` contra su `esperado_*.txt` con `fc`**, mostrando al final un resumen del tipo:
+Compila `gestion-bancaria.exe` **en `bin\`**, corre los 5 pares entrada/salida en la carpeta descartable **`bin\prueba_cli\`** (que se borra y se vuelve a crear en cada caso, así cada uno arranca con un `clientes_v3.dat` vacío y nunca se toca el `bin\clientes_v3.dat` de verdad; leyendo cada `entrada_*.txt` y escribiendo cada `salida_*.txt` en la raíz del proyecto), con el runtime de GnuCOBOL correctamente puesto en el `PATH` para esa sesión (mismo mecanismo de respaldo que `correr_batch_cierre.bat` y `ver_listado_clientes.bat`), y **compara cada `salida_*.txt` contra su `esperado_*.txt` con `fc`**, mostrando al final un resumen del tipo:
 
 ```
 [pruebas]   OK     - alta_ok
@@ -1323,11 +1323,11 @@ Compila `gestion-bancaria.exe` **en `bin\`**, corre ahí los 5 pares entrada/sal
 [pruebas] ==========================================
 ```
 
-Si algún caso falla, el script indica cuál y sugiere el comando `fc` puntual para ver la diferencia exacta, y termina con código de salida distinto de cero (útil si en algún momento se engancha a un pipeline de CI).
+Si algún caso falla, el script indica cuál y sugiere el comando `fc` puntual para ver la diferencia exacta, y termina con código de salida distinto de cero (útil si en algún momento se engancha a un pipeline de CI). Como cada caso corre en una carpeta vacía, el script se puede correr dos veces seguidas sin que la segunda falle por datos de la primera. En Linux/Docker/CI, lo mismo lo hace `correr_pruebas_clientes.sh` (`docker run --rm gestion-bancaria bash correr_pruebas_clientes.sh`).
 
 Ese mismo resumen se guarda además en **`resultado_pruebas.txt`** (en la raíz del proyecto, junto a `CASOS_DE_PRUEBA.md`), igual que `correr_batch_cierre.bat` deja `bin\reporte_cierre.txt` y `ver_listado_clientes.bat` deja `bin\listado_clientes.txt`. Esto es necesario porque si el `.bat` se corre con doble clic (en vez de desde una terminal ya abierta), la ventana de consola se cierra sola apenas termina y no da tiempo a leer el resumen en pantalla; el archivo queda para abrirlo después con cualquier editor de texto.
 
-También se puede correr cada caso a mano, uno por uno, desde `bin\`:
+También se puede correr cada caso a mano, uno por uno, desde `bin\` (ojo: así **sí** se graba en el `bin\clientes_v3.dat` real):
 
 ```bat
 cd bin
@@ -1338,7 +1338,7 @@ Y así con cada par. **Para esto, el `PATH` de esa terminal tiene que incluir el
 
 Cada `entrada_*.txt` es autocontenido (da de alta su propio cliente de prueba, con un DNI dedicado en el rango `800000XX` para no chocar con los DNIs que usa la matriz manual) y **termina siempre en `0`**, la opción de salir del menú: es necesario para que no quede colgado, porque una entrada redirigida por archivo que se queda sin líneas antes de un `0` no corta sola (ver [Solución de problemas](#solucion-de-problemas), «Si la entrada se redirige…»).
 
-Si se corren a mano (fuera de `correr_pruebas_automatizadas.bat`), hay que comparar cada `salida_*.txt` contra su `esperado_*.txt` (o contra el "Resultado esperado" de `CASOS_DE_PRUEBA.md`) uno por uno, por ejemplo con `fc esperado_alta_ok.txt salida_alta_ok.txt`. Si `clientes_v3.dat` ya tiene un cliente con ese mismo DNI de una corrida anterior, el script no falla, pero la salida cambia (por ejemplo, `entrada_alta_ok.txt` mostraría `Ya existe un cliente con ese DNI.` en vez de `Cliente dado de alta.`, y la comparación automática lo marcaría como FALLO); para una corrida "limpia" de los cinco casos, borrar `bin\clientes_v3.dat` antes.
+Si se corren a mano (fuera de `correr_pruebas_automatizadas.bat`), hay que comparar cada `salida_*.txt` contra su `esperado_*.txt` (o contra el "Resultado esperado" de `CASOS_DE_PRUEBA.md`) uno por uno, por ejemplo con `fc esperado_alta_ok.txt salida_alta_ok.txt`. Si `clientes_v3.dat` ya tiene un cliente con ese mismo DNI de una corrida anterior, el script no falla, pero la salida cambia (por ejemplo, `entrada_alta_ok.txt` mostraría `Ya existe un cliente con ese DNI.` en vez de `Cliente dado de alta.`, y la comparación lo marcaría como FALLO). Esto solo pasa corriéndolos a mano: `correr_pruebas_automatizadas.bat` y `correr_pruebas_clientes.sh` usan siempre una carpeta vacía.
 
 Los siete casos restantes (CP-05, CP-07 a CP-12) quedan como pruebas manuales en `CASOS_DE_PRUEBA.md`: tienen ramificaciones (confirmaciones S/N, submenús, un estado previo que hay que preparar, o el batch de cierre) que no se prestan a una sola pasada de entrada redirigida.
 
@@ -1490,7 +1490,6 @@ Cada limitación de arriba sugiere una mejora natural. Algunas, en orden aproxim
 - **PENDIENTE (próximo paso después de la Etapa 1): protección contra el bucle infinito al terminarse la entrada.** Hoy, si la entrada se acaba (archivo redirigido incompleto, o Ctrl+Z / Ctrl+D en el teclado), los datos de Intereses que se vuelven a pedir (moneda, días, TNA) y el menú principal repiten el aviso para siempre, porque GnuCOBOL entrega el fin de entrada como una línea vacía. Propuesta: un **límite de intentos**. Cada dato cuenta los valores inválidos seguidos y, al llegar a 5, cancela la operación (`Demasiados intentos: operacion cancelada.`) sin grabar nada. Los menús cuentan las opciones inválidas seguidas y, al llegar a 10, cierran los archivos y terminan el programa en orden. Alternativa más completa (y más invasiva): leer el teclado como un archivo (`ASSIGN TO KEYBOARD`) y detectar el fin con `AT END`.
 - **PENDIENTE: título del reporte de `BATCH-CIERRE.cbl`.** Sigue diciendo `CUENTA BANCARIA` (no se tocó en las Etapas 1, 2 ni 3).
 - **PENDIENTE: actualizar `batch_cierre.jcl` a la Etapa 3.** Agregar la sentencia `DD` del archivo de plazos fijos y mostrar cómo se pasa la fecha de proceso (ver [El JCL de referencia](#proceso-batch-cierre)). Requiere permiso aparte, porque es un archivo protegido.
-- **PENDIENTE: que los 5 casos de clientes no dependan de `bin\clientes_v3.dat`.** Hoy dan de alta sus clientes `800000XX` en el archivo real de `bin\`, así que **la segunda corrida seguida** de `correr_pruebas_automatizadas.bat` falla con `Ya existe un cliente con ese DNI.` hasta que se borre o se mueva ese archivo. Se podrían correr en una carpeta descartable, como los de INTERESES, PLAZO FIJO y VENCIMIENTOS.
 - **Plazo fijo: listado por DNI** (opcional en la especificación): en la consulta, listar todos los plazos fijos de un cliente.
 - **Historial de movimientos.** Un archivo de transacciones (depósitos, extracciones, modificaciones, intereses) separado del maestro de clientes, para auditoría y para poder reconstruir cómo se llegó a un saldo.
 - **Control de corridas del batch.** Un archivo o registro de "último cierre corrido" que rechace o avise ante una segunda corrida del mismo período.
