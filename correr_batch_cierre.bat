@@ -77,5 +77,7 @@ if "%RC%"=="0" (
     echo [correr_batch_cierre] genero, bin\reporte_cierre.txt.
 )
 
-endlocal
-exit /b %RC%
+rem En la misma linea: %RC% se reemplaza por su valor ANTES de que
+rem endlocal borre la variable (en dos lineas, exit recibiria vacio
+rem y el codigo de retorno se perderia).
+endlocal & exit /b %RC%
