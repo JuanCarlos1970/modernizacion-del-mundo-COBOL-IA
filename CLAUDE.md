@@ -49,16 +49,14 @@ ejecuta el programa. Si se corre desde otro lado, se crea otro
 - Si los `.bat` fallan por el bloqueo de Windows (Device Guard), las
   pruebas se corren en Docker: `docker build -t gestion-bancaria .` y después
   (desde PowerShell):
-  `docker run --rm gestion-bancaria bash -c 'cd bin && sed -i s/\\r$// ../entrada_*.txt ../esperado_*.txt && FALLO=0 && for C in alta_ok alta_dni_invalido deposito extraccion consulta; do ./gestion-bancaria.exe < ../entrada_$C.txt > ../salida_$C.txt; if diff -q ../esperado_$C.txt ../salida_$C.txt > /dev/null; then echo OK - $C; else echo FALLO - $C; FALLO=1; fi; done; exit $FALLO'`
+  `docker run --rm gestion-bancaria bash correr_pruebas_clientes.sh`
   Tienen que salir los 5 en `OK` y código de salida 0. Los casos manuales
   se corren con `docker run -it --rm gestion-bancaria`.
-  Detalles de este comando (no "simplificarlo"):
-  - El `sed` pasa los `.txt` de CRLF a LF solo dentro del contenedor. Hace
+  Detalles:
+  - El script quita el `\r` de los `.txt` al vuelo (`tr -d '\r'`). Hace
     falta porque con `core.autocrlf=true` la carpeta de Windows tiene CRLF,
     `docker build` copia eso, y en Linux el `\r` se lee como parte de lo
     tipeado (por ejemplo, el teléfono sale inválido y fallan los 5 casos).
-  - No lleva comillas dobles dentro: PowerShell 5.1 las borra al pasarlas
-    a `docker` y bash recibe el comando cortado.
   - Con `--rm`, los `salida_*.txt` quedan dentro del contenedor y se
     borran al terminar; el resultado se ve en pantalla.
 
@@ -73,7 +71,10 @@ Recompilar y correr los 61 casos de `CASOS_DE_PRUEBA.md`:
 
 - 5 automáticos (CP-01, CP-02, CP-03, CP-04, CP-06):
   `cmd /c correr_pruebas_automatizadas.bat`. Tiene que decir
-  `Resumen: 5 OK / 0 FALLO (de 5)`.
+  `Resumen: 5 OK / 0 FALLO (de 5)`. En Docker:
+  `docker run --rm gestion-bancaria bash correr_pruebas_clientes.sh`.
+  Corren en la carpeta descartable `bin\prueba_cli` (no tocan los `.dat`
+  de `bin\`).
 - 7 manuales (CP-05, CP-07, CP-08, CP-09, CP-10, CP-11 y CP-12):
   seguir los pasos de la matriz, ejecutando `gestion-bancaria.exe` desde `bin\`.
   CP-12 incluye correr `correr_batch_cierre.bat` y revisar
@@ -116,10 +117,6 @@ Recompilar y correr los 61 casos de `CASOS_DE_PRUEBA.md`:
   ingresaron, qué mostró el programa y si coincide con el "Resultado
   esperado" de la matriz.
 - Al terminar, informar un resumen caso por caso (OK / FALLO).
-- Si un automático falla por "Ya existe un cliente con ese DNI", es por
-  datos de una corrida anterior en `bin\clientes_v3.dat` (pasa en toda
-  segunda corrida seguida del `.bat`, porque los 5 de clientes graban
-  en ese archivo). Avisar y preguntar antes de borrar ese archivo.
 
 ## Regla 2 — Si algún caso falla
 

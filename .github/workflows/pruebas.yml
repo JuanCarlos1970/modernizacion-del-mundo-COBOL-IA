@@ -41,29 +41,11 @@ jobs:
           mkdir -p bin
           cobc -x -Wall -o bin/gestion-bancaria.exe gestion-bancaria.cbl
 
+      # Los 5 casos de clientes (CP-01 a CP-04 y CP-06): cada uno corre
+      # en la carpeta descartable bin/prueba_cli, con un clientes_v3.dat
+      # vacio. Ver correr_pruebas_clientes.sh.
       - name: Correr los 5 casos automatizados y comparar contra lo esperado
-        run: |
-          cd bin
-          OK=0
-          FALLO=0
-          for CASO in alta_ok alta_dni_invalido deposito extraccion consulta; do
-            ./gestion-bancaria.exe < "../entrada_${CASO}.txt" > "../salida_${CASO}.txt"
-            if diff -q "../esperado_${CASO}.txt" "../salida_${CASO}.txt" > /dev/null; then
-              echo "OK     - ${CASO}"
-              OK=$((OK+1))
-            else
-              echo "FALLO  - ${CASO}"
-              echo "----- diff esperado vs salida (${CASO}) -----"
-              diff "../esperado_${CASO}.txt" "../salida_${CASO}.txt" || true
-              FALLO=$((FALLO+1))
-            fi
-          done
-          echo "=========================================="
-          echo " Resumen: ${OK} OK / ${FALLO} FALLO (de 5)"
-          echo "=========================================="
-          if [ "$FALLO" -gt 0 ]; then
-            exit 1
-          fi
+        run: bash correr_pruebas_clientes.sh
 
       # Casos de INTERESES (MENU-01 e INT-01 a INT-11): cada uno corre
       # con un intereses.dat vacio y con fecha de proceso fija

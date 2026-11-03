@@ -49,14 +49,17 @@ rem  cmd ya lo habia creado (vacio) por la redireccion antes de que
 rem  el programa fallara. Ver README.md, seccion "Solucion de
 rem  problemas", para el detalle.
 rem
-rem  IMPORTANTE: el .exe se compila DENTRO de bin\ y se ejecuta ahi
-rem  mismo, para que los clientes de prueba (DNI 800000XX) queden
-rem  en bin\clientes_v3.dat, el MISMO archivo que usan gestion-bancaria.exe,
-rem  BATCH-CIERRE.exe y LISTADO-CLIENTES.exe (no en uno aparte en
-rem  esta carpeta). Los entrada_*.txt se leen desde aca y los
-rem  salida_*.txt, esperado_*.txt y resultado_pruebas.txt tambien
-rem  viven aca, junto a CASOS_DE_PRUEBA.md. Ver README.md, seccion
-rem  "Donde vive clientes_v3.dat".
+rem  IMPORTANTE: el .exe se compila DENTRO de bin\, pero los 5 casos
+rem  de clientes (DNI 800000XX) se ejecutan en la carpeta descartable
+rem  bin\prueba_cli\, que se borra y se vuelve a crear en cada caso
+rem  (igual que bin\prueba_int\, bin\prueba_pf\, etc. en las otras
+rem  partes). Asi cada caso arranca con un clientes_v3.dat vacio y
+rem  nunca se toca el bin\clientes_v3.dat de verdad: se puede correr
+rem  este script dos veces seguidas sin que la segunda falle por
+rem  "Ya existe un cliente con ese DNI". Los entrada_*.txt se leen
+rem  desde aca y los salida_*.txt, esperado_*.txt y
+rem  resultado_pruebas.txt tambien viven aca, junto a
+rem  CASOS_DE_PRUEBA.md.
 rem
 rem  Requisitos: GnuCOBOL (cobc) instalado. Si "cobc" no esta en el
 rem  PATH, este script intenta usar la instalacion de OpenCobolIDE
@@ -103,31 +106,33 @@ if errorlevel 1 (
 )
 
 echo [pruebas] Compilacion OK. Corriendo y verificando los 5 casos
-echo [pruebas] automatizados desde bin\ (sobre bin\clientes_v3.dat) ...
+echo [pruebas] automatizados en la carpeta descartable bin\prueba_cli\ ...
 echo.
 
 set /a OK=0
 set /a FALLO=0
 set "CASOS_FALLIDOS="
 
-pushd "bin"
 for %%C in (alta_ok alta_dni_invalido deposito extraccion consulta) do (
-    if not exist "..\entrada_%%C.txt" (
+    if not exist "entrada_%%C.txt" (
         echo [pruebas] ERROR: no se encuentra entrada_%%C.txt
         echo ERROR: no se encuentra entrada_%%C.txt >> "%LOGFILE%"
-        popd
         exit /b 1
     )
-    if not exist "..\esperado_%%C.txt" (
+    if not exist "esperado_%%C.txt" (
         echo [pruebas] ERROR: no se encuentra esperado_%%C.txt
         echo ERROR: no se encuentra esperado_%%C.txt >> "%LOGFILE%"
-        popd
         exit /b 1
     )
 
-    ".\gestion-bancaria.exe" < "..\entrada_%%C.txt" > "..\salida_%%C.txt"
+    if exist "bin\prueba_cli" rmdir /s /q "bin\prueba_cli"
+    mkdir "bin\prueba_cli"
+    pushd "bin\prueba_cli"
+    "..\gestion-bancaria.exe" < "..\..\entrada_%%C.txt" > "..\..\salida_%%C.txt"
+    popd
+    rmdir /s /q "bin\prueba_cli"
 
-    fc "..\esperado_%%C.txt" "..\salida_%%C.txt" >nul
+    fc "esperado_%%C.txt" "salida_%%C.txt" >nul
     if errorlevel 1 (
         echo [pruebas]   FALLO  - %%C
         echo   FALLO  - %%C >> "%LOGFILE%"
@@ -139,7 +144,6 @@ for %%C in (alta_ok alta_dni_invalido deposito extraccion consulta) do (
         set /a OK+=1
     )
 )
-popd
 
 echo.
 echo [pruebas] ==========================================
