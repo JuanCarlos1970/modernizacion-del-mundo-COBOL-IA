@@ -38,10 +38,20 @@
 //*   REGION=0M   - memoria maxima disponible (0M = la que el sitio
 //*                 permita).
 //*
+//*-------------------------------------------------------------------
+//* Fecha de proceso (opcional): por defecto el cierre usa la fecha
+//* del sistema. Para reprocesar un dia puntual (AAAAMMDD), activar
+//* esta linea SET y el DD CEEOPTS de mas abajo (los dos juntos). Es
+//* lo mismo que "set FECHA_PROCESO=AAAAMMDD" antes del .bat local.
+//* En produccion, el scheduler suele poner este valor solo.
+//*-------------------------------------------------------------------
+//* SET FECHA=20261103
+//*
 //*********************************************************************
 //* PASO 1: acredita el interes mensual a las cuentas Activas y
-//* Reactivadas, y genera el reporte de cierre. Equivale a ejecutar
-//* BATCH-CIERRE.exe (ya compilado) en el entorno local.
+//* Reactivadas, procesa los vencimientos de plazo fijo y genera el
+//* reporte de cierre. Equivale a ejecutar BATCH-CIERRE.exe (ya
+//* compilado) en el entorno local.
 //*********************************************************************
 //PASO010  EXEC PGM=BCIERRE,REGION=0M
 //*
@@ -64,6 +74,22 @@
 //*   Mensajes del entorno COBOL/compilador en tiempo de ejecucion
 //*   (abends, mensajes de sistema). Tambien a la salida del JES.
 //*
+//*CEEOPTS DD *,SYMBOLS=JCLONLY
+//*  ENVAR("FECHA_PROCESO=&FECHA")
+//*/*
+//*   Opciones del runtime (Language Environment). ENVAR crea la
+//*   variable de entorno FECHA_PROCESO que lee el programa, con el
+//*   valor del SET de arriba (&FECHA). SYMBOLS=JCLONLY hace que
+//*   &FECHA se reemplace tambien dentro de estas lineas de datos.
+//*   Para activarlo: en la linea CEEOPTS borrar solo el "*"; en las
+//*   dos siguientes borrar el "//*" del principio. Activar siempre
+//*   junto con el SET (sin SET, &FECHA no existe y el job falla).
+//*   Si la fecha no es valida, el programa termina con codigo 1
+//*   sin tocar ningun archivo (igual que en local).
+//*   NOTA: "ACCEPT ... FROM ENVIRONMENT" es de GnuCOBOL; en Enterprise
+//*   COBOL el programa leeria la variable con un servicio del
+//*   runtime, algo que esta version de BATCH-CIERRE.cbl NO adapta.
+//*
 //*-------------------------------------------------------------------
 //* Archivo de clientes: VSAM KSDS (Key Sequenced Data Set), leido y
 //* actualizado en el mismo paso (equivalente a abrir clientes_v3.dat
@@ -85,6 +111,19 @@
 //*   "clientes_v3.dat" lo hace en GnuCOBOL.
 //*
 //*-------------------------------------------------------------------
+//* Archivo de plazos fijos (Etapa 3): VSAM KSDS, leido y actualizado
+//* en el mismo paso (equivale a abrir plazofijo.dat con OPEN I-O en
+//* BATCH-CIERRE.cbl). La clave del KSDS (numero de plazo fijo)
+//* equivale a RECORD KEY IS PF-NRO en el programa.
+//*-------------------------------------------------------------------
+//PLAZOFIJ DD DSN=PROD.CTA.PLAZOFIJO.KSDS,DISP=SHR
+//*   DSN=PROD.CTA.PLAZOFIJO.KSDS - equivale a "plazofijo.dat" en el
+//*   entorno local. DISP=SHR por la misma razon que en CLIENTES.
+//*   Un nombre de DD tiene como maximo 8 caracteres: por eso es
+//*   PLAZOFIJ y no PLAZOFIJO. El SELECT del programa
+//*   (ARCH-PLAZOFIJO) se asociaria con este DD por ese nombre.
+//*
+//*-------------------------------------------------------------------
 //* Reporte de cierre: archivo secuencial de salida (equivalente a
 //* reporte_cierre.txt, ORGANIZATION LINE SEQUENTIAL en el programa
 //* local).
@@ -92,7 +131,7 @@
 //REPORTE  DD DSN=PROD.CTA.REPORTE.CIERRE(+1),
 //            DISP=(NEW,CATLG,DELETE),
 //            SPACE=(TRK,(5,5),RLSE),
-//            DCB=(RECFM=FB,LRECL=100,BLKSIZE=0)
+//            DCB=(RECFM=FB,LRECL=132,BLKSIZE=0)
 //*   DSN=...REPORTE.CIERRE(+1) - dataset secuencial generado (GDG,
 //*   Generation Data Group): cada corrida del cierre crea una
 //*   generacion nueva (+1), sin pisar el reporte de la corrida
@@ -105,9 +144,10 @@
 //*   reporte a medias).
 //*   SPACE=(TRK,(5,5),RLSE) - espacio en pistas, con liberacion del
 //*   espacio no usado al cerrar el archivo.
-//*   RECFM=FB,LRECL=100 - registros de formato fijo de 100
-//*   caracteres, igual al PIC X(100) de REG-REPORTE en
-//*   BATCH-CIERRE.cbl.
+//*   RECFM=FB,LRECL=132 - registros de formato fijo de 132
+//*   caracteres, igual al PIC X(132) de REG-REPORTE en
+//*   BATCH-CIERRE.cbl (paso de 100 a 132 en la Etapa 3, para que
+//*   entre la tabla de vencimientos).
 //*
 //*-------------------------------------------------------------------
 //* Parametros del cierre (opcional): en esta version local la tasa
@@ -133,9 +173,13 @@
 //*     en STEPLIB                         en cada corrida del .bat
 //*   DD CLIENTES: VSAM KSDS             clientes_v3.dat (archivo
 //*                                         indexado de GnuCOBOL)
+//*   DD PLAZOFIJ: VSAM KSDS             plazofijo.dat (archivo
+//*                                         indexado de GnuCOBOL)
 //*   DD REPORTE: dataset secuencial     reporte_cierre.txt (archivo
 //*     generado (GDG)                     de texto, se sobreescribe)
 //*   SYSOUT / SYSPRINT                  Salida de consola del .bat
+//*   CEEOPTS ENVAR (opcional)           variable de entorno
+//*                                         FECHA_PROCESO (opcional)
 //*
 //* En ambos casos la regla de negocio es identica: interes simple
 //* mensual sobre clientes Activos (A) y Reactivados (R), exclusion
