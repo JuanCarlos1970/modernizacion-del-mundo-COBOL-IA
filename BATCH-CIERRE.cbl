@@ -21,11 +21,13 @@
       *               Al terminar, genera reporte_cierre.txt con el
       *               detalle y los totales del cierre.
       * FECHA DE
-      * PROCESO     : la del sistema, o la de la variable de entorno
-      *               FECHA_PROCESO (AAAAMMDD) si existe. Si la
-      *               variable existe pero no es una fecha valida,
-      *               el cierre termina con error (RETURN-CODE 1)
-      *               sin abrir ni modificar ningun archivo.
+      * PROCESO     : en este orden: la primera linea del archivo
+      *               FECHAPRC (AAAAMMDD) si existe y no esta vacio
+      *               (en z/OS es el DD FECHAPRC del JCL); si no, la
+      *               variable de entorno FECHA_PROCESO (AAAAMMDD);
+      *               si no, la del sistema. Si la fecha elegida no
+      *               es valida, el cierre termina con error
+      *               (RETURN-CODE 1) sin modificar ningun archivo.
       * AUTOR       : EJEMPLO
       * FECHA       : 2026-09-22
       * USO         : Pensado para correrse fuera del horario de
@@ -72,6 +74,17 @@
                ORGANIZATION IS LINE SEQUENTIAL
                FILE STATUS IS WS-FS-REP.
 
+      * Fecha de proceso por archivo (opcional): una sola linea con
+      * AAAAMMDD. Es la forma clasica de pasarle un dato a un batch
+      * en un mainframe (una "tarjeta de control" en el JCL:
+      * //FECHAPRC DD *). OPTIONAL: si el archivo no existe, el OPEN
+      * no falla (FILE STATUS 05) y se sigue como antes. En GnuCOBOL
+      * se busca un archivo llamado FECHAPRC en la carpeta de
+      * ejecucion, o el que indique la variable DD_FECHAPRC.
+           SELECT OPTIONAL ARCH-FECHA ASSIGN TO "FECHAPRC"
+               ORGANIZATION IS LINE SEQUENTIAL
+               FILE STATUS IS WS-FS-FEC.
+
        DATA DIVISION.
        FILE SECTION.
        FD  ARCH-CLIENTES.
@@ -91,6 +104,10 @@
        FD  ARCH-REPORTE.
        01  REG-REPORTE             PIC X(132).
 
+      * 80 posiciones: el largo de una linea de datos en el JCL.
+       FD  ARCH-FECHA.
+       01  REG-FECHA               PIC X(80).
+
        WORKING-STORAGE SECTION.
 
       * Estado de las operaciones de E/S de cada archivo
@@ -105,6 +122,10 @@
            88  FS-PF-NO-EXISTE                 VALUE "35".
        01  WS-FS-REP               PIC XX     VALUE "00".
            88  FS-REP-OK                      VALUE "00".
+       01  WS-FS-FEC               PIC XX     VALUE "00".
+           88  FS-FEC-OK                      VALUE "00".
+           88  FS-FEC-FIN                     VALUE "10".
+           88  FS-FEC-NO-EXISTE               VALUE "05" "35".
       * Operacion de archivo en curso, solo para informar errores.
        01  WS-OPERACION            PIC X(10)  VALUE SPACES.
 
@@ -193,6 +214,11 @@
        01  WS-FECHA-HORA           PIC X(21).
        01  WS-FECHA-PROCESO        PIC 9(8).
        01  WS-FECHA-ENV            PIC X(20).
+      * Fecha "candidata" (del archivo FECHAPRC o de FECHA_PROCESO)
+      * antes de validarla, y de donde salio (para el mensaje de
+      * error).
+       01  WS-FECHA-CAND           PIC X(80).
+       01  WS-ORIGEN-FECHA         PIC X(13).
        01  WS-FECHA-AUX            PIC 9(8).
        01  WS-FECHA-AUX-R REDEFINES WS-FECHA-AUX.
            05  WS-FA-ANIO          PIC 9(4).
@@ -301,7 +327,7 @@
       * tocar nada (ni siquiera el reporte anterior).
        0000-PRINCIPAL.
            DISPLAY " "
-           DISPLAY "=== BATCH DE CIERRE - CUENTA BANCARIA ==="
+           DISPLAY "=== BATCH DE CIERRE - GESTION BANCARIA ==="
            PERFORM 0050-FIJAR-FECHA-PROCESO
            PERFORM 0200-ARMAR-FECHA
            DISPLAY "Fecha de proceso: " WS-FECHA-REPORTE
@@ -340,38 +366,93 @@
                PERFORM 9100-ERROR-REPORTE
            END-IF.
 
-      * Fija WS-FECHA-PROCESO ("hoy" para el cierre), con el mismo
-      * criterio que GESTION-BANCARIA: la variable de entorno
-      * FECHA_PROCESO (AAAAMMDD) si existe, o si no la del sistema.
-      * FUNCTION CURRENT-DATE devuelve 21 caracteres: AAAAMMDD +
-      * hora + huso horario; se toman solo los primeros 8.
-      * DIFERENCIA con GESTION-BANCARIA: si la variable existe pero
-      * no es una fecha valida, aca se termina con error. El batch
-      * corre sin nadie mirando la pantalla, y un error de tipeo en
-      * la fecha haria vencer (o no) plazos fijos que no corresponden.
+      * Fija WS-FECHA-PROCESO ("hoy" para el cierre). Orden:
+      *   1. La primera linea del archivo FECHAPRC (0060), si existe
+      *      y no esta vacia. Es la forma que funciona tambien en un
+      *      mainframe z/OS (DD FECHAPRC del JCL), porque usa solo
+      *      OPEN/READ de COBOL estandar.
+      *   2. Si no, la variable de entorno FECHA_PROCESO, con el
+      *      mismo criterio que GESTION-BANCARIA. "ACCEPT ... FROM
+      *      ENVIRONMENT" es de GnuCOBOL: se mantiene para que el
+      *      .bat, las pruebas y Docker sigan funcionando igual.
+      *   3. Si no, la del sistema. FUNCTION CURRENT-DATE devuelve
+      *      21 caracteres: AAAAMMDD + hora + huso horario; se toman
+      *      solo los primeros 8.
+      * DIFERENCIA con GESTION-BANCARIA: si la fecha elegida no es
+      * valida, aca se termina con error. El batch corre sin nadie
+      * mirando la pantalla, y un error de tipeo en la fecha haria
+      * vencer (o no) plazos fijos que no corresponden.
        0050-FIJAR-FECHA-PROCESO.
            MOVE FUNCTION CURRENT-DATE TO WS-FECHA-HORA
            MOVE WS-FECHA-HORA(1:8) TO WS-FECHA-PROCESO
-           MOVE SPACES TO WS-FECHA-ENV
-           ACCEPT WS-FECHA-ENV FROM ENVIRONMENT "FECHA_PROCESO"
-           IF WS-FECHA-ENV NOT = SPACES
-               IF WS-FECHA-ENV(1:8) IS NUMERIC
-                  AND WS-FECHA-ENV(9:) = SPACES
-                   MOVE WS-FECHA-ENV(1:8) TO WS-FECHA-AUX
+           PERFORM 0060-LEER-FECHAPRC
+           IF WS-FECHA-CAND = SPACES
+               MOVE SPACES TO WS-FECHA-ENV
+               ACCEPT WS-FECHA-ENV FROM ENVIRONMENT "FECHA_PROCESO"
+               MOVE WS-FECHA-ENV TO WS-FECHA-CAND
+               MOVE "FECHA_PROCESO" TO WS-ORIGEN-FECHA
+           END-IF
+           IF WS-FECHA-CAND NOT = SPACES
+               IF WS-FECHA-CAND(1:8) IS NUMERIC
+                  AND WS-FECHA-CAND(9:) = SPACES
+                   MOVE WS-FECHA-CAND(1:8) TO WS-FECHA-AUX
                ELSE
                    MOVE 0 TO WS-FECHA-AUX
                END-IF
                IF FUNCTION TEST-DATE-YYYYMMDD(WS-FECHA-AUX) = 0
                    MOVE WS-FECHA-AUX TO WS-FECHA-PROCESO
                ELSE
-                   DISPLAY "FECHA_PROCESO invalida (use AAAAMMDD): "
-                       FUNCTION TRIM(WS-FECHA-ENV)
-                   DISPLAY "Cierre NO realizado: no se modifico"
-                   DISPLAY "ningun archivo."
-                   MOVE 1 TO RETURN-CODE
-                   STOP RUN
+                   DISPLAY FUNCTION TRIM(WS-ORIGEN-FECHA)
+                       " invalida (use AAAAMMDD): "
+                       FUNCTION TRIM(WS-FECHA-CAND)
+                   PERFORM 0070-TERMINAR-SIN-CIERRE
                END-IF
            END-IF.
+
+      * Lee la primera linea del archivo FECHAPRC y la deja en
+      * WS-FECHA-CAND. Si el archivo no existe (FILE STATUS 05, por
+      * ser OPTIONAL) o esta vacio, WS-FECHA-CAND queda en blanco y
+      * se usa FECHA_PROCESO o la fecha del sistema. El aviso por
+      * pantalla sale SOLO cuando se usa el archivo, para que se
+      * note si quedo uno olvidado en la carpeta de ejecucion.
+      * Cualquier otro problema con el archivo es un error: si
+      * alguien lo puso, es porque queria esa fecha.
+       0060-LEER-FECHAPRC.
+           MOVE SPACES TO WS-FECHA-CAND
+           OPEN INPUT ARCH-FECHA
+           IF FS-FEC-NO-EXISTE
+               CONTINUE
+           ELSE
+               IF NOT FS-FEC-OK
+                   DISPLAY "No se pudo abrir FECHAPRC. FILE STATUS: "
+                       WS-FS-FEC
+                   PERFORM 0070-TERMINAR-SIN-CIERRE
+               END-IF
+               READ ARCH-FECHA
+                   AT END
+                       CONTINUE
+                   NOT AT END
+                       MOVE REG-FECHA TO WS-FECHA-CAND
+               END-READ
+               IF NOT FS-FEC-OK AND NOT FS-FEC-FIN
+                   DISPLAY "No se pudo leer FECHAPRC. FILE STATUS: "
+                       WS-FS-FEC
+                   PERFORM 0070-TERMINAR-SIN-CIERRE
+               END-IF
+               CLOSE ARCH-FECHA
+           END-IF
+           IF WS-FECHA-CAND NOT = SPACES
+               MOVE "FECHAPRC" TO WS-ORIGEN-FECHA
+               DISPLAY "Fecha de proceso tomada del archivo FECHAPRC."
+           END-IF.
+
+      * Termina con codigo 1 antes de abrir los archivos de datos y
+      * el reporte: no se modifica nada.
+       0070-TERMINAR-SIN-CIERRE.
+           DISPLAY "Cierre NO realizado: no se modifico"
+           DISPLAY "ningun archivo."
+           MOVE 1 TO RETURN-CODE
+           STOP RUN.
 
       * Arma la fecha de proceso como DD/MM/AAAA para el reporte.
        0200-ARMAR-FECHA.
@@ -381,7 +462,7 @@
 
        0300-ESCRIBIR-ENCABEZADO.
            PERFORM 0310-ESCRIBIR-SEPARADOR
-           MOVE "PROCESO BATCH DE CIERRE - CUENTA BANCARIA"
+           MOVE "PROCESO BATCH DE CIERRE - GESTION BANCARIA"
                TO REG-REPORTE
            WRITE REG-REPORTE
            MOVE SPACES TO REG-REPORTE

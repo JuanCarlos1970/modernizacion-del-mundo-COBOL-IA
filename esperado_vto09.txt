@@ -1,5 +1,5 @@
  
-=== BATCH DE CIERRE - CUENTA BANCARIA ===
+=== BATCH DE CIERRE - GESTION BANCARIA ===
 Fecha de proceso: 14/11/2026
 No se encontro clientes_v3.dat: no hay
 clientes para procesar en este cierre.
@@ -19,7 +19,7 @@ Reporte generado: reporte_cierre.txt
 ----- codigo de salida del batch: 0
 ----- reporte_cierre.txt
 ====================================================================================================
-PROCESO BATCH DE CIERRE - CUENTA BANCARIA
+PROCESO BATCH DE CIERRE - GESTION BANCARIA
 Fecha del proceso: 14/11/2026
 ====================================================================================================
 

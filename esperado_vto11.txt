@@ -174,7 +174,7 @@ Estado:        A - Activo
  
   Opcion: Hasta luego.
  
-=== BATCH DE CIERRE - CUENTA BANCARIA ===
+=== BATCH DE CIERRE - GESTION BANCARIA ===
 FECHA_PROCESO invalida (use AAAAMMDD): 2026111
 Cierre NO realizado: no se modifico
 ningun archivo.
