@@ -207,7 +207,7 @@ Estado:    I - Inactivo
  
   Opcion: Hasta luego.
  
-=== BATCH DE CIERRE - CUENTA BANCARIA ===
+=== BATCH DE CIERRE - GESTION BANCARIA ===
 Fecha de proceso: 14/11/2026
  
 Cierre finalizado.
@@ -225,7 +225,7 @@ Reporte generado: reporte_cierre.txt
 ----- codigo de salida del batch: 0
 ----- reporte_cierre.txt
 ====================================================================================================
-PROCESO BATCH DE CIERRE - CUENTA BANCARIA
+PROCESO BATCH DE CIERRE - GESTION BANCARIA
 Fecha del proceso: 14/11/2026
 ====================================================================================================
 
@@ -312,7 +312,7 @@ Estado:    R - Reactivado
  
   Opcion: Hasta luego.
  
-=== BATCH DE CIERRE - CUENTA BANCARIA ===
+=== BATCH DE CIERRE - GESTION BANCARIA ===
 Fecha de proceso: 16/11/2026
  
 Cierre finalizado.
@@ -330,7 +330,7 @@ Reporte generado: reporte_cierre.txt
 ----- codigo de salida del batch: 0
 ----- reporte_cierre.txt
 ====================================================================================================
-PROCESO BATCH DE CIERRE - CUENTA BANCARIA
+PROCESO BATCH DE CIERRE - GESTION BANCARIA
 Fecha del proceso: 16/11/2026
 ====================================================================================================
 

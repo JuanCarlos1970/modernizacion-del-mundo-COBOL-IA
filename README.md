@@ -75,6 +75,7 @@ Además del programa interactivo, el proyecto incluye:
 | `.gitattributes` | Fuerza fin de línea LF en los `.sh` (con CRLF, bash no los puede ejecutar) |
 | `.dockerignore` | Deja `bin\` afuera de la imagen de Docker: los `.dat` creados en Windows no se pueden leer con el GnuCOBOL de Linux |
 | `batch_cierre.jcl` | JCL de **referencia/documentación**: cómo correría el mismo cierre en un mainframe z/OS real (no se ejecuta en este entorno) |
+| `carga_masiva.jcl` | JCL de **referencia/documentación**: cómo correría la carga masiva en un mainframe z/OS real (no se ejecuta en este entorno) — ver [Carga masiva](#carga-masiva) |
 | `README.md` | Esta documentación |
 | `CASOS_DE_PRUEBA.md` | Matriz de casos de prueba (QA) — ver [Testing](#testing) |
 | `LICENSE` | Licencia del proyecto — ver [Licencia](#licencia) |
@@ -1059,6 +1060,21 @@ BATCH-CIERRE.exe
 set FECHA_PROCESO=
 ```
 
+**Archivo `FECHAPRC` (para que también funcione en un mainframe).** `ACCEPT ... FROM ENVIRONMENT`, que es lo que lee `FECHA_PROCESO`, existe solo en GnuCOBOL. Por eso el batch **primero** busca un archivo de una línea llamado `FECHAPRC` (sin extensión) en la carpeta de ejecución, con la fecha `AAAAMMDD` en la primera línea. Es la forma clásica de pasarle un dato a un batch de mainframe: en `batch_cierre.jcl` es el `DD FECHAPRC` (una "tarjeta de control" escrita dentro del JCL). El orden es:
+
+1. Si existe `FECHAPRC` y no está vacío, se usa esa fecha, y se avisa en pantalla con `Fecha de proceso tomada del archivo FECHAPRC.` (el aviso sale solo en ese caso, para que se note si quedó un archivo olvidado).
+2. Si no, `FECHA_PROCESO`.
+3. Si no, la fecha del sistema.
+
+Si la fecha del archivo no es válida, pasa lo mismo que con la variable: `FECHAPRC invalida (use AAAAMMDD): ...`, `Cierre NO realizado...` y código `1`. En GnuCOBOL también se puede indicar otra ruta con la variable `DD_FECHAPRC` (por ejemplo, `set DD_FECHAPRC=C:\temp\fecha.txt`). Los demás programas (`gestion-bancaria.cbl`, `CARGA-MASIVA.cbl`) siguen usando solo `FECHA_PROCESO`.
+
+```bat
+REM Windows (cmd), desde bin\: lo mismo que FECHA_PROCESO, pero con el archivo
+echo 20261114> FECHAPRC
+BATCH-CIERRE.exe
+del FECHAPRC
+```
+
 **Acceso a los archivos.** Para buscar al cliente de cada plazo fijo por su DNI, el `SELECT` de `clientes_v3.dat` en el batch pasó de `ACCESS MODE IS SEQUENTIAL` a `ACCESS MODE IS DYNAMIC` (el layout y los datos no cambian). Las dos pasadas de siempre siguen leyendo en orden (`READ NEXT`), y la de vencimientos lee por clave (`READ ... KEY IS`); en una misma pasada no se mezclan las dos formas, porque GnuCOBOL 2.0 y 3.x se comportan distinto en ese caso. `plazofijo.dat` se abre con acceso secuencial (se recorre entero y se regraba con `REWRITE` el que vence). Si `plazofijo.dat` no existe, no es un error: no hay vencimientos.
 
 ### Cómo ejecutarlo localmente
@@ -1070,7 +1086,7 @@ correr_batch_cierre.bat
 El script:
 1. Busca `cobc` en el `PATH`; si no lo encuentra, usa la instalación de OpenCobolIDE detectada en esta máquina (`C:\Program Files (x86)\OpenCobolIDE\GnuCOBOL`) como respaldo. Si tampoco la encuentra ahí, informa el error y no continúa.
 2. Compila `BATCH-CIERRE.cbl` con `cobc -x -Wall` **dentro de `bin\`**.
-3. Ejecuta `BATCH-CIERRE.exe` desde `bin\`, que procesa todo `bin\clientes_v3.dat` y los vencimientos de `bin\plazofijo.dat`, genera `bin\reporte_cierre.txt` y termina mostrando un resumen por pantalla. Usa la fecha del sistema, salvo que la terminal tenga definida `FECHA_PROCESO`.
+3. Ejecuta `BATCH-CIERRE.exe` desde `bin\`, que procesa todo `bin\clientes_v3.dat` y los vencimientos de `bin\plazofijo.dat`, genera `bin\reporte_cierre.txt` y termina mostrando un resumen por pantalla. Usa la fecha del sistema, salvo que exista `bin\FECHAPRC` o que la terminal tenga definida `FECHA_PROCESO`.
 
 Se puede correr las veces que se quiera; cada corrida vuelve a acreditar interés sobre los saldos **ya actualizados** de la corrida anterior (ver [Limitaciones y mejoras futuras](#limitaciones-y-mejoras)), pero un plazo fijo ya acreditado no se vuelve a acreditar. Si `clientes_v3.dat` o `plazofijo.dat` todavía no existen, el batch no falla: procesa cero clientes / cero vencimientos y genera igual un `reporte_cierre.txt` con todos los totales en cero.
 
@@ -1080,7 +1096,7 @@ Se puede correr las veces que se quiera; cada corrida vuelve a acreditar interé
 
 Archivo de texto (secuencial, se sobreescribe en cada corrida) con, en este orden:
 
-1. **Fecha del proceso**, en formato `DD/MM/AAAA`: la de `FECHA_PROCESO` si está definida, o si no la del sistema (`FUNCTION CURRENT-DATE`).
+1. **Fecha del proceso**, en formato `DD/MM/AAAA`: la del archivo `FECHAPRC` si existe, si no la de `FECHA_PROCESO` si está definida, o si no la del sistema (`FUNCTION CURRENT-DATE`).
 2. **Detalle de clientes procesados** (uno por línea, solo los `A`/`R`): DNI, nombre, saldo anterior, interés acreditado y saldo nuevo. Si no hay ninguno, dice explícitamente que no había clientes activos ni reactivados para procesar.
 3. **Detalle de clientes Inactivos** (sin movimiento): DNI, nombre y saldo de cada cliente con estado `I`, sin columnas de interés ni saldo nuevo, porque no se les calcula nada. Si no hay ninguno, dice explícitamente que no hay clientes inactivos.
 4. **Detalle de vencimientos de plazo fijo** (Etapa 3): número, DNI, moneda, capital, interés, total, vencimiento y resultado (`Acreditado`, `Pagar por caja (U$S)`, `Pendiente: cliente inactivo`, `Pendiente: cliente inexistente`, `Pendiente: estado desconocido` o `Error: supera saldo maximo`) de cada plazo fijo vencido. Si no hay ninguno, dice `No hay plazos fijos vencidos.`. Esta tabla mide 121 columnas: por eso el renglón del reporte pasó de 100 a 132 posiciones (el ancho clásico de una impresora de listados). Las líneas de `=` y `-` de las otras secciones siguen teniendo 100, así que esas secciones no cambiaron.
@@ -1090,7 +1106,7 @@ Ejemplo:
 
 ```
 ====================================================================================================
-PROCESO BATCH DE CIERRE - CUENTA BANCARIA
+PROCESO BATCH DE CIERRE - GESTION BANCARIA
 Fecha del proceso: 22/09/2026
 ====================================================================================================
 
@@ -1143,8 +1159,6 @@ El programa también muestra por pantalla un resumen breve equivalente (la fecha
 `batch_cierre.jcl` **no se ejecuta en este entorno** (Windows + GnuCOBOL no corre JCL). Es documentación: muestra cómo se vería este mismo proceso corriendo como un job batch nocturno en un mainframe z/OS real, con su JOB card, un `EXEC PGM=` para el programa ya compilado, y sentencias `DD` que representan el archivo de clientes como un **VSAM KSDS** (equivalente mainframe del archivo indexado `clientes_v3.dat`, clave = DNI) y el reporte de cierre como un **archivo secuencial** de salida (equivalente de `reporte_cierre.txt`). Cada bloque del JCL está comentado explicando qué hace y su correspondencia con el entorno local; el archivo mismo trae, al principio y al final, una tabla de equivalencias entre ambos entornos.
 
 En este entorno de desarrollo local, el equivalente funcional de ese JCL es `correr_batch_cierre.bat`.
-
-> **PENDIENTE:** `batch_cierre.jcl` todavía describe el cierre **anterior a la Etapa 3**: no tiene una sentencia `DD` para el archivo de plazos fijos (`plazofijo.dat`, que en z/OS sería otro VSAM KSDS) ni muestra cómo se pasa la fecha de proceso (`FECHA_PROCESO`). Se va a actualizar más adelante, aparte (es un archivo protegido del proyecto).
 
 ### ⚠ No correr `gestion-bancaria.exe` y el batch al mismo tiempo
 
@@ -1281,6 +1295,10 @@ correr_carga_masiva.bat
 ```
 
 Mismo mecanismo que `correr_batch_cierre.bat`: compila `CARGA-MASIVA.cbl` **dentro de `bin\`** y lo ejecuta desde ahí, sobre los `.dat` de `bin\`. Hay que dejar antes el archivo en `bin\carga.txt` (o definir `ARCHIVO_CARGA`). Al final muestra el código de retorno. Igual que el cierre, **no correrlo al mismo tiempo que `gestion-bancaria.exe` ni que el batch de cierre**.
+
+### El JCL de referencia (`carga_masiva.jcl`)
+
+Igual que `batch_cierre.jcl`, **no se ejecuta en este entorno**: documenta cómo correría la carga masiva como un job de z/OS. Tiene una sentencia `DD` por cada archivo del programa: `CLIENTES`, `INTERES` y `PLAZOFIJ` (los tres VSAM KSDS, equivalentes de `clientes_v3.dat`, `intereses.dat` y `plazofijo.dat`), `CARGA` (el archivo de entrada, equivalente de `carga.txt` / `ARCHIVO_CARGA`) y `CARGAOK` / `CARGARCH` (los dos reportes). Un nombre de `DD` tiene como máximo 8 caracteres, y cada parte del nombre del dataset (lo que va entre puntos) también: por eso el DD y el dataset usan `INTERES` (`PROD.CTA.INTERES.KSDS`) y `PLAZOFIJ` (`PROD.CTA.PLAZOFIJ.KSDS`, el mismo dataset que en `batch_cierre.jcl`), y no `INTERESES` ni `PLAZOFIJO`, que tienen 9. La fecha de proceso va comentada con `CEEOPTS`/`ENVAR` (la variable `FECHA_PROCESO`), porque `CARGA-MASIVA.cbl` todavía no lee el archivo `FECHAPRC` como el cierre. Al final hay una tabla de correspondencias con los archivos locales. El renombrado a `.procesado` no tiene equivalente directo: en z/OS se haría en un paso aparte (o con un dataset generacional), solo si la carga terminó con código 0.
 
 <a id="testing"></a>
 ## Testing
@@ -1457,7 +1475,7 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 - Intereses: el próximo día hábil **no considera feriados** (solo sábados y domingos).
 - Intereses: no hay historial de tasas; solo se guardan la TNA actual y la anterior.
 - Intereses: la baja no pide confirmación (rige de inmediato); se puede revertir con un alta (reactivación).
-- `BATCH-CIERRE.cbl` todavía no usa la tabla de tasas de `intereses.dat`, y su reporte sigue titulado `CUENTA BANCARIA`.
+- `BATCH-CIERRE.cbl` todavía no usa la tabla de tasas de `intereses.dat`.
 - Plazo fijo: un plazo fijo vencido sigue en estado `A` hasta que **corra el batch de cierre** (que lo acredita), y mientras tanto no se puede cancelar.
 - Plazo fijo: la consulta muestra `V - Vencido y acreditado` también para los de dólares, aunque esos no se suman al saldo sino que se pagan por caja (el detalle está en el reporte del cierre).
 - Plazo fijo: la consulta es solo **por número**; no hay listado de los plazos fijos de un DNI.
@@ -1474,6 +1492,7 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 - **No hay historial de movimientos.** El interés acreditado queda en el reporte de esa corrida, pero no se guarda en el archivo de clientes como un movimiento separado; solo se ve reflejado en el saldo. Lo mismo vale para los plazos fijos acreditados.
 - **Vencimientos sin "todo o nada".** El saldo del cliente y el estado `V` del plazo fijo se graban por separado. Si el programa se cortara justo entre las dos grabaciones, hay que corregir ese plazo fijo a mano (el batch avisa cuál) para que no se acredite dos veces.
 - **Dólares sin cuenta.** Los plazos fijos en dólares vencidos se informan "a pagar por caja", pero no queda registro de que se hayan pagado.
+- **`FECHAPRC` se lee solo hasta la columna 80.** Si la línea del archivo es más larga, lo que pasa de la columna 80 se ignora sin aviso: por ejemplo, `20261114` + espacios + una `X` en la columna 100 se acepta como `14/11/2026`. En z/OS no puede pasar (una línea de un `DD *` mide exactamente 80); localmente solo ocurre con un archivo armado a mano de esa forma.
 - **Pendientes sin límite.** Un plazo fijo de un cliente inactivo queda pendiente hasta que se lo reactive; no hay aviso aparte de la línea del reporte en cada cierre.
 
 ### Limitaciones de `CARGA-MASIVA.cbl`
@@ -1488,8 +1507,6 @@ Esto documenta, además del código, la práctica de gestión y trazabilidad de 
 Cada limitación de arriba sugiere una mejora natural. Algunas, en orden aproximado de impacto/esfuerzo:
 
 - **PENDIENTE (próximo paso después de la Etapa 1): protección contra el bucle infinito al terminarse la entrada.** Hoy, si la entrada se acaba (archivo redirigido incompleto, o Ctrl+Z / Ctrl+D en el teclado), los datos de Intereses que se vuelven a pedir (moneda, días, TNA) y el menú principal repiten el aviso para siempre, porque GnuCOBOL entrega el fin de entrada como una línea vacía. Propuesta: un **límite de intentos**. Cada dato cuenta los valores inválidos seguidos y, al llegar a 5, cancela la operación (`Demasiados intentos: operacion cancelada.`) sin grabar nada. Los menús cuentan las opciones inválidas seguidas y, al llegar a 10, cierran los archivos y terminan el programa en orden. Alternativa más completa (y más invasiva): leer el teclado como un archivo (`ASSIGN TO KEYBOARD`) y detectar el fin con `AT END`.
-- **PENDIENTE: título del reporte de `BATCH-CIERRE.cbl`.** Sigue diciendo `CUENTA BANCARIA` (no se tocó en las Etapas 1, 2 ni 3).
-- **PENDIENTE: actualizar `batch_cierre.jcl` a la Etapa 3.** Agregar la sentencia `DD` del archivo de plazos fijos y mostrar cómo se pasa la fecha de proceso (ver [El JCL de referencia](#proceso-batch-cierre)). Requiere permiso aparte, porque es un archivo protegido.
 - **Plazo fijo: listado por DNI** (opcional en la especificación): en la consulta, listar todos los plazos fijos de un cliente.
 - **Historial de movimientos.** Un archivo de transacciones (depósitos, extracciones, modificaciones, intereses) separado del maestro de clientes, para auditoría y para poder reconstruir cómo se llegó a un saldo.
 - **Control de corridas del batch.** Un archivo o registro de "último cierre corrido" que rechace o avise ante una segunda corrida del mismo período.

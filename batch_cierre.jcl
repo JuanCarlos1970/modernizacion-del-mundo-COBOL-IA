@@ -38,15 +38,6 @@
 //*   REGION=0M   - memoria maxima disponible (0M = la que el sitio
 //*                 permita).
 //*
-//*-------------------------------------------------------------------
-//* Fecha de proceso (opcional): por defecto el cierre usa la fecha
-//* del sistema. Para reprocesar un dia puntual (AAAAMMDD), activar
-//* esta linea SET y el DD CEEOPTS de mas abajo (los dos juntos). Es
-//* lo mismo que "set FECHA_PROCESO=AAAAMMDD" antes del .bat local.
-//* En produccion, el scheduler suele poner este valor solo.
-//*-------------------------------------------------------------------
-//* SET FECHA=20261103
-//*
 //*********************************************************************
 //* PASO 1: acredita el interes mensual a las cuentas Activas y
 //* Reactivadas, procesa los vencimientos de plazo fijo y genera el
@@ -74,21 +65,33 @@
 //*   Mensajes del entorno COBOL/compilador en tiempo de ejecucion
 //*   (abends, mensajes de sistema). Tambien a la salida del JES.
 //*
-//*CEEOPTS DD *,SYMBOLS=JCLONLY
-//*  ENVAR("FECHA_PROCESO=&FECHA")
+//*-------------------------------------------------------------------
+//* Fecha de proceso (opcional): por defecto el cierre usa la fecha
+//* del sistema. Para reprocesar un dia puntual, activar estas tres
+//* lineas y poner la fecha (AAAAMMDD) en la del medio. Es una
+//* "tarjeta de control": datos escritos dentro del mismo JCL
+//* (DD *) que el programa lee como un archivo de una linea (SELECT
+//* OPTIONAL ARCH-FECHA, ASSIGN TO "FECHAPRC", en BATCH-CIERRE.cbl).
+//* En produccion, el scheduler suele generar esta linea solo.
+//*-------------------------------------------------------------------
+//*FECHAPRC DD *
+//*20261103
 //*/*
-//*   Opciones del runtime (Language Environment). ENVAR crea la
-//*   variable de entorno FECHA_PROCESO que lee el programa, con el
-//*   valor del SET de arriba (&FECHA). SYMBOLS=JCLONLY hace que
-//*   &FECHA se reemplace tambien dentro de estas lineas de datos.
-//*   Para activarlo: en la linea CEEOPTS borrar solo el "*"; en las
-//*   dos siguientes borrar el "//*" del principio. Activar siempre
-//*   junto con el SET (sin SET, &FECHA no existe y el job falla).
-//*   Si la fecha no es valida, el programa termina con codigo 1
-//*   sin tocar ningun archivo (igual que en local).
-//*   NOTA: "ACCEPT ... FROM ENVIRONMENT" es de GnuCOBOL; en Enterprise
-//*   COBOL el programa leeria la variable con un servicio del
-//*   runtime, algo que esta version de BATCH-CIERRE.cbl NO adapta.
+//*   Para activarlo: en las tres lineas borrar el "//*" del
+//*   principio, salvo en la primera, donde se borra solo el "*"
+//*   (queda "//FECHAPRC DD *"); la fecha queda en la columna 1.
+//*   Si el DD no esta, el programa sigue con la fecha del sistema
+//*   (OPTIONAL). Si la fecha no es valida, termina con codigo 1 sin
+//*   tocar ningun archivo (igual que en local).
+//*   Localmente es lo mismo que un archivo llamado FECHAPRC en la
+//*   carpeta de ejecucion (o "set DD_FECHAPRC=ruta"), o que
+//*   "set FECHA_PROCESO=AAAAMMDD" antes del .bat. Si estan los dos,
+//*   gana el archivo FECHAPRC.
+//*   NOTA: el programa sigue teniendo partes que son de GnuCOBOL y
+//*   que habria que adaptar para compilarlo con Enterprise COBOL
+//*   ("ACCEPT ... FROM ENVIRONMENT", que se mantiene para el uso
+//*   local, ORGANIZATION LINE SEQUENTIAL y los ASSIGN con nombre de
+//*   archivo); esta version de BATCH-CIERRE.cbl NO las adapta.
 //*
 //*-------------------------------------------------------------------
 //* Archivo de clientes: VSAM KSDS (Key Sequenced Data Set), leido y
@@ -116,11 +119,12 @@
 //* BATCH-CIERRE.cbl). La clave del KSDS (numero de plazo fijo)
 //* equivale a RECORD KEY IS PF-NRO en el programa.
 //*-------------------------------------------------------------------
-//PLAZOFIJ DD DSN=PROD.CTA.PLAZOFIJO.KSDS,DISP=SHR
-//*   DSN=PROD.CTA.PLAZOFIJO.KSDS - equivale a "plazofijo.dat" en el
+//PLAZOFIJ DD DSN=PROD.CTA.PLAZOFIJ.KSDS,DISP=SHR
+//*   DSN=PROD.CTA.PLAZOFIJ.KSDS - equivale a "plazofijo.dat" en el
 //*   entorno local. DISP=SHR por la misma razon que en CLIENTES.
-//*   Un nombre de DD tiene como maximo 8 caracteres: por eso es
-//*   PLAZOFIJ y no PLAZOFIJO. El SELECT del programa
+//*   Un nombre de DD tiene como maximo 8 caracteres, y cada parte
+//*   del DSN (entre puntos) tambien: por eso es PLAZOFIJ y no
+//*   PLAZOFIJO (9). El SELECT del programa
 //*   (ARCH-PLAZOFIJO) se asociaria con este DD por ese nombre.
 //*
 //*-------------------------------------------------------------------
@@ -158,7 +162,7 @@
 //* SELECT y la logica de lectura correspondientes, algo que esta
 //* version de BATCH-CIERRE.cbl NO implementa todavia):
 //*-------------------------------------------------------------------
-//*PARAM   DD DSN=PROD.CTA.PARAMETROS.CIERRE,DISP=SHR
+//*PARAM   DD DSN=PROD.CTA.PARAMS.CIERRE,DISP=SHR
 //*
 //*********************************************************************
 //* Notas de correspondencia con el entorno local:
@@ -178,7 +182,7 @@
 //*   DD REPORTE: dataset secuencial     reporte_cierre.txt (archivo
 //*     generado (GDG)                     de texto, se sobreescribe)
 //*   SYSOUT / SYSPRINT                  Salida de consola del .bat
-//*   CEEOPTS ENVAR (opcional)           variable de entorno
+//*   DD FECHAPRC (opcional)             archivo FECHAPRC o variable
 //*                                         FECHA_PROCESO (opcional)
 //*
 //* En ambos casos la regla de negocio es identica: interes simple
